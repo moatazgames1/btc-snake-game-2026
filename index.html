@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#090914"><title>BTC Snake — Play & Grow</title>
+<style>
+:root{--bg:#080812;--panel:#111326;--line:#282b48;--purple:#8b5cf6;--cyan:#22d3ee;--gold:#f7c948;--text:#f5f5ff;--muted:#a3a5c2}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#29204f 0,#090914 48%);color:var(--text);font-family:system-ui,Segoe UI,Arial,sans-serif;min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 4vw;border-bottom:1px solid #24243b;background:#090914dd;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+.brand{font-weight:900;font-size:22px;letter-spacing:.5px}.brand b{color:var(--gold)}button,input{font:inherit}button{border:1px solid var(--line);background:#1a1b32;color:white;padding:10px 15px;border-radius:12px;cursor:pointer}button.primary{background:linear-gradient(100deg,#7545e8,#167dba);border:0;font-weight:800}button:disabled{opacity:.45;cursor:not-allowed}
+main{max-width:1280px;margin:auto;padding:22px 4vw}.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:center}.card{background:linear-gradient(145deg,#17182d,#0f1020);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 15px 45px #0005}.eyebrow{color:var(--cyan);font-weight:800;font-size:12px;letter-spacing:2px}.hero h1{font-size:clamp(32px,5vw,58px);line-height:1.05;margin:12px 0}.hero h1 span{color:var(--gold)}.muted{color:var(--muted)}.stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.stat{background:#0b0c19;border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-width:105px}.stat strong{display:block;font-size:20px}.arena-wrap{position:relative;margin-top:18px}.arena{width:100%;height:min(65vh,620px);min-height:360px;border-radius:20px;overflow:hidden;background:#090b19;border:1px solid #34365a;position:relative}.arena canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:absolute;inset:12px 12px auto;display:flex;justify-content:space-between;pointer-events:none;gap:8px}.hud span{background:#090914bb;border:1px solid #ffffff22;padding:8px 11px;border-radius:10px;font-weight:800}.arena-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}.list{display:grid;gap:8px}.row{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;background:#0b0c19}.skin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.skin{padding:10px;border-radius:13px;background:#0b0c19;border:1px solid var(--line);text-align:center;cursor:pointer}.skin i{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 7px;box-shadow:0 0 18px currentColor}.auth{display:flex;gap:7px;flex-wrap:wrap}.auth input{background:#0b0c19;border:1px solid var(--line);color:white;padding:10px;border-radius:10px;min-width:130px;max-width:180px}.notice{font-size:12px;color:var(--muted);line-height:1.6}.mobile-controls{display:none;justify-content:center;gap:10px;margin-top:12px}.mobile-controls button{width:56px;height:50px;font-size:22px}.ad-slot{border:1px dashed #3a3b5c;border-radius:12px;padding:12px;text-align:center;color:#777b9d;margin-top:14px;font-size:12px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d2040;padding:12px 18px;border:1px solid #494c7c;border-radius:12px;display:none;z-index:20}
+@media(max-width:800px){.hero,.grid{grid-template-columns:1fr}.hero .card:nth-child(2){order:-1}.arena{height:58vh;min-height:330px}.skin-grid{grid-template-columns:repeat(3,1fr)}header{padding:12px 4vw}.brand{font-size:18px}.mobile-controls{display:flex}.auth input{max-width:100%;flex:1}}
+</style>
+</head>
+<body>
+<header><div class="brand">🐍 <b>BTC</b> SNAKE</div><div style="display:flex;gap:8px"><button id="langBtn">EN</button><button id="loginTop">Login</button></div></header>
+<main>
+<section class="hero">
+ <div class="card">
+  <div class="eyebrow">GROW • SURVIVE • DOMINATE</div>
+  <h1 id="headline">اجمع العملات… <span>وكن ملك الساحة</span></h1>
+  <p class="muted" id="subhead">لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.</p>
+  <div class="stats"><div class="stat"><strong id="playersCount">—</strong><small class="muted" id="playersLabel">في الساحة</small></div><div class="stat"><strong id="timeCount">05:00</strong><small class="muted" id="timeLabel">وقت الجولة</small></div><div class="stat"><strong id="myScore">0</strong><small class="muted" id="scoreLabel">عملات الجولة</small></div></div>
+  <div class="arena-actions"><button class="primary" id="playBtn">منافسة جماعية</button><button id="soloBtn">تدريب فردي</button><button id="howBtn">طريقة اللعب</button></div>
+  <div class="notice" id="rules">الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.</div>
+ </div>
+ <div class="card">
+  <div class="eyebrow" id="accountLabel">PLAYER ACCOUNT</div><h2 id="accountTitle">احفظ تقدمك</h2>
+  <div class="auth"><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Password"></div>
+  <div class="arena-actions"><button class="primary" id="emailLogin">دخول / إنشاء حساب</button><button id="googleLogin">Google</button><button id="logout" hidden>خروج</button></div>
+  <p class="notice" id="authStatus">اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.</p>
+  <div class="ad-slot">مساحة إعلانية غير مفعّلة — لن تظهر إعلانات أثناء اللعب.</div>
+ </div>
+</section>
+
+<section class="arena-wrap card">
+ <div class="hud"><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div>
+ <div class="arena" id="arena"></div>
+ <div class="arena-actions"><button id="shieldBtn">🛡 الدرع: اجمعه من الساحة</button><button id="leaveBtn">إنهاء الجولة</button><button id="skinBtn">تخصيص الأفعى</button></div>
+ <div class="mobile-controls">
+  <div style="display:grid;grid-template-columns:repeat(3,56px);gap:5px">
+   <span></span><button data-dir="up">↑</button><span></span>
+   <button data-dir="left">←</button><button data-dir="down">↓</button><button data-dir="right">→</button>
+  </div>
+ </div>
+</section>
+
+<section class="grid">
+ <div class="card"><h2 id="leaderTitle">🏆 الترتيب العالمي</h2><div id="leaderboard" class="list"><div class="row muted">سجّل الدخول لعرض نتائج اللاعبين.</div></div></div>
+ <div class="card"><h2 id="skinTitle">🎨 متجر الأفاعي</h2><p class="notice" id="skinDesc">الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.</p><div class="skin-grid" id="skins"></div></div>
+</section>
+<section class="card" style="margin-top:18px"><h2 id="adminTitle">لوحة الإدارة</h2><p class="notice" id="adminText">تظهر الإحصاءات للمسؤول المصرّح له فقط بعد إعداد ADMIN_UIDS على الخادم.</p><button id="adminBtn">فتح ملخص الإدارة</button><pre id="adminOutput" class="notice"></pre></section>
+<footer class="notice" style="padding:24px 4px;text-align:center">BTC Snake · لعبة مجانية · النقاط الافتراضية ليست بيتكويناً حقيقياً · BTC payouts disabled</footer>
+</main><div id="toast"></div>
+
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
+const API_BASE = "https://btc-snake-api.YOUR-SUBDOMAIN.workers.dev";
+const FB_CONFIG_URL = "./firebase-config.js";
+let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), coinMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
+const $ = id => document.getElementById(id);
+const skins = [
+ {id:"mint",name:"Mint",color:"#35e0a1",unlock:"Free"},
+ {id:"gold",name:"Golden",color:"#f7c948",unlock:"250 pts"},
+ {id:"fire",name:"Fire",color:"#ff623e",unlock:"Rare"},
+ {id:"ice",name:"Ice",color:"#49d9ff",unlock:"Rare"},
+ {id:"galaxy",name:"Galaxy",color:"#a78bfa",unlock:"Legendary"},
+ {id:"toxic",name:"Toxic",color:"#b7f34a",unlock:"Legendary"},
+ {id:"royal",name:"Royal",color:"#f472b6",unlock:"Event"},
+ {id:"diamond",name:"Diamond",color:"#d7f7ff",unlock:"Achievement"}
+];
+const text = {
+ ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية",solo:"تدريب فردي",how:"طريقة اللعب",rules:"الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN"},
+ en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer",solo:"Solo practice",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head = both eliminated. Shields protect temporarily.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي"}
+};
+let lang="ar";
+function toast(s){$("toast").textContent=s;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2600)}
+function applyLang(){document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";const t=text[lang];$("langBtn").textContent=t.language;$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("soloBtn").textContent=t.solo;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("emailLogin").textContent=t.login2;$("authStatus").textContent=t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin}
+$("langBtn").onclick=()=>{lang=lang==="ar"?"en":"ar";applyLang()};applyLang();
+
+async function loadFirebase(){
+ try{
+  const cfg=await import(FB_CONFIG_URL);
+  const appMod=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js");
+  const authMod=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js");
+  const app=appMod.initializeApp(cfg.firebaseConfig);auth=authMod.getAuth(app);
+  firebase={...authMod};
+  authMod.onAuthStateChanged(auth,u=>{currentUser=u;$("authStatus").textContent=u?`Signed in: ${u.displayName||u.email}`:text[lang].auth;$("logout").hidden=!u;refreshLeaderboard();});
+ }catch(e){$("authStatus").textContent="Firebase not configured yet. Guest play remains available."}
+}
+async function token(){return currentUser?await currentUser.getIdToken():null}
+async function api(path,method="GET",body=null){
+ const t=await token();const r=await fetch(API_BASE+path,{method,headers:{"Content-Type":"application/json",...(t?{Authorization:"Bearer "+t}:{})},...(body?{body:JSON.stringify(body)}:{})});return r.json();
+}
+$("emailLogin").onclick=async()=>{
+ if(!firebase){toast("Firebase setup is not configured yet.");return}
+ const email=$("email").value.trim(),password=$("password").value;
+ if(!email||password.length<6){toast("Enter email and password (6+ characters).");return}
+ try{await firebase.signInWithEmailAndPassword(auth,email,password).catch(async e=>{if(e.code==="auth/user-not-found"||e.code==="auth/invalid-credential")return firebase.createUserWithEmailAndPassword(auth,email,password);throw e});toast("Welcome!")}
+ catch(e){toast(e.message)}
+};
+$("googleLogin").onclick=async()=>{if(!firebase)return toast("Firebase setup required");try{await firebase.signInWithPopup(auth,new firebase.GoogleAuthProvider())}catch(e){toast(e.message)}};
+$("logout").onclick=()=>firebase?.signOut(auth);
+$("loginTop").onclick=()=>$("email").focus();
+
+function init3D(){
+ const host=$("arena");scene=new THREE.Scene();scene.background=new THREE.Color("#090b19");
+ camera=new THREE.PerspectiveCamera(48,host.clientWidth/host.clientHeight,.1,500);camera.position.set(50,85,85);camera.lookAt(50,0,50);
+ renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(host.clientWidth,host.clientHeight);host.appendChild(renderer.domElement);
+ scene.add(new THREE.HemisphereLight(0xbacaff,0x182033,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(40,80,20);scene.add(light);
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({color:"#10142b",roughness:.8}));floor.rotation.x=-Math.PI/2;floor.position.set(50,-.5,50);scene.add(floor);
+ const grid=new THREE.GridHelper(100,50,"#353a6c","#202541");grid.position.set(50,.02,50);scene.add(grid);
+ const border=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(100,.4,100)),new THREE.LineBasicMaterial({color:"#7864e8"}));border.position.set(50,.2,50);scene.add(border);
+ const resize=()=>{camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();renderer.setSize(host.clientWidth,host.clientHeight)};new ResizeObserver(resize).observe(host);
+ function animate(){requestAnimationFrame(animate);renderer.render(scene,camera)}animate();
+}
+function makeSphere(color,r=.65){return new THREE.Mesh(new THREE.SphereGeometry(r,14,10),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.25,roughness:.35}))}
+function updateWorld(state){
+ lastState=state;$("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent="0"+Math.floor(state.remaining/60)+":"+String(state.remaining%60).padStart(2,"0");
+ const mine=state.snakes?.find(s=>s.id===myId);if(mine){$("myScore").textContent=mine.score;$("statusPill").textContent=mine.alive?"IN ARENA":"RESPAWNING"}
+ const aliveIds=new Set();
+ for(const s of state.snakes||[]){aliveIds.add(s.id);let group=meshes.get(s.id);if(!group){group=new THREE.Group();meshes.set(s.id,group);scene.add(group)}
+  while(group.children.length<s.body.length){const m=makeSphere(s.color||"#22d3ee",.65);group.add(m)}
+  group.children.forEach((m,i)=>{const p=s.body[i];m.visible=!!p;if(p)m.position.set(p.x,.5,p.z);});
+  group.children.forEach((m,i)=>{if(i===0)m.scale.setScalar(1.18)});
+ }
+ for(const [k,g] of meshes){if(!aliveIds.has(k)){scene.remove(g);meshes.delete(k)}}
+ coinMeshes.forEach(m=>scene.remove(m));coinMeshes=[];
+ for(const c of state.coins||[]){const m=makeSphere("#f7c948",.42);m.position.set(c.x,.55,c.z);scene.add(m);coinMeshes.push(m)}
+ shieldMeshes.forEach(m=>scene.remove(m));shieldMeshes=[];
+ for(const c of state.shields||[]){const m=makeSphere("#54e7ff",.7);m.position.set(c.x,.7,c.z);scene.add(m);shieldMeshes.push(m)}
+}
+function connect(mode="multi"){
+ if(ws)ws.close();
+ const openSocket=async()=>{let ticket="";if(currentUser){try{const issued=await api("/api/ws-ticket","POST",{});ticket=issued.ticket||""}catch{toast("Could not authorize your account for the arena.");return}}const url=API_BASE.replace(/^http/,"ws")+"/ws?mode="+mode+"&skin="+encodeURIComponent(selectedSkin)+(ticket?"&ticket="+encodeURIComponent(ticket):"");ws=new WebSocket(url);
+ ws.onopen=()=>{running=true;$("statusPill").textContent="CONNECTED";toast("Connected to arena")};
+ ws.onmessage=e=>{let d;try{d=JSON.parse(e.data)}catch{return}if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6)}else if(d.type==="state")updateWorld(d);else if(d.type==="roundEnd"){const me=d.results.find(x=>x.id===myId);toast(me?`Round over — rank ${me.rank}, score ${me.score}`:"Round finished")}else if(d.type==="newRound"){toast("New round started") }else if(d.type==="full")toast("Arena is full. Try again soon.")};
+ ws.onclose=()=>{running=false;$("statusPill").textContent="DISCONNECTED"};ws.onerror=()=>toast("Connection error. Check API deployment.");};openSocket();
+}
+$("playBtn").onclick=()=>{if(!renderer)init3D();if(!running)connect("multi")};
+$("soloBtn").onclick=()=>{if(!renderer)init3D();if(!running)connect("solo")};
+$("leaveBtn").onclick=()=>{ws?.close();running=false;$("statusPill").textContent="LEFT ARENA"};
+$("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
+const dirs={up:{x:0,z:-1},down:{x:0,z:1},left:{x:-1,z:0},right:{x:1,z:0}};
+function turn(d){if(ws?.readyState===1)ws.send(JSON.stringify({type:"turn",dir:dirs[d]}))}
+document.querySelectorAll("[data-dir]").forEach(b=>b.addEventListener("click",()=>turn(b.dataset.dir)));
+window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowup","w"].includes(k))turn("up");if(["arrowdown","s"].includes(k))turn("down");if(["arrowleft","a"].includes(k))turn("left");if(["arrowright","d"].includes(k))turn("right")});
+let touchStart=null;rendererTouchSetup();
+function rendererTouchSetup(){const el=$("arena");el.addEventListener("touchstart",e=>{const t=e.touches[0];touchStart={x:t.clientX,y:t.clientY}},{passive:true});el.addEventListener("touchend",e=>{if(!touchStart)return;const t=e.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y;if(Math.max(Math.abs(dx),Math.abs(dy))>24)turn(Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up"));touchStart=null},{passive:true})}
+function drawSkins(){
+ $("skins").innerHTML="";for(const s of skins){const d=document.createElement("button");d.className="skin";d.innerHTML=`<i style="background:${s.color};color:${s.color}"></i><b>${s.name}</b><small class="muted" style="display:block">${s.unlock}</small>`;d.onclick=()=>{selectedSkin=s.id;toast(`${s.name} selected (cosmetic preview)`)};$("skins").appendChild(d)}
+}
+drawSkins();
+async function refreshLeaderboard(){
+ try{const d=await api("/api/leaderboard");$("leaderboard").innerHTML=(d.leaderboard||[]).map((p,i)=>`<div class="row"><b>#${i+1} ${escapeHtml(p.display_name)}</b><span>${p.best_score} 🪙</span></div>`).join("")||'<div class="row muted">No ranked players yet.</div>'}catch{$("leaderboard").innerHTML='<div class="row muted">Leaderboard will appear after API setup.</div>'}
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("adminBtn").onclick=async()=>{try{const d=await api("/api/admin/summary");$("adminOutput").textContent=JSON.stringify(d,null,2)}catch{$("adminOutput").textContent="Admin API unavailable"}};
+loadFirebase();refreshLeaderboard();
+</script>
+</body></html>
