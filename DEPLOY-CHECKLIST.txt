@@ -1,0 +1,20 @@
+BTC SNAKE DEPLOY CHECKLIST
+
+[ ] Create GitHub repository: btc-snake (public)
+[ ] Upload all ZIP contents to repository root (index.html must be at root)
+[ ] Copy firebase-config.js.example to firebase-config.js and fill it with the NEW Firebase web config
+[ ] Enable GitHub Pages from main / root
+[ ] Create D1 database: btc-snake-db
+[ ] Apply backend/schema.sql
+[ ] Create Worker: btc-snake-api using backend/worker.js
+[ ] Configure D1 binding DB -> btc-snake-db
+[ ] Configure Durable Object binding ROOMS -> class SnakeRoom
+[ ] Add migration new_sqlite_classes = ["SnakeRoom"]
+[ ] Add secret FIREBASE_API_KEY
+[ ] Add secret ADMIN_UIDS (your Firebase UID only)
+[ ] Set ALLOWED_ORIGIN and FRONTEND_URL
+[ ] Set API_BASE in index.html to the Worker URL
+[ ] Create separate Firebase project: btc-snake
+[ ] Enable Email/Password and Google sign-in
+[ ] Test /api/health, solo room, multiplayer room, sign-in, leaderboard, admin summary
+[ ] Keep real BTC payouts and rewarded ads disabled until their providers and verification are configured
