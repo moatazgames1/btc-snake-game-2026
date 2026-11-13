@@ -5,7 +5,7 @@ compatibility_date = "2026-11-10"
 [[d1_databases]]
 binding = "DB"
 database_name = "btc-snake-db"
-database_id = "REPLACE_WITH_NEW_D1_DATABASE_ID"
+database_id = "35d603ac-8386-4b62-ab94-8a6ab4793465"
 
 [[durable_objects.bindings]]
 name = "ROOMS"
@@ -17,4 +17,4 @@ new_sqlite_classes = ["SnakeRoom"]
 
 [vars]
 ALLOWED_ORIGIN = "https://moatazgames1.github.io"
-FRONTEND_URL = "https://moatazgames1.github.io/btc-snake/"
+FRONTEND_URL = "https://moatazgames1.github.io/btc-snake-game-2026/"
