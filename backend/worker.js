@@ -104,8 +104,12 @@ export default {
           user = { uid: row.uid, name: row.display_name };
         }
         const mode = url.searchParams.get("mode") === "solo" ? "solo" : "multi";
+        const requestedDuration = Number(url.searchParams.get("duration") || 300);
+        const duration = requestedDuration === 600 ? 600 : 300;
         if (origin && origin !== env.ALLOWED_ORIGIN) return json({ ok: false, error: "origin_not_allowed" }, 403, headers);
-        const roomId = mode === "solo" ? `solo-${user?.uid || crypto.randomUUID()}` : "public-main";
+        const roomId = mode === "solo"
+          ? `solo-${user?.uid || crypto.randomUUID()}-${duration}`
+          : `public-${duration}`;
         const stub = env.ROOMS.get(env.ROOMS.idFromName(roomId));
         const guest = !user;
         const headersForRoom = new Headers(request.headers);
@@ -114,6 +118,7 @@ export default {
         headersForRoom.set("X-Player-Registered", guest ? "0" : "1");
         headersForRoom.set("X-Player-Skin", url.searchParams.get("skin") || "mint");
         headersForRoom.set("X-Game-Mode", mode);
+        headersForRoom.set("X-Round-Seconds", String(duration));
         return stub.fetch(new Request(request, { headers: headersForRoom }));
       }
 
@@ -131,26 +136,32 @@ export class SnakeRoom {
     this.clients = new Map();
     this.playerMeta = new Map();
     this.snakes = new Map();
-    this.botFillDone = false;
     this.mode = "multi";
     this.coins = [];
     this.shields = [];
     this.startedAt = Date.now();
     this.roundSeconds = 300;
+    this.roundEnded = false;
+    this.endRoundInProgress = false;
+    this.botFillDone = false;
+    this.botFillScheduled = false;
     this.tickNo = 0;
     this.roundId = crypto.randomUUID();
     this.lastBroadcast = 0;
     this.spawnCoins(36);
     this.timer = setInterval(() => this.tick(), 100);
-    setTimeout(() => { this.fillBots(); this.botFillDone = true; this.broadcast(); }, 4000);
   }
 
   async fetch(request) {
+    if (this.endRoundInProgress) return new Response("Round is finishing", { status: 503 });
     if (request.headers.get("Upgrade") !== "websocket") return new Response("WebSocket required", { status: 426 });
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     server.accept();
     this.mode = request.headers.get("X-Game-Mode") === "solo" ? "solo" : "multi";
+    const requestedDuration = Number(request.headers.get("X-Round-Seconds") || 300);
+    this.roundSeconds = requestedDuration === 600 ? 600 : 300;
+    if (this.roundEnded && this.clients.size === 0) this.resetRound();
     const pid = request.headers.get("X-Player-Id") || `guest-${crypto.randomUUID()}`;
     const name = (request.headers.get("X-Player-Name") || "Player").slice(0, 24);
     const registered = request.headers.get("X-Player-Registered") === "1";
@@ -168,10 +179,39 @@ export class SnakeRoom {
     this.playerMeta.set(pid, { name, registered, skin });
     server.send(JSON.stringify({ type: "welcome", playerId: pid, roundId: this.roundId, roundSeconds: this.roundSeconds }));
     this.broadcast();
+    this.scheduleBotFill();
     server.addEventListener("message", ev => this.onMessage(pid, ev.data));
     server.addEventListener("close", () => this.remove(pid));
     server.addEventListener("error", () => this.remove(pid));
     return new Response(null, { status: 101, webSocket: client });
+  }
+
+  scheduleBotFill() {
+    if (this.botFillDone || this.botFillScheduled || this.roundEnded) return;
+    this.botFillScheduled = true;
+    setTimeout(() => {
+      this.botFillScheduled = false;
+      if (this.roundEnded) return;
+      this.fillBots();
+      this.botFillDone = true;
+      this.broadcast();
+    }, 4000);
+  }
+
+  resetRound() {
+    this.snakes.clear();
+    this.clients.clear();
+    this.playerMeta.clear();
+    this.coins = [];
+    this.shields = [];
+    this.spawnCoins(36);
+    this.roundId = crypto.randomUUID();
+    this.startedAt = Date.now();
+    this.tickNo = 0;
+    this.roundEnded = false;
+    this.endRoundInProgress = false;
+    this.botFillDone = false;
+    this.botFillScheduled = false;
   }
 
   makeSnake(pid, name, registered, bot, skin = "mint") {
@@ -179,7 +219,7 @@ export class SnakeRoom {
     const palette = { mint:"#35e0a1", gold:"#f7c948", fire:"#ff623e", ice:"#49d9ff", galaxy:"#a78bfa", toxic:"#b7f34a", royal:"#f472b6", diamond:"#d7f7ff" };
     return { id: pid, name, registered, bot, alive: true, score: 0, xp: 0,
       body: [{x,z},{x:x-1,z},{x:x-2,z}], dir: {x:1,z:0}, nextDir: {x:1,z:0},
-      shieldUntil: 0, respawnAt: 0, color: bot ? ["#a78bfa","#22d3ee","#f59e0b","#34d399","#fb7185"][Math.floor(Math.random()*5)] : (palette[skin] || palette.mint), skin };
+      shieldUntil: 0, color: bot ? ["#a78bfa","#22d3ee","#f59e0b","#34d399","#fb7185"][Math.floor(Math.random()*5)] : (palette[skin] || palette.mint), skin };
   }
 
   fillBots() {
@@ -231,17 +271,12 @@ export class SnakeRoom {
   }
 
   tick() {
+    if (this.roundEnded || this.endRoundInProgress) return;
     this.tickNo++;
     const t = Date.now();
     if ((t-this.startedAt)/1000 >= this.roundSeconds) { this.endRound(); return; }
     for (const s of this.snakes.values()) {
-      if (!s.alive) {
-        if (t >= s.respawnAt) {
-          const fresh = this.makeSnake(s.id,s.name,s.registered,s.bot,s.skin);
-          Object.assign(s,fresh);
-        }
-        continue;
-      }
+      if (!s.alive) continue;
       if (s.bot) this.botThink(s);
       if (this.tickNo % 2) continue;
       s.dir = s.nextDir;
@@ -283,37 +318,44 @@ export class SnakeRoom {
     }
     for (const pid of dead) {
       const s=this.snakes.get(pid); if (!s) continue;
-      s.alive=false; s.respawnAt=t+2500;
+      s.alive=false;
       this.coins.push(...s.body.slice(0,Math.min(12,s.body.length)).map(p=>({x:p.x,z:p.z,value:1})));
       s.body=[];
     }
   }
 
   async endRound() {
-    const results=[...this.snakes.values()].sort((a,b)=>b.score-a.score).map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:s.bot}));
-    this.broadcast({type:"roundEnd",results,roundId:this.roundId});
+    if (this.roundEnded || this.endRoundInProgress) return;
+    this.endRoundInProgress = true;
+    const results=[...this.snakes.values()]
+      .sort((a,b)=>b.score-a.score)
+      .map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:s.bot}));
     const end=Date.now();
     const matchId=this.roundId;
+    this.broadcast({type:"roundEnd",results,roundId:this.roundId,durationSeconds:this.roundSeconds});
     try {
       if (this.mode !== "solo") {
-      await this.env.DB.prepare("INSERT INTO matches(id,started_at,ended_at,duration_seconds,winner_uid,created_at) VALUES(?,?,?,?,?,?)")
-        .bind(matchId,Math.floor(this.startedAt/1000),Math.floor(end/1000),300,(results[0]?.registered&&!results[0]?.bot)?results[0].id:null,Math.floor(end/1000)).run();
-      for (const r of results.filter(x=>x.registered&&!x.bot)) {
-        await this.env.DB.prepare("INSERT INTO match_results(match_id,uid,display_name,score,rank,is_bot,created_at) VALUES(?,?,?,?,?,?,?)")
-          .bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000)).run();
-        await this.env.DB.prepare("INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,virtual_points,xp,level) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(uid) DO UPDATE SET display_name=excluded.display_name,last_seen_at=excluded.last_seen_at,best_score=MAX(players.best_score,excluded.best_score),total_matches=players.total_matches+1,total_wins=players.total_wins+CASE WHEN excluded.total_wins>0 THEN 1 ELSE 0 END,virtual_points=players.virtual_points+excluded.virtual_points,xp=players.xp+excluded.xp")
-          .bind(r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),r.score,r.rank===1?1:0,r.rank===1?1:0,r.rank===1?25:r.rank===2?12:r.rank===3?6:2,r.score,1).run();
+        await this.env.DB.prepare("INSERT INTO matches(id,started_at,ended_at,duration_seconds,winner_uid,created_at) VALUES(?,?,?,?,?,?)")
+          .bind(matchId,Math.floor(this.startedAt/1000),Math.floor(end/1000),this.roundSeconds,(results[0]?.registered&&!results[0]?.bot)?results[0].id:null,Math.floor(end/1000)).run();
+        for (const r of results.filter(x=>x.registered&&!x.bot)) {
+          await this.env.DB.prepare("INSERT INTO match_results(match_id,uid,display_name,score,rank,is_bot,created_at) VALUES(?,?,?,?,?,?,?)")
+            .bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000)).run();
+          await this.env.DB.prepare("INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,virtual_points,xp,level) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(uid) DO UPDATE SET display_name=excluded.display_name,last_seen_at=excluded.last_seen_at,best_score=MAX(players.best_score,excluded.best_score),total_matches=players.total_matches+1,total_wins=players.total_wins+CASE WHEN excluded.total_wins>0 THEN 1 ELSE 0 END,virtual_points=players.virtual_points+excluded.virtual_points,xp=players.xp+excluded.xp")
+            .bind(r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),r.score,1,r.rank===1?1:0,r.rank===1?25:r.rank===2?12:r.rank===3?6:2,r.score,1).run();
+        }
       }
-      }
-    } catch {}
+    } catch (e) {
+      console.error("Failed to save round results:", e);
+    }
+    this.roundEnded = true;
+    this.endRoundInProgress = false;
+    const sockets = [...this.clients.values()];
+    this.clients.clear();
+    this.playerMeta.clear();
     this.snakes.clear();
-    for (const [pid, meta] of this.playerMeta) this.snakes.set(pid, this.makeSnake(pid, meta.name, meta.registered, false, meta.skin));
-    this.coins=[]; this.shields=[];
-    this.spawnCoins(36);
-    this.roundId=crypto.randomUUID();
-    this.startedAt=Date.now();
-    this.fillBots();
-    this.broadcast({type:"newRound",roundId:this.roundId,roundSeconds:300});
+    for (const socket of sockets) {
+      try { socket.close(1000, "Round finished"); } catch {}
+    }
   }
 
   snapshot() {
