@@ -43,12 +43,7 @@ main{max-width:1280px;margin:auto;padding:22px 4vw}.hero{display:grid;grid-templ
   <strong>تم إقصاؤك من الجولة 🐍</strong>
   <div>لن تعود الأفعى للحياة. يمكنك مشاهدة بقية المنافسة أو الخروج من الجولة.</div>
  </div>
- <div class="mobile-controls">
-  <div style="display:grid;grid-template-columns:repeat(3,56px);gap:5px">
-   <span></span><button data-dir="up">↑</button><span></span>
-   <button data-dir="left">←</button><button data-dir="down">↓</button><button data-dir="right">→</button>
-  </div>
- </div>
+ <div class="mobile-controls" aria-label="عصا التحكم"><div class="joystick-base" id="joystickBase"><div class="joystick-knob" id="joystickKnob"></div></div></div>
 </section>
 <section id="roundResults" class="card" hidden style="margin-top:18px">
   <h2 id="resultsTitle">🏆 نتائج الجولة</h2>
