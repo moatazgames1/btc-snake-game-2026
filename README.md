@@ -21,12 +21,24 @@ This is a deployable **first playable foundation**, not a finished money-transfe
 - Admin access is restricted by `ADMIN_UIDS` on the Worker. Set it before exposing the admin endpoint.
 - Firebase client config is public by design; server secrets must never be placed in the frontend.
 
-## Create the separate resources
+## Existing deployment
+
+This repository is already connected to its existing GitHub Pages, Cloudflare Worker/D1, and Firebase resources. Do not create duplicate resources when updating this project.
+
+- Live site: `https://moatazgames1.github.io/btc-snake-game-2026/`
+- Frontend: `index.html` at the repository root.
+- Backend: `backend/worker.js` deployed as the existing `btc-snake-api` Worker.
+- Database: the existing `btc-snake-db` D1 database.
+- Firebase project: the existing `btc-snake` project.
+
+Make and review changes on a feature branch first. Merge into `main` only after testing and explicit approval.
+
+## Deployment reference (existing resources)
 
 1. Create a new **public** GitHub repository named `btc-snake` under the existing GitHub account. Do not change `moatazgames1.github.io`.
 2. Upload the complete contents of this ZIP to the repository root. The root already contains `index.html`.
 3. Enable GitHub Pages for `main` / `/ (root)`. The project URL will be:
-   `https://moatazgames1.github.io/btc-snake/`
+   `https://moatazgames1.github.io/btc-snake-game-2026/`
 4. In the same Cloudflare account, create a new D1 database named `btc-snake-db`. Apply `backend/schema.sql`.
 5. Create a new Worker named `btc-snake-api`, using `backend/worker.js`, and configure:
    - D1 binding: `DB` -> `btc-snake-db`
@@ -35,7 +47,7 @@ This is a deployable **first playable foundation**, not a finished money-transfe
    - Secret: `FIREBASE_API_KEY`
    - Secret: `ADMIN_UIDS` (comma-separated Firebase UIDs)
    - Variable: `ALLOWED_ORIGIN` = `https://moatazgames1.github.io`
-   - Variable: `FRONTEND_URL` = `https://moatazgames1.github.io/btc-snake/`
+   - Variable: `FRONTEND_URL` = `https://moatazgames1.github.io/btc-snake-game-2026/`
 6. In Firebase Console (same Google account), create a new Firebase project named `btc-snake`. Enable Authentication -> Email/Password and Google. Register a Web App and copy its config into `firebase-config.js` based on `firebase-config.js.example`.
 7. Set `API_BASE` in `index.html` to the deployed Worker URL, e.g. `https://btc-snake-api.<your-subdomain>.workers.dev`.
 8. Deploy the Worker and test `/api/health`, then open the GitHub Pages URL.
@@ -53,7 +65,7 @@ GitHub project Pages sites use `https://<owner>.github.io/<repository>/`:
 ## Current game rules in this build
 
 - 5-minute rounds.
-- Top-down 3D arena.
+- Third-person 3D follow camera with 360-degree joystick steering.
 - Up to 10 snakes in one shared arena, with bots filling empty places.
 - Head touching another snake's body kills the moving snake.
 - Head-to-head collision eliminates both.
@@ -66,6 +78,6 @@ GitHub project Pages sites use `https://<owner>.github.io/<repository>/`:
 ## Admin
 
 After setting `ADMIN_UIDS`, a Firebase user whose UID is listed can open:
-`https://moatazgames1.github.io/btc-snake/?admin=1`
+`https://moatazgames1.github.io/btc-snake-game-2026/?admin=1`
 
 The initial admin summary is intentionally limited to safe operational counts. Do not expose payout or private user data in public endpoints.
