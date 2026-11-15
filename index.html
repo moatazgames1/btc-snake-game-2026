@@ -70,6 +70,7 @@ const API_BASE = "https://btc-snake-api.motazfaysel5.workers.dev";
 const FB_CONFIG_URL = "./firebase-config.js";
 let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), coinMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
 let lastMode = "multi", lastDuration = 300, roundEndedByServer = false, manualLeave = false, wasAlive = null;
+let localSolo = false, localLoop = null, localGame = null;
 const $ = id => document.getElementById(id);
 const skins = [
  {id:"mint",name:"Mint",color:"#35e0a1",unlock:"Free"},
@@ -148,8 +149,73 @@ function updateWorld(state){
  shieldMeshes.forEach(m=>scene.remove(m));shieldMeshes=[];
  for(const c of state.shields||[]){const m=makeSphere("#54e7ff",.7);m.position.set(c.x,.7,c.z);scene.add(m);shieldMeshes.push(m)}
 }
+function startLocalSolo(duration=300){
+  localSolo=true;running=true;ws=null;
+  lastMode="solo";lastDuration=duration;roundEndedByServer=false;manualLeave=false;wasAlive=null;
+  myId="local-player";
+  $("roundResults").hidden=true;$("deathPanel").hidden=true;$("myScore").textContent="0";
+  const palette={mint:"#35e0a1",gold:"#f7c948",fire:"#ff623e",ice:"#49d9ff",galaxy:"#a78bfa",toxic:"#b7f34a",royal:"#f472b6",diamond:"#d7f7ff"};
+  const makeLocalSnake=(id,name,bot,color,x,z)=>({id,name,bot,alive:true,score:0,body:[{x,z},{x:x-1,z},{x:x-2,z}],dir:{x:1,z:0},nextDir:{x:1,z:0},shieldUntil:0,color});
+  const coins=Array.from({length:36},()=>({x:4+Math.random()*92,z:4+Math.random()*92,value:1}));
+  const bots=Array.from({length:4},(_,i)=>makeLocalSnake("training-bot-"+i,"BOT-"+(i+1),true,["#a78bfa","#22d3ee","#f59e0b","#fb7185"][i],12+Math.random()*76,12+Math.random()*76));
+  localGame={startedAt:Date.now(),duration,tick:0,snakes:[makeLocalSnake(myId,"You",false,palette[selectedSkin]||palette.mint,18+Math.random()*64,18+Math.random()*64),...bots],coins,shields:[{x:15+Math.random()*70,z:15+Math.random()*70}]};
+  $("roundPill").textContent="TRAINING";
+  $("statusPill").textContent=lang==="ar"?"تدريب محلي — بدون اتصال":"LOCAL TRAINING — OFFLINE";
+  toast(lang==="ar"?"بدأ التدريب المحلي، لا يحتاج اتصالاً بالخادم":"Local training started — no server connection needed");
+  updateWorld({snakes:localGame.snakes,coins:localGame.coins,shields:localGame.shields,remaining:duration});
+  localLoop=setInterval(localSoloTick,100);
+}
+function localSoloTick(){
+  if(!localSolo||!localGame)return;
+  const g=localGame,now=Date.now(),elapsed=(now-g.startedAt)/1000;
+  const remaining=Math.max(0,g.duration-Math.floor(elapsed));
+  if(remaining<=0){finishLocalSolo();return;}
+  g.tick++;
+  if(g.tick%2===0){
+    for(const s of g.snakes){
+      if(!s.alive)continue;
+      if(s.bot&&Math.random()<0.22&&g.coins.length){
+        const target=g.coins.reduce((best,c)=>!best||Math.hypot(c.x-s.body[0].x,c.z-s.body[0].z)<Math.hypot(best.x-s.body[0].x,best.z-s.body[0].z)?c:best,null);
+        if(target){const dx=target.x-s.body[0].x,dz=target.z-s.body[0].z;const choices=Math.abs(dx)>Math.abs(dz)?[{x:Math.sign(dx)||1,z:0},{x:0,z:Math.sign(dz)||1}]:[{x:0,z:Math.sign(dz)||1},{x:Math.sign(dx)||1,z:0}];const d=choices[0];if(!(d.x===-s.dir.x&&d.z===-s.dir.z))s.nextDir=d;}
+      }
+      s.dir=s.nextDir;
+      const h=s.body[0],head={x:Math.max(0,Math.min(100,h.x+s.dir.x*.9)),z:Math.max(0,Math.min(100,h.z+s.dir.z*.9))};
+      s.body.unshift(head);s.body.pop();
+      const ci=g.coins.findIndex(c=>Math.hypot(c.x-head.x,c.z-head.z)<1.8);
+      if(ci>=0){g.coins.splice(ci,1);s.score++;s.body.push({...s.body[s.body.length-1]});if(g.coins.length<26)for(let i=0;i<12;i++)g.coins.push({x:4+Math.random()*92,z:4+Math.random()*92,value:1});}
+      const si=g.shields.findIndex(c=>Math.hypot(c.x-head.x,c.z-head.z)<2);
+      if(si>=0){g.shields.splice(si,1);s.shieldUntil=now+5000;}
+    }
+    const alive=g.snakes.filter(s=>s.alive),dead=new Set();
+    for(const a of alive){
+      const h=a.body[0];
+      if((h.x<=.5||h.x>=99.5||h.z<=.5||h.z>=99.5)&&a.shieldUntil<now)dead.add(a.id);
+      for(const b of alive){
+        if(a.id===b.id)continue;
+        const bh=b.body[0];
+        if(Math.hypot(h.x-bh.x,h.z-bh.z)<1.1&&a.shieldUntil<now)dead.add(a.id);
+        for(let k=1;k<b.body.length;k++){const p=b.body[k];if(Math.hypot(h.x-p.x,h.z-p.z)<.85&&a.shieldUntil<now){dead.add(a.id);break;}}
+      }
+      for(let k=3;k<a.body.length;k++){const p=a.body[k];if(Math.hypot(h.x-p.x,h.z-p.z)<.8&&a.shieldUntil<now){dead.add(a.id);break;}}
+    }
+    for(const id of dead){const snake=g.snakes.find(s=>s.id===id);if(snake){snake.alive=false;snake.body=[];}}
+  }
+  updateWorld({snakes:g.snakes,coins:g.coins,shields:g.shields,remaining});
+}
+function finishLocalSolo(){
+  if(!localGame)return;
+  clearInterval(localLoop);localLoop=null;localSolo=false;running=false;
+  const results=[...localGame.snakes].sort((a,b)=>b.score-a.score).map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,bot:s.bot}));
+  showResults(results,localGame.duration);
+  $("playAgainBtn").disabled=false;
+  $("statusPill").textContent=lang==="ar"?"انتهى التدريب المحلي":"LOCAL TRAINING FINISHED";
+  localGame=null;
+}
 function connect(mode="multi",duration=300){
-  if(ws)ws.close();
+  if(ws){ws.onclose=null;ws.onerror=null;ws.close();ws=null;}
+  if(localLoop){clearInterval(localLoop);localLoop=null;}
+  if(mode==="solo"){startLocalSolo(duration);return;}
+  localSolo=false;localGame=null;
   lastMode=mode;lastDuration=duration;roundEndedByServer=false;manualLeave=false;wasAlive=null;myId=null;
   $("roundResults").hidden=true;$("deathPanel").hidden=true;$("myScore").textContent="0";
   const openSocket=async()=>{
@@ -187,10 +253,10 @@ function connect(mode="multi",duration=300){
  $("play10Btn").onclick=()=>{if(!renderer)init3D();if(!running)connect("multi",600)};
  $("soloBtn").onclick=()=>{if(!renderer)init3D();if(!running)connect("solo",300)};
  $("playAgainBtn").onclick=()=>{if(!renderer)init3D();if(!running)connect(lastMode,lastDuration)};
- $("leaveBtn").onclick=()=>{manualLeave=true;ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA"};
+ $("leaveBtn").onclick=()=>{manualLeave=true;if(localLoop){clearInterval(localLoop);localLoop=null;}localSolo=false;localGame=null;ws?.close();ws=null;running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA"};
 $("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
 const dirs={up:{x:0,z:-1},down:{x:0,z:1},left:{x:-1,z:0},right:{x:1,z:0}};
-function turn(d){if(ws?.readyState===1)ws.send(JSON.stringify({type:"turn",dir:dirs[d]}))}
+function turn(d){if(localSolo&&localGame){const s=localGame.snakes.find(x=>x.id===myId);if(s&&s.alive){const next=dirs[d];if(!(next.x===-s.dir.x&&next.z===-s.dir.z))s.nextDir=next;}return;}if(ws?.readyState===1)ws.send(JSON.stringify({type:"turn",dir:dirs[d]}))}
 document.querySelectorAll("[data-dir]").forEach(b=>b.addEventListener("click",()=>turn(b.dataset.dir)));
 window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowup","w"].includes(k))turn("up");if(["arrowdown","s"].includes(k))turn("down");if(["arrowleft","a"].includes(k))turn("left");if(["arrowright","d"].includes(k))turn("right")});
 let touchStart=null;rendererTouchSetup();
