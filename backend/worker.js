@@ -203,7 +203,7 @@ export class SnakeRoom {
     this.botFillScheduled = true;
     setTimeout(() => {
       this.botFillScheduled = false;
-      if (this.roundEnded) return;
+      if (this.roundEnded || this.botFillDone || this.clients.size === 0) return;
       this.fillBots();
       this.botFillDone = true;
       this.broadcast();
@@ -346,6 +346,7 @@ export class SnakeRoom {
   async endRound() {
     if (this.roundEnded || this.endRoundInProgress) return;
     this.endRoundInProgress = true;
+    this.stopTimer();
     const results=[...this.snakes.values()]
       .sort((a,b)=>b.score-a.score)
       .map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:s.bot}));
@@ -368,7 +369,6 @@ export class SnakeRoom {
     }
     this.roundEnded = true;
     this.endRoundInProgress = false;
-    this.stopTimer();
     const sockets = [...this.clients.values()];
     this.clients.clear();
     this.playerMeta.clear();
