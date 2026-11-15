@@ -148,8 +148,8 @@ export class SnakeRoom {
     this.tickNo = 0;
     this.roundId = crypto.randomUUID();
     this.lastBroadcast = 0;
+    this.timer = null;
     this.spawnCoins(36);
-    this.timer = setInterval(() => this.tick(), 100);
   }
 
   async fetch(request) {
@@ -177,6 +177,7 @@ export class SnakeRoom {
     this.snakes.set(pid, snake);
     this.clients.set(pid, server);
     this.playerMeta.set(pid, { name, registered, skin });
+    this.startTimer();
     server.send(JSON.stringify({ type: "welcome", playerId: pid, roundId: this.roundId, roundSeconds: this.roundSeconds }));
     this.broadcast();
     this.scheduleBotFill();
@@ -184,6 +185,17 @@ export class SnakeRoom {
     server.addEventListener("close", () => this.remove(pid));
     server.addEventListener("error", () => this.remove(pid));
     return new Response(null, { status: 101, webSocket: client });
+  }
+
+  startTimer() {
+    if (this.timer || this.roundEnded || this.clients.size === 0) return;
+    this.timer = setInterval(() => this.tick(), 100);
+  }
+
+  stopTimer() {
+    if (!this.timer) return;
+    clearInterval(this.timer);
+    this.timer = null;
   }
 
   scheduleBotFill() {
@@ -199,6 +211,7 @@ export class SnakeRoom {
   }
 
   resetRound() {
+    this.stopTimer();
     this.snakes.clear();
     this.clients.clear();
     this.playerMeta.clear();
@@ -238,7 +251,13 @@ export class SnakeRoom {
     this.snakes.delete(pid);
     const wasReal = this.playerMeta.has(pid);
     this.playerMeta.delete(pid);
-    if (wasReal && this.botFillDone) this.fillBots();
+    if (wasReal && this.botFillDone && this.clients.size > 0) this.fillBots();
+
+    if (this.clients.size === 0) {
+      this.stopTimer();
+      if (!this.roundEnded && !this.endRoundInProgress) this.resetRound();
+      return;
+    }
     this.broadcast();
   }
 
@@ -349,6 +368,7 @@ export class SnakeRoom {
     }
     this.roundEnded = true;
     this.endRoundInProgress = false;
+    this.stopTimer();
     const sockets = [...this.clients.values()];
     this.clients.clear();
     this.playerMeta.clear();
