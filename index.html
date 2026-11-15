@@ -176,7 +176,7 @@ function connect(mode="multi",duration=300){
     if(manualLeave){connecting=false;return}
    }
    const url=API_BASE.replace(/^http/,"ws")+"/ws?mode="+mode+"&duration="+duration+"&skin="+encodeURIComponent(selectedSkin)+(ticket?"&ticket="+encodeURIComponent(ticket):"");
-   ws=new WebSocket(url);
+   try{ws=new WebSocket(url)}catch(e){connecting=false;endFullscreenGame();toast("Could not open the game connection.");return}
    ws.onopen=()=>{connecting=false;running=true;$("statusPill").textContent=lang==="ar"?"متصل بالساحة":"CONNECTED";toast(lang==="ar"?"تم الاتصال بالساحة":"Connected to arena")};
    ws.onmessage=e=>{
     let d;try{d=JSON.parse(e.data)}catch{return}
