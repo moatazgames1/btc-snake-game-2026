@@ -348,27 +348,35 @@ export class SnakeRoom {
       .map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:s.bot}));
     const end=Date.now();
     const matchId=this.roundId;
-    try {
-      if (competitive) {
+    let matchRowSaved = !competitive;
+    if (competitive) {
+      try {
         await this.env.DB.prepare("INSERT INTO matches(id,started_at,ended_at,duration_seconds,winner_uid,created_at) VALUES(?,?,?,?,?,?)")
           .bind(matchId,Math.floor(this.startedAt/1000),Math.floor(end/1000),this.roundSeconds,(results[0]?.registered&&!results[0]?.bot)?results[0].id:null,Math.floor(end/1000)).run();
+        matchRowSaved = true;
+      } catch (e) {
+        console.error("Failed to save match header:", e);
       }
-      for (const r of results.filter(x=>x.registered&&!x.bot)) {
+    }
+    for (const r of results.filter(x=>x.registered&&!x.bot)) {
+      try {
         const rankBonus = competitive ? (r.rank===1?25:r.rank===2?12:r.rank===3?6:2) : 0;
         const earned = r.score + rankBonus;
-        if (competitive) {
-          await this.env.DB.prepare("INSERT INTO match_results(match_id,uid,display_name,score,rank,is_bot,created_at) VALUES(?,?,?,?,?,?,?)")
-            .bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000)).run();
+        const statements = [];
+        if (competitive && matchRowSaved) {
+          statements.push(this.env.DB.prepare("INSERT INTO match_results(match_id,uid,display_name,score,rank,is_bot,created_at) VALUES(?,?,?,?,?,?,?)")
+            .bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000)));
         }
-        await this.env.DB.prepare("INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,virtual_points,xp,level) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(uid) DO UPDATE SET display_name=excluded.display_name,last_seen_at=excluded.last_seen_at,best_score=MAX(players.best_score,excluded.best_score),total_matches=players.total_matches+excluded.total_matches,total_wins=players.total_wins+excluded.total_wins,virtual_points=players.virtual_points+excluded.virtual_points,xp=players.xp+excluded.xp")
-          .bind(r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),competitive?r.score:0,competitive?1:0,competitive&&r.rank===1?1:0,earned,competitive?r.score:0,1).run();
+        statements.push(this.env.DB.prepare("INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,virtual_points,xp,level) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(uid) DO UPDATE SET display_name=excluded.display_name,last_seen_at=excluded.last_seen_at,best_score=MAX(players.best_score,excluded.best_score),total_matches=players.total_matches+excluded.total_matches,total_wins=players.total_wins+excluded.total_wins,virtual_points=players.virtual_points+excluded.virtual_points,xp=players.xp+excluded.xp")
+          .bind(r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),competitive?r.score:0,competitive?1:0,competitive&&r.rank===1?1:0,earned,competitive?r.score:0,1));
         if (earned > 0) {
-          await this.env.DB.prepare("INSERT INTO wallet_ledger(id,uid,entry_type,amount,balance_after,reference_id,note,created_at) SELECT ?,uid,'match_reward',?,virtual_points,?,?,? FROM players WHERE uid=?")
-            .bind(id(),r.id,earned,matchId,"Round coins " + r.score + " + placement bonus " + rankBonus,Math.floor(end/1000),r.id).run();
+          statements.push(this.env.DB.prepare("INSERT INTO wallet_ledger(id,uid,entry_type,amount,balance_after,reference_id,note,created_at) SELECT ?,uid,'match_reward',?,virtual_points,?,?,? FROM players WHERE uid=?")
+            .bind(id(),r.id,earned,matchId,"Round coins " + r.score + " + placement bonus " + rankBonus,Math.floor(end/1000),r.id));
         }
+        await this.env.DB.batch(statements);
+      } catch (e) {
+        console.error("Failed to save player round result:", r.id, e);
       }
-    } catch (e) {
-      console.error("Failed to save round results:", e);
     }
     this.roundEnded = true;
     this.endRoundInProgress = false;
