@@ -218,7 +218,7 @@ export class SnakeRoom {
     const x = 10 + Math.random() * 80, z = 10 + Math.random() * 80;
     const palette = { mint:"#35e0a1", gold:"#f7c948", fire:"#ff623e", ice:"#49d9ff", galaxy:"#a78bfa", toxic:"#b7f34a", royal:"#f472b6", diamond:"#d7f7ff" };
     return { id: pid, name, registered, bot, alive: true, score: 0, xp: 0,
-      body: [{x,z},{x:x-1,z},{x:x-2,z}], dir: {x:1,z:0}, nextDir: {x:1,z:0},
+      body: [{x,z},{x:x-1,z},{x:x-2,z}], dir: {x:1,z:0}, desiredDir: {x:1,z:0}, heading: 0,
       shieldUntil: 0, color: bot ? ["#a78bfa","#22d3ee","#f59e0b","#34d399","#fb7185"][Math.floor(Math.random()*5)] : (palette[skin] || palette.mint), skin };
   }
 
@@ -247,10 +247,16 @@ export class SnakeRoom {
     try { data = JSON.parse(raw); } catch { return; }
     const s = this.snakes.get(pid);
     if (!s || !s.alive) return;
-    if (data.type === "turn" && data.dir && Number.isInteger(data.dir.x) && Number.isInteger(data.dir.z)) {
-      const d = { x: Math.max(-1, Math.min(1, data.dir.x)), z: Math.max(-1, Math.min(1, data.dir.z)) };
-      if (Math.abs(d.x) + Math.abs(d.z) === 1 && !(d.x === -s.dir.x && d.z === -s.dir.z)) s.nextDir = d;
+    let direction = null;
+    if (data.type === "steer" && Number.isFinite(data.x) && Number.isFinite(data.z)) {
+      direction = { x: data.x, z: data.z };
+    } else if (data.type === "turn" && data.dir && Number.isFinite(data.dir.x) && Number.isFinite(data.dir.z)) {
+      direction = { x: data.dir.x, z: data.dir.z };
     }
+    if (!direction) return;
+    const length = Math.hypot(direction.x, direction.z);
+    if (length < 0.15) return;
+    s.desiredDir = { x: direction.x / length, z: direction.z / length };
   }
 
   spawnCoins(n) {
@@ -259,13 +265,14 @@ export class SnakeRoom {
   }
 
   botThink(s) {
-    if (Math.random() < 0.08) {
-      const coin = this.coins.reduce((best,c) => !best || Math.hypot(c.x-s.body[0].x,c.z-s.body[0].z) < Math.hypot(best.x-s.body[0].x,best.z-s.body[0].z) ? c : best, null);
+    if (Math.random() < 0.08 && this.coins.length) {
+      const head = s.body[0];
+      const coin = this.coins.reduce((best, c) =>
+        !best || Math.hypot(c.x-head.x,c.z-head.z) < Math.hypot(best.x-head.x,best.z-head.z) ? c : best, null);
       if (coin) {
-        const dx = coin.x-s.body[0].x, dz = coin.z-s.body[0].z;
-        const choices = Math.abs(dx)>Math.abs(dz) ? [{x:Math.sign(dx)||1,z:0},{x:0,z:Math.sign(dz)||1}] : [{x:0,z:Math.sign(dz)||1},{x:Math.sign(dx)||1,z:0}];
-        const d = choices[Math.floor(Math.random()*choices.length)];
-        if (!(d.x === -s.dir.x && d.z === -s.dir.z)) s.nextDir = d;
+        const dx = coin.x-head.x, dz = coin.z-head.z;
+        const length = Math.hypot(dx,dz) || 1;
+        s.desiredDir = { x: dx/length, z: dz/length };
       }
     }
   }
@@ -279,7 +286,15 @@ export class SnakeRoom {
       if (!s.alive) continue;
       if (s.bot) this.botThink(s);
       if (this.tickNo % 2) continue;
-      s.dir = s.nextDir;
+      const currentAngle = Math.atan2(s.dir.z, s.dir.x);
+      const targetAngle = Math.atan2(s.desiredDir.z, s.desiredDir.x);
+      let angleDelta = targetAngle - currentAngle;
+      while (angleDelta > Math.PI) angleDelta -= Math.PI * 2;
+      while (angleDelta < -Math.PI) angleDelta += Math.PI * 2;
+      const turnStep = Math.max(-0.22, Math.min(0.22, angleDelta));
+      const heading = currentAngle + turnStep;
+      s.dir = { x: Math.cos(heading), z: Math.sin(heading) };
+      s.heading = heading;
       const h = s.body[0];
       const nh = {x: Math.max(0,Math.min(100,h.x+s.dir.x*0.9)), z: Math.max(0,Math.min(100,h.z+s.dir.z*0.9))};
       s.body.unshift(nh); s.body.pop();
@@ -327,21 +342,29 @@ export class SnakeRoom {
   async endRound() {
     if (this.roundEnded || this.endRoundInProgress) return;
     this.endRoundInProgress = true;
+    const competitive = this.mode !== "solo";
     const results=[...this.snakes.values()]
       .sort((a,b)=>b.score-a.score)
       .map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:s.bot}));
     const end=Date.now();
     const matchId=this.roundId;
-    this.broadcast({type:"roundEnd",results,roundId:this.roundId,durationSeconds:this.roundSeconds});
     try {
-      if (this.mode !== "solo") {
+      if (competitive) {
         await this.env.DB.prepare("INSERT INTO matches(id,started_at,ended_at,duration_seconds,winner_uid,created_at) VALUES(?,?,?,?,?,?)")
           .bind(matchId,Math.floor(this.startedAt/1000),Math.floor(end/1000),this.roundSeconds,(results[0]?.registered&&!results[0]?.bot)?results[0].id:null,Math.floor(end/1000)).run();
-        for (const r of results.filter(x=>x.registered&&!x.bot)) {
+      }
+      for (const r of results.filter(x=>x.registered&&!x.bot)) {
+        const rankBonus = competitive ? (r.rank===1?25:r.rank===2?12:r.rank===3?6:2) : 0;
+        const earned = r.score + rankBonus;
+        if (competitive) {
           await this.env.DB.prepare("INSERT INTO match_results(match_id,uid,display_name,score,rank,is_bot,created_at) VALUES(?,?,?,?,?,?,?)")
             .bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000)).run();
-          await this.env.DB.prepare("INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,virtual_points,xp,level) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(uid) DO UPDATE SET display_name=excluded.display_name,last_seen_at=excluded.last_seen_at,best_score=MAX(players.best_score,excluded.best_score),total_matches=players.total_matches+1,total_wins=players.total_wins+CASE WHEN excluded.total_wins>0 THEN 1 ELSE 0 END,virtual_points=players.virtual_points+excluded.virtual_points,xp=players.xp+excluded.xp")
-            .bind(r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),r.score,1,r.rank===1?1:0,r.rank===1?25:r.rank===2?12:r.rank===3?6:2,r.score,1).run();
+        }
+        await this.env.DB.prepare("INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,virtual_points,xp,level) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(uid) DO UPDATE SET display_name=excluded.display_name,last_seen_at=excluded.last_seen_at,best_score=MAX(players.best_score,excluded.best_score),total_matches=players.total_matches+excluded.total_matches,total_wins=players.total_wins+excluded.total_wins,virtual_points=players.virtual_points+excluded.virtual_points,xp=players.xp+excluded.xp")
+          .bind(r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),competitive?r.score:0,competitive?1:0,competitive&&r.rank===1?1:0,earned,competitive?r.score:0,1).run();
+        if (earned > 0) {
+          await this.env.DB.prepare("INSERT INTO wallet_ledger(id,uid,entry_type,amount,balance_after,reference_id,note,created_at) SELECT ?,uid,'match_reward',?,virtual_points,?,?,? FROM players WHERE uid=?")
+            .bind(id(),r.id,earned,matchId,"Round coins " + r.score + " + placement bonus " + rankBonus,Math.floor(end/1000),r.id).run();
         }
       }
     } catch (e) {
@@ -349,6 +372,7 @@ export class SnakeRoom {
     }
     this.roundEnded = true;
     this.endRoundInProgress = false;
+    this.broadcast({type:"roundEnd",results,roundId:this.roundId,durationSeconds:this.roundSeconds});
     const sockets = [...this.clients.values()];
     this.clients.clear();
     this.playerMeta.clear();
@@ -360,7 +384,7 @@ export class SnakeRoom {
 
   snapshot() {
     return { type:"state", roundId:this.roundId, remaining:Math.max(0,this.roundSeconds-Math.floor((Date.now()-this.startedAt)/1000)),
-      snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,alive:s.alive,score:s.score,body:s.body,color:s.color,shield:s.shieldUntil>Date.now()})),
+      snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,alive:s.alive,score:s.score,body:s.body,color:s.color,heading:s.heading,shield:s.shieldUntil>Date.now()})),
       coins:this.coins,shields:this.shields };
   }
   broadcast(extra=null) {
