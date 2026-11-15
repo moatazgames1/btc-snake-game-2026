@@ -179,6 +179,10 @@ function setCameraMode(){
  $("cameraBtn").textContent=labels[cameraMode];
 }
 $("cameraBtn").onclick=setCameraMode;
+function enterGameScreen(){gameScreenActive=true;document.body.classList.add("game-screen");const root=document.documentElement;if(root.requestFullscreen){const p=root.requestFullscreen();if(p&&p.catch)p.catch(()=>{});}else if(root.webkitRequestFullscreen){try{root.webkitRequestFullscreen()}catch{}}}
+function exitGameScreen(){gameScreenActive=false;document.body.classList.remove("game-screen");if(document.fullscreenElement&&document.exitFullscreen){document.exitFullscreen().catch(()=>{});}else if(document.webkitFullscreenElement&&document.webkitExitFullscreen){document.webkitExitFullscreen();}}
+$("exitScreenBtn").onclick=exitGameScreen;
+document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&gameScreenActive){gameScreenActive=false;document.body.classList.remove("game-screen");}});
 function makeMat(color,emissiveIntensity=.22,metalness=.22,roughness=.34){
  return new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity,metalness,roughness});
 }
@@ -334,7 +338,7 @@ function connect(mode="multi",duration=300){
   openSocket();
  }
  function showResults(results,duration){
-  roundEndedByServer=true;$("deathPanel").hidden=true;$("roundResults").hidden=false;$("playAgainBtn").disabled=true;
+  exitGameScreen();roundEndedByServer=true;$("deathPanel").hidden=true;$("roundResults").hidden=false;$("playAgainBtn").disabled=true;
   $("resultsTitle").textContent=lang==="ar"?"🏆 نتائج الجولة":"🏆 Round results";
   $("resultsSummary").textContent=lang==="ar"?`انتهت جولة ${duration/60} دقائق.`:`${duration/60}-minute round finished.`;
   $("resultsList").innerHTML=results.map(r=>`<div class="row"><b>#${r.rank} ${escapeHtml(r.name)}${r.bot?" · BOT":""}</b><span>${r.score} 🪙</span></div>`).join("")||'<div class="row muted">No results.</div>';
@@ -343,18 +347,23 @@ function connect(mode="multi",duration=300){
   if(mine)$("resultsSummary").textContent+=lang==="ar"?` مركزك ${mine.rank} — نقاطك ${mine.score}.`:` Your rank: ${mine.rank} — score: ${mine.score}.`;
   $("playAgainBtn").textContent=lang==="ar"?"العب جولة جديدة":"Play another round";
  }
- $("playBtn").onclick=()=>{if(!renderer)init3D();if(!running)connect("multi",300)};
- $("play10Btn").onclick=()=>{if(!renderer)init3D();if(!running)connect("multi",600)};
- $("soloBtn").onclick=()=>{if(!renderer)init3D();if(!running)connect("solo",300)};
- $("playAgainBtn").onclick=()=>{if(!renderer)init3D();if(!running)connect(lastMode,lastDuration)};
- $("leaveBtn").onclick=()=>{manualLeave=true;if(localLoop){clearInterval(localLoop);localLoop=null;}localSolo=false;localGame=null;ws?.close();ws=null;running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA"};
+ $("playBtn").onclick=()=>{if(!renderer)init3D();if(!running){enterGameScreen();connect("multi",300)}};
+ $("play10Btn").onclick=()=>{if(!renderer)init3D();if(!running){enterGameScreen();connect("multi",600)}};
+ $("soloBtn").onclick=()=>{if(!renderer)init3D();if(!running){enterGameScreen();connect("solo",300)}};
+ $("playAgainBtn").onclick=()=>{if(!renderer)init3D();if(!running){enterGameScreen();connect(lastMode,lastDuration)}};
+ $("leaveBtn").onclick=()=>{exitGameScreen();manualLeave=true;if(localLoop){clearInterval(localLoop);localLoop=null;}localSolo=false;localGame=null;ws?.close();ws=null;running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA"};
 $("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
 const dirs={up:{x:0,z:-1},down:{x:0,z:1},left:{x:-1,z:0},right:{x:1,z:0}};
 function turn(d){if(localSolo&&localGame){const s=localGame.snakes.find(x=>x.id===myId);if(s&&s.alive){const next=dirs[d];if(!(next.x===-s.dir.x&&next.z===-s.dir.z))s.nextDir=next;}return;}if(ws?.readyState===1)ws.send(JSON.stringify({type:"turn",dir:dirs[d]}))}
-document.querySelectorAll("[data-dir]").forEach(b=>b.addEventListener("click",()=>turn(b.dataset.dir)));
+function initJoystick(){
+ const base=$("joystickBase"),knob=$("joystickKnob");if(!base||!knob)return;let activePointer=null;
+ const reset=()=>{activePointer=null;knob.style.transform="translate(-50%,-50%)";};
+ function move(e){if(activePointer!==e.pointerId)return;const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const max=r.width*.34,len=Math.hypot(dx,dy)||1;if(len>max){dx=dx/len*max;dy=dy/len*max;}knob.style.transform="translate(calc(-50% + "+dx+"px),calc(-50% + "+dy+"px))";if(Math.hypot(dx,dy)>max*.28){const dir=Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up");turn(dir);}}
+ base.addEventListener("pointerdown",e=>{activePointer=e.pointerId;base.setPointerCapture(e.pointerId);move(e);});base.addEventListener("pointermove",move);base.addEventListener("pointerup",e=>{if(activePointer===e.pointerId)reset();});base.addEventListener("pointercancel",reset);base.addEventListener("lostpointercapture",reset);
+}
+initJoystick();
 window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowup","w"].includes(k))turn("up");if(["arrowdown","s"].includes(k))turn("down");if(["arrowleft","a"].includes(k))turn("left");if(["arrowright","d"].includes(k))turn("right")});
-let touchStart=null;rendererTouchSetup();
-function rendererTouchSetup(){const el=$("arena");el.addEventListener("touchstart",e=>{const t=e.touches[0];touchStart={x:t.clientX,y:t.clientY}},{passive:true});el.addEventListener("touchend",e=>{if(!touchStart)return;const t=e.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y;if(Math.max(Math.abs(dx),Math.abs(dy))>24)turn(Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up"));touchStart=null},{passive:true})}
+
 function drawSkins(){
  $("skins").innerHTML="";for(const s of skins){const d=document.createElement("button");d.className="skin";d.innerHTML=`<i style="background:${s.color};color:${s.color}"></i><b>${s.name}</b><small class="muted" style="display:block">${s.unlock}</small>`;d.onclick=()=>{selectedSkin=s.id;toast(`${s.name} selected (cosmetic preview)`)};$("skins").appendChild(d)}
 }
