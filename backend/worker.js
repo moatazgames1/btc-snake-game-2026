@@ -1,10 +1,16 @@
-const cors = (origin, env) => ({
-  "Access-Control-Allow-Origin": origin === env.ALLOWED_ORIGIN ? origin : env.ALLOWED_ORIGIN,
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-  "Access-Control-Allow-Headers": "Authorization,Content-Type",
-  "Access-Control-Max-Age": "86400",
-  "Vary": "Origin"
-});
+const allowedOrigins = env => (env.ALLOWED_ORIGIN || "")
+  .split(",").map(value => value.trim()).filter(Boolean);
+const cors = (origin, env) => {
+  const allowed = allowedOrigins(env);
+  const allowedOrigin = allowed.includes(origin) ? origin : (allowed[0] || "null");
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Authorization,Content-Type",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin"
+  };
+};
 const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", ...headers } });
 const now = () => Math.floor(Date.now() / 1000);
@@ -106,7 +112,7 @@ export default {
         const mode = url.searchParams.get("mode") === "solo" ? "solo" : "multi";
         const requestedDuration = Number(url.searchParams.get("duration") || 300);
         const duration = requestedDuration === 600 ? 600 : 300;
-        if (origin && origin !== env.ALLOWED_ORIGIN) return json({ ok: false, error: "origin_not_allowed" }, 403, headers);
+        if (origin && !allowedOrigins(env).includes(origin)) return json({ ok: false, error: "origin_not_allowed" }, 403, headers);
         const roomId = mode === "solo"
           ? `solo-${user?.uid || crypto.randomUUID()}-${duration}`
           : `public-${duration}`;
