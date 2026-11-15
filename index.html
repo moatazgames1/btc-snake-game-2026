@@ -66,7 +66,7 @@ const API_BASE = "https://btc-snake-api.motazfaysel5.workers.dev";
 const FB_CONFIG_URL = "./firebase-config.js";
 let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), coinMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
 let lastMode = "multi", lastDuration = 300, roundEndedByServer = false, manualLeave = false, wasAlive = null;
-let localSolo = false, localLoop = null, localGame = null;
+let localSolo = false, localLoop = null, localGame = null, gameScreenActive = false;
 let cameraMode = 0, cameraYaw = 0, cameraTarget = new THREE.Vector3(50,0,50), cameraForward = new THREE.Vector3(1,0,0), cameraReady = false, pointerX = null;
 const $ = id => document.getElementById(id);
 const skins = [
