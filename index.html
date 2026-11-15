@@ -134,18 +134,18 @@ function init3D(){
  canvas.addEventListener("pointerup",()=>{pointerX=null;});
  canvas.addEventListener("pointercancel",()=>{pointerX=null;});
  canvas.addEventListener("pointermove",e=>{if(pointerX===null||!running)return;const dx=e.clientX-pointerX;pointerX=e.clientX;cameraYaw-=dx*.008;});
- canvas.addEventListener("touchstart",e=>{if(e.touches.length===1)pointerX=e.touches[0].clientX;},{passive:true});
- canvas.addEventListener("touchmove",e=>{if(pointerX===null||e.touches.length!==1||!running)return;const dx=e.touches[0].clientX-pointerX;pointerX=e.touches[0].clientX;cameraYaw-=dx*.008;},{passive:true});
- canvas.addEventListener("touchend",()=>{pointerX=null;},{passive:true});
+
 }
 function updateFollowCamera(){
  const head=cameraTarget, forward=cameraForward;
  if(cameraMode===2){
+  camera.up.set(0,0,-1);
   const desired=new THREE.Vector3(head.x,head.y+92,head.z+.01);
   camera.position.lerp(desired,.075);
   camera.lookAt(head.x,0,head.z);
   return;
  }
+ camera.up.set(0,1,0);
  const distance=cameraMode===0?10:20;
  const height=cameraMode===0?7:12;
  const baseX=-forward.x,baseZ=-forward.z;
