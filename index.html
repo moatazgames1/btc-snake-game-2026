@@ -72,7 +72,7 @@ main{max-width:1280px;margin:auto;padding:22px 4vw}.hero{display:grid;grid-templ
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
 const API_BASE = "https://btc-snake-api.motazfaysel5.workers.dev";
 const FB_CONFIG_URL = "./firebase-config.js";
-let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), coinMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
+let firebase = null, auth = null, currentUser = null, ws = null, running = false, connecting = false, myId = null, scene, camera, renderer, meshes = new Map(), coinMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
 let lastMode = "multi", lastDuration = 300, roundEndedByServer = false, manualLeave = false, wasAlive = null;
 let joystickPointer=null;
 const $ = id => document.getElementById(id);
@@ -88,7 +88,7 @@ const skins = [
 ];
 const text = {
  ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 5 دقائق",play10:"منافسة جماعية · 10 دقائق",solo:"تدريب فردي · 5 دقائق",how:"طريقة اللعب",rules:"الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN"},
- en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 5 min",play10:"Live multiplayer · 10 min",solo:"Solo practice · 5 min",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head = both eliminated. Shields protect temporarily.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي"}
+ en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A third-person 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 5 min",play10:"Live multiplayer · 10 min",solo:"Solo practice · 5 min",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head = both eliminated. Shields protect temporarily.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي"}
 };
 let lang="ar";
 function toast(s){$("toast").textContent=s;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2600)}
@@ -172,19 +172,20 @@ function connect(mode="multi",duration=300){
    let ticket="";
    if(currentUser){
     try{const issued=await api("/api/ws-ticket","POST",{});ticket=issued.ticket||""}
-    catch{toast("Could not authorize your account for the arena.");return}
+    catch{connecting=false;endFullscreenGame();toast("Could not authorize your account for the arena.");return}
+    if(manualLeave){connecting=false;return}
    }
    const url=API_BASE.replace(/^http/,"ws")+"/ws?mode="+mode+"&duration="+duration+"&skin="+encodeURIComponent(selectedSkin)+(ticket?"&ticket="+encodeURIComponent(ticket):"");
    ws=new WebSocket(url);
-   ws.onopen=()=>{running=true;$("statusPill").textContent=lang==="ar"?"متصل بالساحة":"CONNECTED";toast(lang==="ar"?"تم الاتصال بالساحة":"Connected to arena")};
+   ws.onopen=()=>{connecting=false;running=true;$("statusPill").textContent=lang==="ar"?"متصل بالساحة":"CONNECTED";toast(lang==="ar"?"تم الاتصال بالساحة":"Connected to arena")};
    ws.onmessage=e=>{
     let d;try{d=JSON.parse(e.data)}catch{return}
     if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6);$("timeCount").textContent=duration===600?"10:00":"05:00"}
     else if(d.type==="state")updateWorld(d);
-    else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration);refreshPlayerProfile();}
+    else if(d.type==="roundEnd"){roundEndedByServer=true;connecting=false;endFullscreenGame();showResults(d.results||[],d.durationSeconds||duration);refreshPlayerProfile();}
     else if(d.type==="full")toast(lang==="ar"?"الساحة ممتلئة، حاول لاحقاً":"Arena is full. Try again soon.");
    };
-   ws.onclose=()=>{running=false;if(roundEndedByServer)$("playAgainBtn").disabled=false;if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=lang==="ar"?"غير متصل":"DISCONNECTED"};
+   ws.onclose=()=>{connecting=false;running=false;if(roundEndedByServer)$("playAgainBtn").disabled=false;if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=lang==="ar"?"غير متصل":"DISCONNECTED"};
    ws.onerror=()=>toast("Connection error. Check API deployment.");
   };
   openSocket();
@@ -200,7 +201,9 @@ function connect(mode="multi",duration=300){
   $("playAgainBtn").textContent=lang==="ar"?"العب جولة جديدة":"Play another round";
  }
  async function startGame(mode,duration){
-  if(!renderer)init3D();if(running)return;
+  if(running||connecting)return;
+  if(!renderer)init3D();
+  connecting=true;
   document.querySelector(".arena-wrap").classList.add("game-active");$("joystick").classList.add("active");
   if(document.documentElement.requestFullscreen){try{await document.documentElement.requestFullscreen()}catch{}}
   if(screen.orientation?.lock){try{await screen.orientation.lock("landscape")}catch{}}
@@ -215,7 +218,7 @@ function connect(mode="multi",duration=300){
  $("play10Btn").onclick=()=>startGame("multi",600);
  $("soloBtn").onclick=()=>startGame("solo",300);
  $("playAgainBtn").onclick=()=>startGame(lastMode,lastDuration);
- $("leaveBtn").onclick=()=>{manualLeave=true;ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA";endFullscreenGame()};
+ $("leaveBtn").onclick=()=>{manualLeave=true;connecting=false;ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA";endFullscreenGame()};
 $("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
 function sendSteer(x,z){if(ws?.readyState===1)ws.send(JSON.stringify({type:"steer",x,z}))}
 const joy=$("joystick");
@@ -223,7 +226,13 @@ function moveJoy(e){
  const r=joy.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),max=r.width*.36,len=Math.hypot(dx,dy),scale=len>max?max/(len||1):1;
  const x=dx*scale/max,z=dy*scale/max;
  $("joystick-base").style.transform="translate("+x*36+"px,"+z*36+"px)";
- if(Math.hypot(x,z)>.12)sendSteer(x,z);
+ if(Math.hypot(x,z)>.12){
+  const mine=lastState?.snakes?.find(s=>s.id===myId);
+  const heading=Number.isFinite(mine?.heading)?mine.heading:0;
+  const worldX=x*Math.sin(heading)-z*Math.cos(heading);
+  const worldZ=-x*Math.cos(heading)-z*Math.sin(heading);
+  sendSteer(worldX,worldZ);
+ }
 }
 joy.addEventListener("pointerdown",e=>{e.preventDefault();joystickPointer=e.pointerId;joy.setPointerCapture(e.pointerId);moveJoy(e)});
 joy.addEventListener("pointermove",e=>{if(e.pointerId===joystickPointer)moveJoy(e)});
