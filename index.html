@@ -102,7 +102,7 @@ async function loadFirebase(){
   const authMod=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js");
   const app=appMod.initializeApp(cfg.firebaseConfig);auth=authMod.getAuth(app);
   firebase={...authMod};
-  authMod.onAuthStateChanged(auth,u=>{currentUser=u;$("authStatus").textContent=u?`Signed in: ${u.displayName||u.email}`:text[lang].auth;$("logout").hidden=!u;refreshLeaderboard();});
+  authMod.onAuthStateChanged(auth,u=>{currentUser=u;$("authStatus").textContent=u?`Signed in: ${u.displayName||u.email}`:text[lang].auth;$("logout").hidden=!u;refreshLeaderboard();refreshPlayerProfile();});
  }catch(e){$("authStatus").textContent="Firebase not configured yet. Guest play remains available."}
 }
 async function token(){return currentUser?await currentUser.getIdToken():null}
