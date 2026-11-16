@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#090914"><title>BTC Snake — HD Nature Test</title>
+<style>
+:root{--bg:#080812;--panel:#111326;--line:#282b48;--purple:#8b5cf6;--cyan:#22d3ee;--gold:#f7c948;--text:#f5f5ff;--muted:#a3a5c2}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#29204f 0,#090914 48%);color:var(--text);font-family:system-ui,Segoe UI,Arial,sans-serif;min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 4vw;border-bottom:1px solid #24243b;background:#090914dd;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+.brand{font-weight:900;font-size:22px;letter-spacing:.5px}.brand b{color:var(--gold)}button,input{font:inherit}button{border:1px solid var(--line);background:#1a1b32;color:white;padding:10px 15px;border-radius:12px;cursor:pointer}button.primary{background:linear-gradient(100deg,#7545e8,#167dba);border:0;font-weight:800}button:disabled{opacity:.45;cursor:not-allowed}
+main{max-width:1280px;margin:auto;padding:22px 4vw}.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:center}.card{background:linear-gradient(145deg,#17182d,#0f1020);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 15px 45px #0005}.eyebrow{color:var(--cyan);font-weight:800;font-size:12px;letter-spacing:2px}.hero h1{font-size:clamp(32px,5vw,58px);line-height:1.05;margin:12px 0}.hero h1 span{color:var(--gold)}.muted{color:var(--muted)}.stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.stat{background:#0b0c19;border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-width:105px}.stat strong{display:block;font-size:20px}.arena-wrap{position:relative;margin-top:18px}#arenaWrap{display:none}.arena{width:100%;height:min(65vh,620px);min-height:360px;border-radius:20px;overflow:hidden;background:#090b19;border:1px solid #34365a;position:relative}.arena canvas{position:absolute;inset:0;display:block;width:100%;height:100%;z-index:1;touch-action:none}.hud{position:absolute;z-index:7;inset:12px 12px auto;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:8px}#cameraBtn{pointer-events:auto;cursor:pointer;position:relative;z-index:9;touch-action:manipulation}.hud span{background:#090914dd;border:1px solid #ffffff22;padding:8px 11px;border-radius:10px;font-weight:800;white-space:nowrap}.hud-left{position:absolute;left:0;display:flex;gap:7px;align-items:center}.hud-right{position:absolute;right:0;display:flex;gap:7px;align-items:center;direction:rtl}#hudTimer{position:absolute;left:50%;transform:translateX(-50%)}.hud-coins{color:#f7c948}.arena-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.mode-option{border:1px solid var(--line)}.mode-option.selected{border:2px solid var(--gold);background:#34304a;box-shadow:0 0 0 2px #f7c94833}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}.list{display:grid;gap:8px}.row{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;background:#0b0c19}.skin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.skin{padding:10px;border-radius:13px;background:#0b0c19;border:1px solid var(--line);text-align:center;cursor:pointer}.skin i{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 7px;box-shadow:0 0 18px currentColor}.auth{display:flex;gap:7px;flex-wrap:wrap}.auth input{background:#0b0c19;border:1px solid var(--line);color:white;padding:10px;border-radius:10px;min-width:130px;max-width:180px}.notice{font-size:12px;color:var(--muted);line-height:1.6}.mobile-controls{display:none;position:absolute;z-index:8;left:18px;bottom:18px;touch-action:none}.joystick-base{width:132px;height:132px;border-radius:50%;border:2px solid #ffffff55;background:radial-gradient(circle,#27365cbb,#080c1dcc);box-shadow:0 8px 30px #0009,inset 0 0 18px #7dd3fc22;position:relative;touch-action:none;user-select:none}.joystick-knob{position:absolute;width:54px;height:54px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;border:2px solid #bdefff;background:linear-gradient(145deg,#38bdf8dd,#6d42d9ee);box-shadow:0 0 22px #22d3ee88;pointer-events:none}.ad-slot{border:1px dashed #3a3b5c;border-radius:12px;padding:12px;text-align:center;color:#777b9d;margin-top:14px;font-size:12px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d2040;padding:12px 18px;border:1px solid #494c7c;border-radius:12px;display:none;z-index:1200}
+body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fullscreen .hero,body.game-fullscreen .grid,body.game-fullscreen main>section:not(.arena-wrap),body.game-fullscreen footer{display:none!important}body.game-fullscreen main{display:block;max-width:none;width:100%;height:100%;margin:0;padding:0}body.game-fullscreen #arenaWrap{display:block!important;visibility:visible!important;position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;margin:0!important;padding:0;border:0;border-radius:0;z-index:1100;background:#090b19;box-shadow:none}body.game-fullscreen .arena{position:absolute;inset:0;width:100%;height:100%;min-height:0;border:0;border-radius:0}body.game-fullscreen .hud{inset:calc(env(safe-area-inset-top) + 10px) 10px auto}body.game-fullscreen .arena-actions{position:absolute;z-index:8;right:10px;bottom:calc(env(safe-area-inset-bottom) + 12px);margin:0;max-width:calc(100% - 170px);gap:6px}body.game-fullscreen .arena-actions button{padding:8px 10px;font-size:12px}body.game-fullscreen .mobile-controls{display:block!important;left:calc(env(safe-area-inset-left) + 14px);bottom:calc(env(safe-area-inset-bottom) + 12px)}body.game-fullscreen #deathPanel{position:absolute;z-index:9;left:50%;bottom:calc(env(safe-area-inset-bottom) + 160px);transform:translateX(-50%);width:min(90%,420px);background:#321b25ee!important}
+@media(max-width:800px){.hero,.grid{grid-template-columns:1fr}.hero .card:nth-child(2){order:-1}.arena{height:58vh;min-height:330px}.skin-grid{grid-template-columns:repeat(3,1fr)}header{padding:12px 4vw}.brand{font-size:18px}.mobile-controls{display:block}.auth input{max-width:100%;flex:1}}
+</style>
+</head>
+<body>
+<header><div class="brand">🐍 <b>BTC</b> SNAKE · HD NATURE TEST</div><div style="display:flex;gap:8px"><button id="langBtn">EN</button><button id="loginTop">Login</button></div></header>
+<main>
+<section class="hero">
+ <div class="card">
+  <div class="eyebrow">GROW • SURVIVE • DOMINATE</div>
+  <h1 id="headline">اجمع العملات… <span>وكن ملك الساحة</span></h1>
+  <p class="muted" id="subhead">لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.</p>
+  <div class="stats"><div class="stat"><strong id="playersCount">—</strong><small class="muted" id="playersLabel">في الساحة</small></div><div class="stat"><strong id="timeCount">05:00</strong><small class="muted" id="timeLabel">وقت الجولة</small></div><div class="stat"><strong id="myScore">0</strong><small class="muted" id="scoreLabel">عملات الجولة</small></div></div>
+  <div class="arena-actions"><button class="mode-option selected" id="playBtn" type="button" aria-pressed="true">منافسة جماعية · 5 دقائق</button><button class="mode-option" id="play10Btn" type="button" aria-pressed="false">منافسة جماعية · 10 دقائق</button><button class="mode-option" id="soloBtn" type="button" aria-pressed="false">تدريب فردي · 5 دقائق</button><button class="primary" id="startSelectedBtn" type="button">بدء اللعب</button><button id="howBtn">طريقة اللعب</button></div>
+  <div class="notice" id="rules">الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.</div>
+ </div>
+ <div class="card">
+  <div class="eyebrow" id="accountLabel">PLAYER ACCOUNT</div><h2 id="accountTitle">احفظ تقدمك</h2>
+  <div class="auth"><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Password"></div>
+  <div class="arena-actions"><button class="primary" id="emailLogin">دخول / إنشاء حساب</button><button id="googleLogin">Google</button><button id="logout" hidden>خروج</button></div>
+  <p class="notice" id="authStatus">اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.</p>
+  <div class="ad-slot">مساحة إعلانية غير مفعّلة — لن تظهر إعلانات أثناء اللعب.</div>
+ </div>
+</section>
+
+<section class="arena-wrap card" id="arenaWrap">
+ <div class="hud"><div class="hud-left"><span id="hudCoins" class="hud-coins">🪙 0</span></div><span id="hudTimer">05:00</span><div class="hud-right"><button id="cameraBtn" type="button" aria-label="تغيير زاوية الكاميرا">📷 1/3</button><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div></div>
+ <div class="arena" id="arena"></div>
+ <div class="arena-actions"><button id="shieldBtn">🛡 الدرع: اجمعه من الساحة</button><button id="leaveBtn">الخروج من الجولة</button><button id="skinBtn">تخصيص الأفعى</button></div>
+ <div id="deathPanel" class="notice" hidden style="margin-top:12px;padding:14px;border:1px solid #ff623e;border-radius:12px;background:#321b25">
+  <strong>تم إقصاؤك من الجولة 🐍</strong>
+  <div>لن تعود الأفعى للحياة. يمكنك مشاهدة بقية المنافسة أو الخروج من الجولة.</div>
+ </div>
+ <div class="mobile-controls" aria-label="عصا التحكم"><div class="joystick-base" id="joystickBase"><div class="joystick-knob" id="joystickKnob"></div></div></div>
+</section>
+<section id="roundResults" class="card" hidden style="margin-top:18px">
+  <h2 id="resultsTitle">🏆 نتائج الجولة</h2>
+  <p id="resultsSummary" class="notice"></p>
+  <div id="resultsList" class="list"></div>
+  <div class="arena-actions"><button class="primary" id="playAgainBtn">العب جولة جديدة</button></div>
+</section>
+
+<section class="grid">
+ <div class="card"><h2 id="leaderTitle">🏆 الترتيب العالمي</h2><div id="leaderboard" class="list"><div class="row muted">سجّل الدخول لعرض نتائج اللاعبين.</div></div></div>
+ <div class="card"><h2 id="skinTitle">🎨 متجر الأفاعي</h2><p class="notice" id="skinDesc">الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.</p><div class="skin-grid" id="skins"></div></div>
+</section>
+<section class="card" style="margin-top:18px"><h2 id="adminTitle">لوحة الإدارة</h2><p class="notice" id="adminText">تظهر الإحصاءات للمسؤول المصرّح له فقط بعد إعداد ADMIN_UIDS على الخادم.</p><button id="adminBtn">فتح ملخص الإدارة</button><pre id="adminOutput" class="notice"></pre></section>
+<footer class="notice" style="padding:24px 4px;text-align:center">BTC Snake · لعبة مجانية · النقاط الافتراضية ليست بيتكويناً حقيقياً · BTC payouts disabled</footer>
+</main><div id="toast"></div>
+
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
+const API_BASE = "https://btc-snake-hd-api.motazfaysel5.workers.dev";
+const FB_CONFIG_URL = "./firebase-config.js";
+let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), coinMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
+let lastMode = "multi", lastDuration = 300, roundEndedByServer = false, manualLeave = false, wasAlive = null, cameraViewMode = 0, selectedMode = "multi", selectedDuration = 300;
+const $ = id => document.getElementById(id);
+const skins = [
+ {id:"mint",name:"Mint",color:"#35e0a1",unlock:"Free"},
+ {id:"gold",name:"Golden",color:"#f7c948",unlock:"250 pts"},
+ {id:"fire",name:"Fire",color:"#ff623e",unlock:"Rare"},
+ {id:"ice",name:"Ice",color:"#49d9ff",unlock:"Rare"},
+ {id:"galaxy",name:"Galaxy",color:"#a78bfa",unlock:"Legendary"},
+ {id:"toxic",name:"Toxic",color:"#b7f34a",unlock:"Legendary"},
+ {id:"royal",name:"Royal",color:"#f472b6",unlock:"Event"},
+ {id:"diamond",name:"Diamond",color:"#d7f7ff",unlock:"Achievement"}
+];
+const text = {
+ ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 5 دقائق",play10:"منافسة جماعية · 10 دقائق",solo:"تدريب فردي · 5 دقائق",how:"طريقة اللعب",rules:"الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
+ en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 5 min",play10:"Live multiplayer · 10 min",solo:"Solo practice · 5 min",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head = both eliminated. Shields protect temporarily.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
+};
+let lang="ar";
+function toast(s){$("toast").textContent=s;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2600)}
+function applyLang(){document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";const t=text[lang];$("langBtn").textContent=t.language;$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("play10Btn").textContent=t.play10;$("soloBtn").textContent=t.solo;$("startSelectedBtn").textContent=t.start;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("emailLogin").textContent=t.login2;$("authStatus").textContent=t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin}
+$("langBtn").onclick=()=>{lang=lang==="ar"?"en":"ar";applyLang()};applyLang();
+
+async function loadFirebase(){
+ try{
+  const cfg=await import(FB_CONFIG_URL);
+  const appMod=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js");
+  const authMod=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js");
+  const app=appMod.initializeApp(cfg.firebaseConfig);auth=authMod.getAuth(app);
+  firebase={...authMod};
+  authMod.onAuthStateChanged(auth,u=>{currentUser=u;$("authStatus").textContent=u?`Signed in: ${u.displayName||u.email}`:text[lang].auth;$("logout").hidden=!u;refreshLeaderboard();});
+ }catch(e){$("authStatus").textContent="Firebase not configured yet. Guest play remains available."}
+}
+async function token(){return currentUser?await currentUser.getIdToken():null}
+async function api(path,method="GET",body=null){
+ const t=await token();const r=await fetch(API_BASE+path,{method,headers:{"Content-Type":"application/json",...(t?{Authorization:"Bearer "+t}:{})},...(body?{body:JSON.stringify(body)}:{})});return r.json();
+}
+$("emailLogin").onclick=async()=>{
+ if(!firebase){toast("Firebase setup is not configured yet.");return}
+ const email=$("email").value.trim(),password=$("password").value;
+ if(!email||password.length<6){toast("Enter email and password (6+ characters).");return}
+ try{await firebase.signInWithEmailAndPassword(auth,email,password).catch(async e=>{if(e.code==="auth/user-not-found"||e.code==="auth/invalid-credential")return firebase.createUserWithEmailAndPassword(auth,email,password);throw e});toast("Welcome!")}
+ catch(e){toast(e.message)}
+};
+$("googleLogin").onclick=async()=>{if(!firebase)return toast("Firebase setup required");try{await firebase.signInWithPopup(auth,new firebase.GoogleAuthProvider())}catch(e){toast(e.message)}};
+$("logout").onclick=()=>firebase?.signOut(auth);
+$("loginTop").onclick=()=>$("email").focus();
+
+function resizeGameRenderer(){
+ if(!renderer||!camera)return;
+ const host=$("arena");if(!host)return;
+ const width=Math.max(1,host.clientWidth||window.innerWidth||360);
+ const height=Math.max(1,host.clientHeight||window.innerHeight||640);
+ camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);
+}
+function init3D(){
+ const host=$("arena");scene=new THREE.Scene();scene.background=new THREE.Color("#090b19");
+ const width=Math.max(1,host.clientWidth||window.innerWidth||360),height=Math.max(1,host.clientHeight||window.innerHeight||640);
+ camera=new THREE.PerspectiveCamera(58,width/height,.1,500);camera.position.set(50,85,85);camera.lookAt(50,0,50);
+ renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(width,height,false);renderer.domElement.style.cssText="position:absolute;inset:0;display:block;width:100%;height:100%;z-index:1;touch-action:none";host.appendChild(renderer.domElement);
+ scene.add(new THREE.HemisphereLight(0xbacaff,0x182033,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(40,80,20);scene.add(light);
+ scene.background=new THREE.Color("#a9c5b2");scene.fog=new THREE.FogExp2("#a9c5b2",.012);
+ const grassCanvas=document.createElement("canvas");grassCanvas.width=grassCanvas.height=256;
+ const gx=grassCanvas.getContext("2d");gx.fillStyle="#527d39";gx.fillRect(0,0,256,256);
+ for(let i=0;i<6200;i++){const x=Math.random()*256,y=Math.random()*256;gx.strokeStyle=["#315d2d","#477337","#72934a","#91a85b","#3d6930"][i%5];gx.globalAlpha=.22+Math.random()*.35;gx.lineWidth=.5+Math.random();gx.beginPath();gx.moveTo(x,y);gx.lineTo(x+(Math.random()-.5)*4,y-2-Math.random()*6);gx.stroke()}gx.globalAlpha=1;
+ const grassTex=new THREE.CanvasTexture(grassCanvas);grassTex.wrapS=grassTex.wrapT=THREE.RepeatWrapping;grassTex.repeat.set(12,12);grassTex.colorSpace=THREE.SRGBColorSpace;
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({map:grassTex,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.set(50,-.5,50);scene.add(floor);
+ const earth=new THREE.Mesh(new THREE.CylinderGeometry(72,72,3,48),new THREE.MeshStandardMaterial({color:"#59412d",roughness:1}));earth.position.set(50,-2,50);scene.add(earth);
+ const bark=new THREE.MeshStandardMaterial({color:"#59402b",roughness:1}),leafMats=["#294f2e","#37683a","#4b7540"].map(color=>new THREE.MeshStandardMaterial({color,roughness:.96}));
+ const trunkGeo=new THREE.CylinderGeometry(.22,.36,3.4,7),crownGeo=new THREE.IcosahedronGeometry(1.65,1);
+ for(let i=0;i<42;i++){const a=Math.random()*Math.PI*2,r=40+Math.random()*17,x=50+Math.cos(a)*r,z=50+Math.sin(a)*r;const tree=new THREE.Group();tree.position.set(x,0,z);const h=2.2+Math.random()*1.8;const trunk=new THREE.Mesh(trunkGeo,bark);trunk.scale.y=h/3.4;trunk.position.y=h/2;tree.add(trunk);for(let j=0;j<3;j++){const crown=new THREE.Mesh(crownGeo,leafMats[(i+j)%3]);crown.scale.set(.9+Math.random()*.25,.85+Math.random()*.35,.9+Math.random()*.25);crown.position.set((Math.random()-.5)*.45,h+j*.62,(Math.random()-.5)*.45);tree.add(crown)}scene.add(tree)}
+ const stoneMat=new THREE.MeshStandardMaterial({color:"#77796c",roughness:1});
+ for(let i=0;i<34;i++){const a=Math.random()*Math.PI*2,r=34+Math.random()*18,stone=new THREE.Mesh(new THREE.DodecahedronGeometry(.35+Math.random()*.7,0),stoneMat);stone.position.set(50+Math.cos(a)*r,.05,50+Math.sin(a)*r);stone.scale.y=.55;scene.add(stone)}
+ const edge=new THREE.Mesh(new THREE.TorusGeometry(50,.35,5,96),new THREE.MeshStandardMaterial({color:"#7c8c68",roughness:1}));edge.rotation.x=Math.PI/2;edge.position.set(50,-.15,50);scene.add(edge);
+ const resize=()=>resizeGameRenderer();new ResizeObserver(resize).observe(host);window.addEventListener("resize",resizeGameRenderer);document.addEventListener("fullscreenchange",()=>requestAnimationFrame(resizeGameRenderer));requestAnimationFrame(resizeGameRenderer);
+ function animate(){requestAnimationFrame(animate);renderer.render(scene,camera)}animate();
+}
+function updateFollowCamera(snake){
+ if(!camera||!snake?.body||snake.body.length<2)return;
+ const head=snake.body[0],neck=snake.body[1];
+ let dx=head.x-neck.x,dz=head.z-neck.z;const len=Math.hypot(dx,dz)||1;dx/=len;dz/=len;
+ const views=[{back:8,height:4.8,look:2},{back:14,height:7,look:3},{back:22,height:11,look:4}];
+ const v=views[cameraViewMode];
+ camera.position.set(head.x-dx*v.back, v.height, head.z-dz*v.back);
+ camera.lookAt(head.x+dx*v.look, .65, head.z+dz*v.look);
+}
+function cycleCameraView(){
+ cameraViewMode=(cameraViewMode+1)%3;
+ const b=$("cameraBtn");if(b)b.textContent="📷 "+(cameraViewMode+1)+"/3";
+ if(lastState&&myId){const mine=lastState.snakes?.find(s=>s.id===myId);if(mine)updateFollowCamera(mine)}
+}
+$("cameraBtn").onclick=cycleCameraView;
+function makeSphere(color,r=.65){return new THREE.Mesh(new THREE.SphereGeometry(r,18,14),new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.04}))}
+function makeSnakeSegment(color,r=.62,head=false){
+ const g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({color,roughness:.34,metalness:.08});
+ const core=new THREE.Mesh(new THREE.SphereGeometry(r,20,16),mat);core.scale.set(1.08,.82,1);g.add(core);
+ if(!head){const band=new THREE.Mesh(new THREE.TorusGeometry(r*.88,.045,6,16),new THREE.MeshStandardMaterial({color:"#b4d66b",roughness:.3,metalness:.12}));band.rotation.x=Math.PI/2;band.position.y=.1;g.add(band)}
+ else {const eyeMat=new THREE.MeshStandardMaterial({color:"#f4d46a",roughness:.2});for(const side of [-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.105,12,10),eyeMat);eye.position.set(.25,.25,side*.38);g.add(eye)}}
+ return g;
+}
+function iRadius(total,index){return Math.max(.36,.59-index*.008)}
+function updateWorld(state){
+ lastState=state;const clock=String(Math.floor(state.remaining/60)).padStart(2,"0")+":"+String(state.remaining%60).padStart(2,"0");$("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent=clock;$("hudTimer").textContent=clock;
+ const mine=state.snakes?.find(s=>s.id===myId);
+ if(mine){
+  $("myScore").textContent=mine.score;$("hudCoins").textContent="🪙 "+mine.score;
+  $("statusPill").textContent=mine.alive?(lang==="ar"?"داخل الساحة":"IN ARENA"):(lang==="ar"?"تم إقصاؤك":"ELIMINATED");
+  if(wasAlive===true&&!mine.alive){$("deathPanel").hidden=false;toast(lang==="ar"?"تم إقصاؤك — يمكنك المشاهدة أو الخروج":"Eliminated — spectate or leave");}
+  wasAlive=mine.alive;
+  if(mine.alive)updateFollowCamera(mine);
+ }
+ const aliveIds=new Set();
+ for(const s of state.snakes||[]){aliveIds.add(s.id);let group=meshes.get(s.id);if(!group){group=new THREE.Group();meshes.set(s.id,group);scene.add(group)}
+  while(group.children.length<s.body.length){const m=makeSnakeSegment(s.color||"#35a853",iRadius(s.body.length,group.children.length),group.children.length===0);group.add(m)}
+  group.children.forEach((m,i)=>{const p=s.body[i];m.visible=!!p;if(p)m.position.set(p.x,.5,p.z);});
+  group.children.forEach((m,i)=>{m.scale.setScalar(i===0?1.16:1)});
+ }
+ for(const [k,g] of meshes){if(!aliveIds.has(k)){scene.remove(g);meshes.delete(k)}}
+ coinMeshes.forEach(m=>scene.remove(m));coinMeshes=[];
+ for(const c of state.coins||[]){const m=makeSphere("#f7c948",.42);m.position.set(c.x,.55,c.z);scene.add(m);coinMeshes.push(m)}
+ shieldMeshes.forEach(m=>scene.remove(m));shieldMeshes=[];
+ for(const c of state.shields||[]){const m=makeSphere("#54e7ff",.7);m.position.set(c.x,.7,c.z);scene.add(m);shieldMeshes.push(m)}
+}
+function enterGameView(){
+ document.body.classList.add("game-fullscreen");
+ const target=$("arenaWrap");
+ let request=Promise.resolve();
+ if(target?.requestFullscreen)request=target.requestFullscreen().catch(()=>{});
+ return request.then(()=>{if(screen.orientation?.lock)screen.orientation.lock("landscape").catch(()=>{});});
+}
+function exitGameView(){
+ document.body.classList.remove("game-fullscreen");
+ if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+ if(screen.orientation?.unlock)try{screen.orientation.unlock()}catch{}
+}
+function startGame(mode,duration){
+ enterGameView().then(()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  const wrap=$("arenaWrap"),host=$("arena");
+  if(wrap){wrap.style.display="block";wrap.style.visibility="visible"}
+  if(host){host.style.display="block";host.style.visibility="visible"}
+  if(!renderer)init3D();else resizeGameRenderer();
+  resizeGameRenderer();
+  if(!running)connect(mode,duration);
+ })));
+}
+function connect(mode="multi",duration=300){
+  if(ws)ws.close();
+  lastMode=mode;lastDuration=duration;roundEndedByServer=false;manualLeave=false;wasAlive=null;myId=null;
+  $("roundResults").hidden=true;$("deathPanel").hidden=true;$("myScore").textContent="0";
+  const openSocket=async()=>{
+   let ticket="";
+   if(currentUser){
+    try{const issued=await api("/api/ws-ticket","POST",{});ticket=issued.ticket||""}
+    catch{toast("Could not authorize your account for the arena.");return}
+   }
+   const url=API_BASE.replace(/^http/,"ws")+"/ws?mode="+mode+"&duration="+duration+"&skin="+encodeURIComponent(selectedSkin)+(ticket?"&ticket="+encodeURIComponent(ticket):"");
+   ws=new WebSocket(url);
+   ws.onopen=()=>{running=true;$("statusPill").textContent=lang==="ar"?"متصل بالساحة":"CONNECTED";toast(lang==="ar"?"تم الاتصال بالساحة":"Connected to arena")};
+   ws.onmessage=e=>{
+    let d;try{d=JSON.parse(e.data)}catch{return}
+    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6);const initialClock=duration===600?"10:00":"05:00";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🪙 0"}
+    else if(d.type==="state")updateWorld(d);
+    else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration);}
+    else if(d.type==="full")toast(lang==="ar"?"الساحة ممتلئة، حاول لاحقاً":"Arena is full. Try again soon.");
+   };
+   ws.onclose=()=>{running=false;if(roundEndedByServer)$("playAgainBtn").disabled=false;if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=lang==="ar"?"غير متصل":"DISCONNECTED"};
+   ws.onerror=()=>toast("Connection error. Check API deployment.");
+  };
+  openSocket();
+ }
+ function showResults(results,duration){
+  roundEndedByServer=true;exitGameView();$("deathPanel").hidden=true;$("roundResults").hidden=false;$("playAgainBtn").disabled=true;
+  $("resultsTitle").textContent=lang==="ar"?"🏆 نتائج الجولة":"🏆 Round results";
+  $("resultsSummary").textContent=lang==="ar"?`انتهت جولة ${duration/60} دقائق.`:`${duration/60}-minute round finished.`;
+  $("resultsList").innerHTML=results.map(r=>`<div class="row"><b>#${r.rank} ${escapeHtml(r.name)}${r.bot?" · BOT":""}</b><span>${r.score} 🪙</span></div>`).join("")||'<div class="row muted">No results.</div>';
+  const mine=results.find(r=>r.id===myId);
+  $("statusPill").textContent=mine?(lang==="ar"?`مركزك: ${mine.rank}`:`Your rank: ${mine.rank}`):(lang==="ar"?"انتهت الجولة":"ROUND FINISHED");
+  if(mine)$("resultsSummary").textContent+=lang==="ar"?` مركزك ${mine.rank} — نقاطك ${mine.score}.`:` Your rank: ${mine.rank} — score: ${mine.score}.`;
+  $("playAgainBtn").textContent=lang==="ar"?"العب جولة جديدة":"Play another round";
+ }
+ function chooseMode(mode,duration){
+  selectedMode=mode;selectedDuration=duration;
+  for(const id of ["playBtn","play10Btn","soloBtn"]){const b=$(id);const active=(id==="playBtn"&&mode==="multi"&&duration===300)||(id==="play10Btn"&&mode==="multi"&&duration===600)||(id==="soloBtn"&&mode==="solo"&&duration===300);b.classList.toggle("selected",active);b.setAttribute("aria-pressed",String(active));}
+ }
+ $("playBtn").onclick=()=>chooseMode("multi",300);
+ $("play10Btn").onclick=()=>chooseMode("multi",600);
+ $("soloBtn").onclick=()=>chooseMode("solo",300);
+ $("startSelectedBtn").onclick=()=>startGame(selectedMode,selectedDuration);
+ $("playAgainBtn").onclick=()=>startGame(lastMode,lastDuration);
+ $("leaveBtn").onclick=()=>{manualLeave=true;ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA";exitGameView()};
+$("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
+function steerTurn(value){
+ const amount=Math.max(-1,Math.min(1,value));
+ if(ws?.readyState===1)ws.send(JSON.stringify({type:"steer",value:amount}));
+}
+function initJoystick(){
+ const base=$("joystickBase"),knob=$("joystickKnob");if(!base||!knob)return;let activePointer=null,lastSent=0,lastSentAt=0;
+ const reset=()=>{activePointer=null;steerTurn(0);knob.style.transform="translate(-50%,-50%)";};
+ function move(e){
+  if(activePointer!==e.pointerId)return;
+  const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  let dx=e.clientX-cx,dy=e.clientY-cy;const max=r.width*.34,len=Math.hypot(dx,dy)||1;
+  if(len>max){dx=dx/len*max;dy=dy/len*max;}
+  knob.style.transform="translate(calc(-50% + "+dx+"px),calc(-50% + "+dy+"px))";
+  const turnAmount=Math.abs(dx/max)>.08?dx/max:0,now=Date.now();
+  if(Math.abs(turnAmount-lastSent)>.035||now-lastSentAt>65){steerTurn(turnAmount);lastSent=turnAmount;lastSentAt=now;}
+ }
+ base.addEventListener("pointerdown",e=>{activePointer=e.pointerId;base.setPointerCapture(e.pointerId);lastSentAt=0;steerTurn(0);move(e);});
+ base.addEventListener("pointermove",move);base.addEventListener("pointerup",e=>{if(activePointer===e.pointerId)reset();});
+ base.addEventListener("pointercancel",reset);base.addEventListener("lostpointercapture",reset);
+}
+initJoystick();
+window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowleft","a"].includes(k))steerTurn(-1);if(["arrowright","d"].includes(k))steerTurn(1)});
+window.addEventListener("keyup",e=>{if(["arrowleft","arrowright","a","d"].includes(e.key.toLowerCase()))steerTurn(0)});
+function drawSkins(){
+ $("skins").innerHTML="";for(const s of skins){const d=document.createElement("button");d.className="skin";d.innerHTML=`<i style="background:${s.color};color:${s.color}"></i><b>${s.name}</b><small class="muted" style="display:block">${s.unlock}</small>`;d.onclick=()=>{selectedSkin=s.id;toast(`${s.name} selected (cosmetic preview)`)};$("skins").appendChild(d)}
+}
+drawSkins();
+async function refreshLeaderboard(){
+ try{const d=await api("/api/leaderboard");$("leaderboard").innerHTML=(d.leaderboard||[]).map((p,i)=>`<div class="row"><b>#${i+1} ${escapeHtml(p.display_name)}</b><span>${p.best_score} 🪙</span></div>`).join("")||'<div class="row muted">No ranked players yet.</div>'}catch{$("leaderboard").innerHTML='<div class="row muted">Leaderboard will appear after API setup.</div>'}
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("adminBtn").onclick=async()=>{try{const d=await api("/api/admin/summary");$("adminOutput").textContent=JSON.stringify(d,null,2)}catch{$("adminOutput").textContent="Admin API unavailable"}};
+loadFirebase();refreshLeaderboard();
+</script>
+</body></html>
