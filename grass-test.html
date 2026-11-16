@@ -1,56 +1,64 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#183d20">
-<title>BTC Snake — تجربة الأرض الخضراء</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#193d25"><title>BTC Snake — HD Nature Test</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#183d20;color:#fff;font-family:system-ui,Arial,sans-serif}#game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:fixed;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none}.pill{background:#10251ddd;border:1px solid #c6f6a755;border-radius:14px;padding:9px 13px;font-size:13px;box-shadow:0 5px 20px #0005}.pill b{color:#b8f28b}.back{pointer-events:auto;color:white;text-decoration:none;background:#10251ddd;border:1px solid #c6f6a755;border-radius:12px;padding:9px 12px}.hint{position:fixed;top:66px;left:12px;right:12px;text-align:center;font-size:12px;color:#f1ffe8;text-shadow:0 2px 5px #000;pointer-events:none}.joy{position:fixed;left:20px;bottom:22px;width:124px;height:124px;border-radius:50%;border:2px solid #ffffff88;background:#142d22aa;box-shadow:inset 0 0 20px #fff2;touch-action:none}.knob{position:absolute;left:50%;top:50%;width:48px;height:48px;transform:translate(-50%,-50%);border-radius:50%;background:linear-gradient(145deg,#d8ffad,#61b94c);border:2px solid #fff;box-shadow:0 3px 15px #0008;pointer-events:none}.reset{position:fixed;right:18px;bottom:25px;border:1px solid #ffffff88;background:#173822dd;color:#fff;border-radius:13px;padding:12px 15px;font-size:13px}.label{position:fixed;right:18px;bottom:78px;color:#f4ffe9;font-size:11px;text-shadow:0 2px 5px #000}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#182f25;color:#fff;font-family:system-ui,Arial}#game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}.top{position:fixed;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;gap:8px}.top>*{pointer-events:auto}.pill,.back,.reset{background:#10251ddd;border:1px solid #d8f5c755;border-radius:13px;color:white;padding:9px 12px;text-decoration:none;font-size:13px;box-shadow:0 5px 20px #0005}.pill b{color:#d7b45a}.hint{position:fixed;top:62px;left:12px;right:12px;text-align:center;font-size:12px;text-shadow:0 2px 6px #000;pointer-events:none;color:#f4ffe9}.joy{position:fixed;left:18px;bottom:20px;width:124px;height:124px;border-radius:50%;border:2px solid #ffffff88;background:#13291e99;box-shadow:inset 0 0 20px #fff2;touch-action:none}.knob{position:absolute;left:50%;top:50%;width:48px;height:48px;transform:translate(-50%,-50%);border-radius:50%;background:linear-gradient(145deg,#fff0b0,#b68b35);border:2px solid #fff;box-shadow:0 3px 15px #0008;pointer-events:none}.label{position:fixed;left:22px;bottom:150px;font-size:11px;text-shadow:0 2px 5px #000}.reset{position:fixed;right:18px;bottom:22px}
 </style>
 </head>
 <body>
 <div id="game"></div>
-<div class="hud"><a class="back" href="./">← العودة للعبة</a><div class="pill">🐍 <b>تجربة الخريطة الخضراء</b></div></div>
-<div class="hint">أرض عشبية ثلاثية الأبعاد · حرّك عصا التحكم لتجربة الساحة</div>
-<div class="joy" id="joy"><div class="knob" id="knob"></div></div>
-<div class="label">عصا التحكم</div><button class="reset" id="reset">إعادة البداية ↻</button>
+<div class="top"><a class="back" href="./">← العودة للعبة الأصلية</a><div class="pill">🐍 <b>BTC SNAKE · تجربة HD</b></div></div>
+<div class="hint">تجربة بصرية مستقلة · حرّك عصا التحكم لاستكشاف الخريطة</div>
+<div class="label">عصا التحكم</div><div class="joy" id="joy"><div class="knob" id="knob"></div></div><button class="reset" id="reset">إعادة البداية ↻</button>
 <script type="module">
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
-const host=document.getElementById("game");
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x9ac9e8);scene.fog=new THREE.Fog(0x9ac9e8,48,145);
-const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,250);
+const host=document.getElementById("game"),scene=new THREE.Scene();
+scene.background=new THREE.Color(0x9bbbd0);scene.fog=new THREE.FogExp2(0xa8c1c2,.0065);
+const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,320);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;host.appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xe9f7ff,0x526b36,2.0));
-const sun=new THREE.DirectionalLight(0xfff4d7,2.2);sun.position.set(-35,55,25);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-85;sun.shadow.camera.right=85;sun.shadow.camera.top=85;sun.shadow.camera.bottom=-85;scene.add(sun);
-// Textured grassy ground
-const cv=document.createElement("canvas");cv.width=cv.height=512;const cx=cv.getContext("2d");cx.fillStyle="#4c913d";cx.fillRect(0,0,512,512);
-for(let i=0;i<18000;i++){const x=Math.random()*512,y=Math.random()*512;cx.strokeStyle=["#397d32","#65a94b","#80b957","#2f702e","#a0c96a"][Math.floor(Math.random()*5)];cx.globalAlpha=.22+Math.random()*.42;cx.lineWidth=.5+Math.random()*1.4;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+(Math.random()-.5)*4,y-2-Math.random()*7);cx.stroke()}cx.globalAlpha=1;
-const grassTex=new THREE.CanvasTexture(cv);grassTex.wrapS=grassTex.wrapT=THREE.RepeatWrapping;grassTex.repeat.set(18,18);grassTex.colorSpace=THREE.SRGBColorSpace;
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshStandardMaterial({map:grassTex,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
-const soil=new THREE.Mesh(new THREE.CylinderGeometry(90,90,2,64),new THREE.MeshStandardMaterial({color:0x63452c,roughness:1}));soil.position.y=-1.15;scene.add(soil);
-// Distant rolling green mounds
-for(let i=0;i<22;i++){const a=i/22*Math.PI*2,r=68+(i%3)*7;const m=new THREE.Mesh(new THREE.SphereGeometry(1,18,12),new THREE.MeshStandardMaterial({color:[0x477d36,0x568c3e,0x689746][i%3],roughness:1}));m.scale.set(19,4+Math.random()*4,12);m.position.set(Math.cos(a)*r,1,Math.sin(a)*r);scene.add(m)}
-// Trees, shrubs and stones
-const trunkMat=new THREE.MeshStandardMaterial({color:0x76502e,roughness:1}),leafMats=[0x286b35,0x347c3c,0x4b9147].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
-for(let i=0;i<95;i++){const a=Math.random()*Math.PI*2,r=15+Math.random()*65,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.hypot(x,z)<12)continue;const h=2.2+Math.random()*2.4;const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22,.38,h,7),trunkMat);trunk.position.set(x,h/2,z);trunk.castShadow=true;scene.add(trunk);for(let j=0;j<3;j++){const crown=new THREE.Mesh(new THREE.ConeGeometry(1.5-j*.22,2.5,8),leafMats[(i+j)%3]);crown.position.set(x,h*.72+j*.85,z);crown.castShadow=true;scene.add(crown)}}
-for(let i=0;i<65;i++){const a=Math.random()*Math.PI*2,r=10+Math.random()*72,x=Math.cos(a)*r,z=Math.sin(a)*r;const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.45+Math.random()*.8,0),new THREE.MeshStandardMaterial({color:0x777b6a,roughness:1}));rock.position.set(x,.25,z);rock.scale.y=.55;rock.castShadow=true;scene.add(rock)}
-// A friendly demo snake
-const snake=new THREE.Group();scene.add(snake);const green=new THREE.MeshStandardMaterial({color:0x20c879,roughness:.55}),belly=new THREE.MeshStandardMaterial({color:0x9bf0a5,roughness:.7}),eyeMat=new THREE.MeshStandardMaterial({color:0xffffff}),pupil=new THREE.MeshStandardMaterial({color:0x14251b});
-const head=new THREE.Mesh(new THREE.SphereGeometry(.72,20,16),green);head.scale.set(1.25,.8,1);head.position.y=.72;head.castShadow=true;snake.add(head);
-for(const side of [-1,1]){const e=new THREE.Mesh(new THREE.SphereGeometry(.14,12,10),eyeMat);e.position.set(.48,.98,side*.43);snake.add(e);const p=new THREE.Mesh(new THREE.SphereGeometry(.07,10,8),pupil);p.position.set(.55,1,side*.48);snake.add(p)}
-const segments=[];for(let i=0;i<17;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.5-i*.014,14,10),i%3===0?belly:green);s.position.y=.48;s.castShadow=true;snake.add(s);segments.push(s)}
-let pos=new THREE.Vector3(0,0,0),heading=0,steer=0,forward=0;const trail=[];
-function placeSnake(){snake.position.set(pos.x,0,pos.z);snake.rotation.y=heading;head.position.set(0,.72,0);for(let i=0;i<segments.length;i++){const t=trail[Math.min(i*4,trail.length-1)]||new THREE.Vector3(pos.x,0,pos.z);segments[i].position.set(t.x-pos.x,.48,t.z-pos.z)}}
-for(let i=0;i<100;i++)trail.push(new THREE.Vector3(0,0,i*.35));
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;host.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xdceeff,0x53613b,1.65));
+const sun=new THREE.DirectionalLight(0xffe3b0,3.1);sun.position.set(-42,65,24);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);sun.shadow.camera.left=-65;sun.shadow.camera.right=65;sun.shadow.camera.top=65;sun.shadow.camera.bottom=-65;sun.shadow.bias=-.00025;scene.add(sun);
+// Natural grass texture
+const texCanvas=document.createElement("canvas");texCanvas.width=texCanvas.height=512;const ctx=texCanvas.getContext("2d");ctx.fillStyle="#527d3b";ctx.fillRect(0,0,512,512);
+for(let i=0;i<26000;i++){const x=Math.random()*512,y=Math.random()*512;ctx.strokeStyle=["#315c2e","#477337","#72934a","#91a85b","#3d6930","#b0b66b"][i%6];ctx.globalAlpha=.18+Math.random()*.4;ctx.lineWidth=.5+Math.random()*1.1;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x-2,y-4,x+(Math.random()-.5)*5,y-3-Math.random()*8);ctx.stroke()}ctx.globalAlpha=1;
+const grassTex=new THREE.CanvasTexture(texCanvas);grassTex.wrapS=grassTex.wrapT=THREE.RepeatWrapping;grassTex.repeat.set(22,22);grassTex.colorSpace=THREE.SRGBColorSpace;
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(220,220),new THREE.MeshStandardMaterial({map:grassTex,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const earth=new THREE.Mesh(new THREE.CylinderGeometry(110,110,3,80),new THREE.MeshStandardMaterial({color:0x59412d,roughness:1}));earth.position.y=-1.7;scene.add(earth);
+// distant mountain silhouettes
+const rockMat=new THREE.MeshStandardMaterial({color:0x65786a,roughness:1});
+for(let i=0;i<18;i++){const a=i/18*Math.PI*2,r=105+Math.random()*12,m=new THREE.Mesh(new THREE.ConeGeometry(12+Math.random()*12,23+Math.random()*25,7),rockMat);m.position.set(Math.cos(a)*r,8,Math.sin(a)*r);m.rotation.y=Math.random()*2;scene.add(m)}
+// Tree groups, instanced-like shared geometry/materials
+const bark=new THREE.MeshStandardMaterial({color:0x59402b,roughness:1}),leaves=[0x294f2e,0x37683a,0x4b7540].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.95}));
+const trunkGeo=new THREE.CylinderGeometry(.22,.42,3.8,8),crownGeo=new THREE.IcosahedronGeometry(1.8,1);
+for(let i=0;i<105;i++){const a=Math.random()*Math.PI*2,r=17+Math.random()*78,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.hypot(x,z)<14)continue;const group=new THREE.Group();group.position.set(x,0,z);const h=2.1+Math.random()*2.2;const tr=new THREE.Mesh(trunkGeo,bark);tr.scale.y=h/3.8;tr.position.y=h/2;tr.castShadow=true;group.add(tr);for(let j=0;j<3;j++){const crown=new THREE.Mesh(crownGeo,leaves[(i+j)%3]);crown.scale.set(.85+Math.random()*.35,.8+Math.random()*.5,.85+Math.random()*.35);crown.position.set((Math.random()-.5)*.7,h+j*.75, (Math.random()-.5)*.6);crown.castShadow=true;group.add(crown)}scene.add(group)}
+// stones and grass tufts
+const stoneMat=new THREE.MeshStandardMaterial({color:0x77796c,roughness:1});
+for(let i=0;i<85;i++){const a=Math.random()*Math.PI*2,r=9+Math.random()*86,stone=new THREE.Mesh(new THREE.DodecahedronGeometry(.45+Math.random()*1.1,1),stoneMat);stone.position.set(Math.cos(a)*r,.25,Math.sin(a)*r);stone.scale.y=.55;stone.rotation.set(Math.random(),Math.random(),Math.random());stone.castShadow=true;scene.add(stone)}
+// Player snake: black-gold scales, smooth connected body
+const snake=new THREE.Group();scene.add(snake);
+const black=new THREE.MeshStandardMaterial({color:0x11171a,metalness:.38,roughness:.28});
+const gold=new THREE.MeshStandardMaterial({color:0xc49a3c,metalness:.72,roughness:.24});
+const bellyMat=new THREE.MeshStandardMaterial({color:0x92713a,metalness:.4,roughness:.48});
+const head=new THREE.Mesh(new THREE.SphereGeometry(.72,32,24),black);head.scale.set(1.3,.78,1);head.position.y=.78;head.castShadow=true;snake.add(head);
+const snout=new THREE.Mesh(new THREE.SphereGeometry(.42,24,16),black);snout.scale.set(1.15,.65,.8);snout.position.set(.52,.62,0);snake.add(snout);
+for(const side of [-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.15,18,14),new THREE.MeshStandardMaterial({color:0xe9c66b,metalness:.35,roughness:.2}));eye.position.set(.32,1.02,side*.48);snake.add(eye);const pupil=new THREE.Mesh(new THREE.SphereGeometry(.075,14,10),new THREE.MeshStandardMaterial({color:0x080a0b}));pupil.position.set(.39,1.04,side*.55);snake.add(pupil)}
+// Body sections with subtle gold scale bands
+const body=[];const scaleGeo=new THREE.SphereGeometry(1,20,16);
+for(let i=0;i<24;i++){const g=new THREE.Group();const radius=.52-i*.014;const core=new THREE.Mesh(scaleGeo,black);core.scale.set(1,radius*1.35,radius);core.position.y=.53;core.castShadow=true;g.add(core);const band=new THREE.Mesh(new THREE.TorusGeometry(radius*.9,.035,6,18),gold);band.rotation.x=Math.PI/2;band.position.y=.64;g.add(band);snake.add(g);body.push(g)}
+let pos=new THREE.Vector3(0,0,0),heading=0,steer=0,throttle=0;const trail=[];
+for(let i=0;i<180;i++)trail.push(new THREE.Vector3(0,0,i*.24));
+function updateSnake(){snake.position.set(pos.x,0,pos.z);snake.rotation.y=heading;for(let i=0;i<body.length;i++){const p=trail[Math.min((i+1)*5,trail.length-1)];body[i].position.set(p.x-pos.x,0,p.z-pos.z);body[i].rotation.y=Math.atan2((trail[Math.min((i+1)*5-1,trail.length-1)].x-p.x),(trail[Math.min((i+1)*5-1,trail.length-1)].z-p.z))}}
 const joy=document.getElementById("joy"),knob=document.getElementById("knob");let pointer=null;
-function setJoy(e){const r=joy.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),len=Math.hypot(dx,dy),max=42,k=Math.min(1,max/(len||1));knob.style.left=(50+dx*k/ r.width*100)+"%";knob.style.top=(50+dy*k/r.height*100)+"%";steer=dx*k/max;forward=-dy*k/max}
-joy.addEventListener("pointerdown",e=>{pointer=e.pointerId;joy.setPointerCapture(pointer);setJoy(e)});joy.addEventListener("pointermove",e=>{if(e.pointerId===pointer)setJoy(e)});function release(){pointer=null;steer=0;forward=0;knob.style.left="50%";knob.style.top="50%"}joy.addEventListener("pointerup",release);joy.addEventListener("pointercancel",release);
-addEventListener("keydown",e=>{if(["ArrowLeft","a","A"].includes(e.key))steer=1;if(["ArrowRight","d","D"].includes(e.key))steer=-1;if(["ArrowUp","w","W"].includes(e.key))forward=1;if(["ArrowDown","s","S"].includes(e.key))forward=-.5});addEventListener("keyup",e=>{if(["ArrowLeft","a","A","ArrowRight","d","D"].includes(e.key))steer=0;if(["ArrowUp","w","W","ArrowDown","s","S"].includes(e.key))forward=0});
-function reset(){pos.set(0,0,0);heading=0;trail.length=0;for(let i=0;i<100;i++)trail.push(new THREE.Vector3(0,0,i*.35));placeSnake()}document.getElementById("reset").onclick=reset;
-const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);heading+=steer*dt*1.8;const speed=forward>.05?5.2:forward<-.05?-2.2:0;pos.x+=Math.sin(heading)*speed*dt;pos.z+=Math.cos(heading)*speed*dt;trail.unshift(new THREE.Vector3(pos.x,0,pos.z));if(trail.length>100)trail.pop();placeSnake();const target=new THREE.Vector3(pos.x-Math.sin(heading)*9,5.8,pos.z-Math.cos(heading)*9);camera.position.lerp(target,1-Math.pow(.001,dt));camera.lookAt(pos.x,1,pos.z);renderer.render(scene,camera)}animate();
-addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight)});
-</script>
-</body>
-</html>
+function joyMove(e){const r=joy.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,max=43,len=Math.hypot(dx,dy),k=Math.min(1,max/(len||1));knob.style.left=(50+dx*k/r.width*100)+"%";knob.style.top=(50+dy*k/r.height*100)+"%";steer=dx*k/max;throttle=-dy*k/max}
+function release(){pointer=null;steer=0;throttle=0;knob.style.left="50%";knob.style.top="50%"}
+joy.addEventListener("pointerdown",e=>{pointer=e.pointerId;joy.setPointerCapture(pointer);joyMove(e)});joy.addEventListener("pointermove",e=>{if(e.pointerId===pointer)joyMove(e)});joy.addEventListener("pointerup",release);joy.addEventListener("pointercancel",release);
+addEventListener("keydown",e=>{if(["ArrowLeft","a","A"].includes(e.key))steer=1;if(["ArrowRight","d","D"].includes(e.key))steer=-1;if(["ArrowUp","w","W"].includes(e.key))throttle=1;if(["ArrowDown","s","S"].includes(e.key))throttle=-.45});
+addEventListener("keyup",e=>{if(["ArrowLeft","a","A","ArrowRight","d","D"].includes(e.key))steer=0;if(["ArrowUp","w","W","ArrowDown","s","S"].includes(e.key))throttle=0});
+function reset(){pos.set(0,0,0);heading=0;trail.length=0;for(let i=0;i<180;i++)trail.push(new THREE.Vector3(0,0,i*.24));updateSnake()}document.getElementById("reset").onclick=reset;
+const clock=new THREE.Clock();
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);heading+=steer*dt*1.65;const speed=throttle>.05?5.1:throttle<-.05?-2:0;pos.x+=Math.sin(heading)*speed*dt;pos.z+=Math.cos(heading)*speed*dt;trail.unshift(new THREE.Vector3(pos.x,0,pos.z));if(trail.length>180)trail.pop();updateSnake();const desired=new THREE.Vector3(pos.x-Math.sin(heading)*10,6.3,pos.z-Math.cos(heading)*10);camera.position.lerp(desired,1-Math.pow(.001,dt));camera.lookAt(pos.x,1,pos.z);renderer.render(scene,camera)}
+animate();addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight)});
+</script></body></html>
