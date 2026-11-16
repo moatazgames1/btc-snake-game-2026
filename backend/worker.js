@@ -272,6 +272,10 @@ export class SnakeRoom {
     try { data = JSON.parse(raw); } catch { return; }
     const s = this.snakes.get(pid);
     if (!s || !s.alive) return;
+    if (data.type === "steer" && Number.isFinite(data.value)) {
+      s.turnInput = Math.max(-1, Math.min(1, data.value));
+      return;
+    }
     if (data.type === "turn" && data.dir && Number.isFinite(data.dir.x) && Number.isFinite(data.dir.z)) {
       const length = Math.hypot(data.dir.x, data.dir.z);
       if (length > 0.15) {
@@ -305,11 +309,16 @@ export class SnakeRoom {
     for (const s of this.snakes.values()) {
       if (!s.alive) continue;
       if (s.bot) this.botThink(s);
-      const currentAngle = Math.atan2(s.dir.z,s.dir.x), targetAngle = Math.atan2(s.nextDir.z,s.nextDir.x);
-      let delta = Math.atan2(Math.sin(targetAngle-currentAngle),Math.cos(targetAngle-currentAngle));
-      delta = Math.max(-0.18,Math.min(0.18,delta));
-      const angle = currentAngle + delta;
-      s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
+      if (s.bot) {
+        const currentAngle = Math.atan2(s.dir.z,s.dir.x), targetAngle = Math.atan2(s.nextDir.z,s.nextDir.x);
+        let delta = Math.atan2(Math.sin(targetAngle-currentAngle),Math.cos(targetAngle-currentAngle));
+        delta = Math.max(-0.18,Math.min(0.18,delta));
+        const angle = currentAngle + delta;
+        s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
+      } else if (s.turnInput) {
+        const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.055;
+        s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
+      }
       if (this.tickNo % 2) continue;
       const h = s.body[0];
       const nh = {x: Math.max(0,Math.min(100,h.x+s.dir.x*0.9)), z: Math.max(0,Math.min(100,h.z+s.dir.z*0.9))};
