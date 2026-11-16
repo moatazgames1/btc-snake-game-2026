@@ -253,6 +253,8 @@ function connect(mode="multi",duration=300){
  $("startSelectedBtn").onclick=()=>startGame(selectedMode,selectedDuration);
  $("playAgainBtn").onclick=()=>startGame(lastMode,lastDuration);
  $("leaveBtn").onclick=()=>{manualLeave=true;ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA";exitGameView()};
+ $("shieldBtn").onclick=()=>toast(lang==="ar"?"التقط الدرع الأزرق داخل الساحة لتحصل على حماية مؤقتة.":"Collect the blue shield in the arena for temporary protection.");
+ $("skinBtn").onclick=()=>{exitGameView();requestAnimationFrame(()=>$("skins").scrollIntoView({behavior:"smooth",block:"center"}));};
 $("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
 function steerTurn(value){
  const amount=Math.max(-1,Math.min(1,value));
