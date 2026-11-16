@@ -272,9 +272,12 @@ export class SnakeRoom {
     try { data = JSON.parse(raw); } catch { return; }
     const s = this.snakes.get(pid);
     if (!s || !s.alive) return;
-    if (data.type === "turn" && data.dir && Number.isInteger(data.dir.x) && Number.isInteger(data.dir.z)) {
-      const d = { x: Math.max(-1, Math.min(1, data.dir.x)), z: Math.max(-1, Math.min(1, data.dir.z)) };
-      if (Math.abs(d.x) + Math.abs(d.z) === 1 && !(d.x === -s.dir.x && d.z === -s.dir.z)) s.nextDir = d;
+    if (data.type === "turn" && data.dir && Number.isFinite(data.dir.x) && Number.isFinite(data.dir.z)) {
+      const length = Math.hypot(data.dir.x, data.dir.z);
+      if (length > 0.15) {
+        const d = { x: data.dir.x / length, z: data.dir.z / length };
+        if (d.x * s.dir.x + d.z * s.dir.z > -0.85) s.nextDir = d;
+      }
     }
   }
 
@@ -287,10 +290,9 @@ export class SnakeRoom {
     if (Math.random() < 0.08) {
       const coin = this.coins.reduce((best,c) => !best || Math.hypot(c.x-s.body[0].x,c.z-s.body[0].z) < Math.hypot(best.x-s.body[0].x,best.z-s.body[0].z) ? c : best, null);
       if (coin) {
-        const dx = coin.x-s.body[0].x, dz = coin.z-s.body[0].z;
-        const choices = Math.abs(dx)>Math.abs(dz) ? [{x:Math.sign(dx)||1,z:0},{x:0,z:Math.sign(dz)||1}] : [{x:0,z:Math.sign(dz)||1},{x:Math.sign(dx)||1,z:0}];
-        const d = choices[Math.floor(Math.random()*choices.length)];
-        if (!(d.x === -s.dir.x && d.z === -s.dir.z)) s.nextDir = d;
+        const dx = coin.x-s.body[0].x, dz = coin.z-s.body[0].z, length = Math.hypot(dx,dz) || 1;
+        const d = { x: dx/length, z: dz/length };
+        if (d.x*s.dir.x+d.z*s.dir.z > -0.85) s.nextDir = d;
       }
     }
   }
@@ -303,8 +305,12 @@ export class SnakeRoom {
     for (const s of this.snakes.values()) {
       if (!s.alive) continue;
       if (s.bot) this.botThink(s);
+      const currentAngle = Math.atan2(s.dir.z,s.dir.x), targetAngle = Math.atan2(s.nextDir.z,s.nextDir.x);
+      let delta = Math.atan2(Math.sin(targetAngle-currentAngle),Math.cos(targetAngle-currentAngle));
+      delta = Math.max(-0.18,Math.min(0.18,delta));
+      const angle = currentAngle + delta;
+      s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
       if (this.tickNo % 2) continue;
-      s.dir = s.nextDir;
       const h = s.body[0];
       const nh = {x: Math.max(0,Math.min(100,h.x+s.dir.x*0.9)), z: Math.max(0,Math.min(100,h.z+s.dir.z*0.9))};
       s.body.unshift(nh); s.body.pop();
