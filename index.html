@@ -116,13 +116,14 @@ $("loginTop").onclick=()=>$("email").focus();
 function init3D(){
  const host=$("arena");scene=new THREE.Scene();scene.background=new THREE.Color("#070a18");scene.fog=new THREE.Fog("#070a18",115,230);
  camera=new THREE.PerspectiveCamera(52,host.clientWidth/host.clientHeight,.1,420);camera.position.set(50,85,85);camera.lookAt(50,0,50);
- renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:"high-performance"});
- renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(host.clientWidth,host.clientHeight);
- renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ const lowPowerDevice = matchMedia("(max-width: 800px)").matches || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+ renderer=new THREE.WebGLRenderer({antialias:!lowPowerDevice,alpha:false,powerPreference:"high-performance"});
+ renderer.setPixelRatio(Math.min(devicePixelRatio,lowPowerDevice?1:1.35));renderer.setSize(host.clientWidth,host.clientHeight);
+ renderer.shadowMap.enabled=!lowPowerDevice;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
  host.appendChild(renderer.domElement);
  scene.add(new THREE.HemisphereLight(0xc8dcff,0x172039,2.1));
- const sun=new THREE.DirectionalLight(0xffffff,2.4);sun.position.set(34,70,26);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-65;sun.shadow.camera.right=65;sun.shadow.camera.top=65;sun.shadow.camera.bottom=-65;scene.add(sun);
+ const sun=new THREE.DirectionalLight(0xffffff,2.4);sun.position.set(34,70,26);sun.castShadow=renderer.shadowMap.enabled;if(renderer.shadowMap.enabled){sun.shadow.mapSize.set(512,512);sun.shadow.camera.left=-65;sun.shadow.camera.right=65;sun.shadow.camera.top=65;sun.shadow.camera.bottom=-65;}scene.add(sun);
  const cyanLight=new THREE.PointLight(0x22d3ee,18,75);cyanLight.position.set(8,10,50);scene.add(cyanLight);
  const purpleLight=new THREE.PointLight(0x8b5cf6,20,75);purpleLight.position.set(92,12,50);scene.add(purpleLight);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({color:"#10172b",roughness:.72,metalness:.16}));
@@ -237,10 +238,20 @@ function updateWorld(state){
   });
  }
  for(const [k,g] of meshes){if(!aliveIds.has(k)){scene.remove(g);meshes.delete(k)}}
- coinMeshes.forEach(m=>scene.remove(m));coinMeshes=[];
- for(const c of state.coins||[]){const m=makeCoin();m.position.set(c.x,.72,c.z);scene.add(m);coinMeshes.push(m)}
- shieldMeshes.forEach(m=>scene.remove(m));shieldMeshes=[];
- for(const c of state.shields||[]){const m=makeShield();m.position.set(c.x,.82,c.z);scene.add(m);shieldMeshes.push(m)}
+ const coins=state.coins||[];
+ for(let i=0;i<coins.length;i++){
+  let m=coinMeshes[i];
+  if(!m){m=makeCoin();coinMeshes[i]=m;scene.add(m);}
+  m.visible=true;m.position.set(coins[i].x,.72,coins[i].z);
+ }
+ for(let i=coins.length;i<coinMeshes.length;i++)coinMeshes[i].visible=false;
+ const shields=state.shields||[];
+ for(let i=0;i<shields.length;i++){
+  let m=shieldMeshes[i];
+  if(!m){m=makeShield();shieldMeshes[i]=m;scene.add(m);}
+  m.visible=true;m.position.set(shields[i].x,.82,shields[i].z);
+ }
+ for(let i=shields.length;i<shieldMeshes.length;i++)shieldMeshes[i].visible=false;
 }
 function startLocalSolo(duration=300){
   localSolo=true;running=true;ws=null;
