@@ -66,7 +66,7 @@ const API_BASE = "https://btc-snake-api.motazfaysel5.workers.dev";
 const FB_CONFIG_URL = "./firebase-config.js";
 let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), coinMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
 let lastMode = "multi", lastDuration = 300, roundEndedByServer = false, manualLeave = false, wasAlive = null;
-let localSolo = false, localLoop = null, localGame = null, gameScreenActive = false, localMoveHeld = false;
+let localSolo = false, localLoop = null, localGame = null, gameScreenActive = false;
 let cameraMode = 0, cameraYaw = 0, cameraTarget = new THREE.Vector3(50,0,50), cameraForward = new THREE.Vector3(1,0,0), cameraReady = false, pointerX = null;
 const $ = id => document.getElementById(id);
 const skins = [
@@ -291,8 +291,12 @@ function localSoloTick(){
         if(d.x*snake.dir.x+d.z*snake.dir.z>-.85)snake.nextDir=d;
       }
     }
-    if(!snake.bot&&snake.id===myId&&!localMoveHeld)continue;
-    snake.dir=smoothDirection(snake.dir,snake.nextDir);
+    if(!snake.bot&&snake.id===myId){
+      const angle=Math.atan2(snake.dir.z,snake.dir.x)+(snake.turnInput||0)*0.055;
+      snake.dir={x:Math.cos(angle),z:Math.sin(angle)};
+    }else{
+      snake.dir=smoothDirection(snake.dir,snake.nextDir);
+    }
     if(g.tick%2!==0)continue;
     const h=snake.body[0],head={x:Math.max(0,Math.min(100,h.x+snake.dir.x*.9)),z:Math.max(0,Math.min(100,h.z+snake.dir.z*.9))};
     snake.body.unshift(head);snake.body.pop();
@@ -372,35 +376,32 @@ function connect(mode="multi",duration=300){
  $("leaveBtn").onclick=()=>{exitGameScreen();manualLeave=true;if(localLoop){clearInterval(localLoop);localLoop=null;}localSolo=false;localGame=null;ws?.close();ws=null;running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA"};
 $("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
 const dirs={up:{x:0,z:-1},down:{x:0,z:1},left:{x:-1,z:0},right:{x:1,z:0}};
-function steer(vector){
- const len=Math.hypot(vector.x,vector.z);if(len<.15)return;
- const next={x:vector.x/len,z:vector.z/len};
- if(localSolo&&localGame){const s=localGame.snakes.find(x=>x.id===myId);if(s&&s.alive&&next.x*s.dir.x+next.z*s.dir.z>-.85){s.nextDir=next;localMoveHeld=true;}return;}
- if(ws?.readyState===1)ws.send(JSON.stringify({type:"turn",dir:next}));
+function steerTurn(value){
+ const amount=Math.max(-1,Math.min(1,value));
+ if(localSolo&&localGame){const s=localGame.snakes.find(x=>x.id===myId);if(s&&s.alive)s.turnInput=amount;return;}
+ if(ws?.readyState===1)ws.send(JSON.stringify({type:"steer",value:amount}));
 }
-function turn(d){steer(dirs[d])}
+function turn(d){steerTurn(d==="left"?-1:d==="right"?1:0)}
 function initJoystick(){
  const base=$("joystickBase"),knob=$("joystickKnob");if(!base||!knob)return;let activePointer=null,lastSent={x:0,z:0},lastSentAt=0;
- const reset=()=>{activePointer=null;localMoveHeld=false;knob.style.transform="translate(-50%,-50%)";};
+ const reset=()=>{activePointer=null;steerTurn(0);knob.style.transform="translate(-50%,-50%)";};
  function move(e){
   if(activePointer!==e.pointerId)return;
   const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
   let dx=e.clientX-cx,dy=e.clientY-cy;const max=r.width*.34,len=Math.hypot(dx,dy)||1;
   if(len>max){dx=dx/len*max;dy=dy/len*max;}
   knob.style.transform="translate(calc(-50% + "+dx+"px),calc(-50% + "+dy+"px))";
-  if(Math.hypot(dx,dy)>max*.18){
-   const vector={x:dx/max,z:dy/max},now=Date.now();
-   if(Math.hypot(vector.x-lastSent.x,vector.z-lastSent.z)>.055||now-lastSentAt>65){steer(vector);lastSent=vector;lastSentAt=now;}
-  }
+  const turnAmount=Math.abs(dx/max)>.08?dx/max:0,now=Date.now();
+  if(Math.abs(turnAmount-lastSent.x)>.035||now-lastSentAt>65){steerTurn(turnAmount);lastSent={x:turnAmount,z:0};lastSentAt=now;}
  }
- base.addEventListener("pointerdown",e=>{activePointer=e.pointerId;base.setPointerCapture(e.pointerId);lastSentAt=0;if(localSolo)localMoveHeld=true;move(e);});
+ base.addEventListener("pointerdown",e=>{activePointer=e.pointerId;base.setPointerCapture(e.pointerId);lastSentAt=0;steerTurn(0);move(e);});
  base.addEventListener("pointermove",move);base.addEventListener("pointerup",e=>{if(activePointer===e.pointerId)reset();});
  base.addEventListener("pointercancel",reset);base.addEventListener("lostpointercapture",reset);
 }
 
 initJoystick();
 window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowup","w"].includes(k))turn("up");if(["arrowdown","s"].includes(k))turn("down");if(["arrowleft","a"].includes(k))turn("left");if(["arrowright","d"].includes(k))turn("right")});
-window.addEventListener("keyup",e=>{if(["arrowup","arrowdown","arrowleft","arrowright","w","a","s","d"].includes(e.key.toLowerCase()))localMoveHeld=false;});
+window.addEventListener("keyup",e=>{if(["arrowleft","arrowright","a","d"].includes(e.key.toLowerCase()))steerTurn(0);});
 
 function drawSkins(){
  $("skins").innerHTML="";for(const s of skins){const d=document.createElement("button");d.className="skin";d.innerHTML=`<i style="background:${s.color};color:${s.color}"></i><b>${s.name}</b><small class="muted" style="display:block">${s.unlock}</small>`;d.onclick=()=>{selectedSkin=s.id;toast(`${s.name} selected (cosmetic preview)`)};$("skins").appendChild(d)}
