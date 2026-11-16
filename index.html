@@ -281,20 +281,26 @@ function localSoloTick(){
   const remaining=Math.max(0,g.duration-Math.floor(elapsed));
   if(remaining<=0){finishLocalSolo();return;}
   g.tick++;
-  if(g.tick%2===0){
-    for(const s of g.snakes){
-      if(!s.alive)continue;
-      if(s.bot&&Math.random()<0.22&&g.coins.length){
-        const target=g.coins.reduce((best,c)=>!best||Math.hypot(c.x-s.body[0].x,c.z-s.body[0].z)<Math.hypot(best.x-s.body[0].x,best.z-s.body[0].z)?c:best,null);
-        if(target){const dx=target.x-s.body[0].x,dz=target.z-s.body[0].z;const choices=Math.abs(dx)>Math.abs(dz)?[{x:Math.sign(dx)||1,z:0},{x:0,z:Math.sign(dz)||1}]:[{x:0,z:Math.sign(dz)||1},{x:Math.sign(dx)||1,z:0}];const d=choices[0];if(!(d.x===-s.dir.x&&d.z===-s.dir.z))s.nextDir=d;}
+  for(const snake of g.snakes){
+    if(!snake.alive)continue;
+    if(snake.bot&&g.tick%2===0&&Math.random()<0.22&&g.coins.length){
+      const target=g.coins.reduce((best,c)=>!best||Math.hypot(c.x-snake.body[0].x,c.z-snake.body[0].z)<Math.hypot(best.x-snake.body[0].x,best.z-snake.body[0].z)?c:best,null);
+      if(target){
+        const dx=target.x-snake.body[0].x,dz=target.z-snake.body[0].z,len=Math.hypot(dx,dz)||1;
+        const d={x:dx/len,z:dz/len};
+        if(d.x*snake.dir.x+d.z*snake.dir.z>-.85)snake.nextDir=d;
       }
-       s.dir=smoothDirection(s.dir,s.nextDir);
-      if(g.tick%2===0){const h=s.body[0],head={x:Math.max(0,Math.min(100,h.x+s.dir.x*.9)),z:Math.max(0,Math.min(100,h.z+s.dir.z*.9))};s.body.unshift(head);s.body.pop();}
-      const ci=g.coins.findIndex(c=>Math.hypot(c.x-head.x,c.z-head.z)<1.8);
-      if(ci>=0){g.coins.splice(ci,1);s.score++;s.body.push({...s.body[s.body.length-1]});if(g.coins.length<26)for(let i=0;i<12;i++)g.coins.push({x:4+Math.random()*92,z:4+Math.random()*92,value:1});}
-      const si=g.shields.findIndex(c=>Math.hypot(c.x-head.x,c.z-head.z)<2);
-      if(si>=0){g.shields.splice(si,1);s.shieldUntil=now+5000;}
     }
+    snake.dir=smoothDirection(snake.dir,snake.nextDir);
+    if(g.tick%2!==0)continue;
+    const h=snake.body[0],head={x:Math.max(0,Math.min(100,h.x+snake.dir.x*.9)),z:Math.max(0,Math.min(100,h.z+snake.dir.z*.9))};
+    snake.body.unshift(head);snake.body.pop();
+    const ci=g.coins.findIndex(c=>Math.hypot(c.x-head.x,c.z-head.z)<1.8);
+    if(ci>=0){g.coins.splice(ci,1);snake.score++;snake.body.push({...snake.body[snake.body.length-1]});if(g.coins.length<26)for(let i=0;i<12;i++)g.coins.push({x:4+Math.random()*92,z:4+Math.random()*92,value:1});}
+    const si=g.shields.findIndex(c=>Math.hypot(c.x-head.x,c.z-head.z)<2);
+    if(si>=0){g.shields.splice(si,1);snake.shieldUntil=now+5000;}
+  }
+  if(g.tick%2===0){
     const alive=g.snakes.filter(s=>s.alive),dead=new Set();
     for(const a of alive){
       const h=a.body[0];
