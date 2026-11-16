@@ -292,7 +292,7 @@ function localSoloTick(){
       }
     }
     if(!snake.bot&&snake.id===myId){
-      const angle=Math.atan2(snake.dir.z,snake.dir.x)+(snake.turnInput||0)*0.055;
+      const angle=Math.atan2(snake.dir.z,snake.dir.x)+(snake.turnInput||0)*0.10;
       snake.dir={x:Math.cos(angle),z:Math.sin(angle)};
     }else{
       snake.dir=smoothDirection(snake.dir,snake.nextDir);
