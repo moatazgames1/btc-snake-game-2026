@@ -316,7 +316,7 @@ export class SnakeRoom {
         const angle = currentAngle + delta;
         s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
       } else if (s.turnInput) {
-        const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.055;
+        const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.10;
         s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
       }
       if (this.tickNo % 2) continue;
