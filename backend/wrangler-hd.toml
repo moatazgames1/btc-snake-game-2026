@@ -1,0 +1,29 @@
+name = "btc-snake-hd-api"
+main = "worker-hd.js"
+compatibility_date = "2026-11-10"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "btc-snake-hd-db"
+database_id = "bc84c32e-b8f0-4fdf-b0e2-e37e5a2d1126"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "SnakeRoomHD"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SnakeRoomHD"]
+
+[vars]
+ALLOWED_ORIGIN = "https://moatazgames1.github.io"
+FRONTEND_URL = "https://moatazgames1.github.io/btc-snake-game-2026/"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
