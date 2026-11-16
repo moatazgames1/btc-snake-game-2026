@@ -253,6 +253,12 @@ function updateWorld(state){
  }
  for(let i=shields.length;i<shieldMeshes.length;i++)shieldMeshes[i].visible=false;
 }
+function smoothDirection(current,target,maxAngle=.18){
+ const a=Math.atan2(current.z,current.x),b=Math.atan2(target.z,target.x);
+ let delta=Math.atan2(Math.sin(b-a),Math.cos(b-a));
+ delta=Math.max(-maxAngle,Math.min(maxAngle,delta));
+ const angle=a+delta;return {x:Math.cos(angle),z:Math.sin(angle)};
+}
 function startLocalSolo(duration=300){
   localSolo=true;running=true;ws=null;
   lastMode="solo";lastDuration=duration;roundEndedByServer=false;manualLeave=false;wasAlive=null;
@@ -282,9 +288,8 @@ function localSoloTick(){
         const target=g.coins.reduce((best,c)=>!best||Math.hypot(c.x-s.body[0].x,c.z-s.body[0].z)<Math.hypot(best.x-s.body[0].x,best.z-s.body[0].z)?c:best,null);
         if(target){const dx=target.x-s.body[0].x,dz=target.z-s.body[0].z;const choices=Math.abs(dx)>Math.abs(dz)?[{x:Math.sign(dx)||1,z:0},{x:0,z:Math.sign(dz)||1}]:[{x:0,z:Math.sign(dz)||1},{x:Math.sign(dx)||1,z:0}];const d=choices[0];if(!(d.x===-s.dir.x&&d.z===-s.dir.z))s.nextDir=d;}
       }
-      s.dir=s.nextDir;
-      const h=s.body[0],head={x:Math.max(0,Math.min(100,h.x+s.dir.x*.9)),z:Math.max(0,Math.min(100,h.z+s.dir.z*.9))};
-      s.body.unshift(head);s.body.pop();
+       s.dir=smoothDirection(s.dir,s.nextDir);
+      if(g.tick%2===0){const h=s.body[0],head={x:Math.max(0,Math.min(100,h.x+s.dir.x*.9)),z:Math.max(0,Math.min(100,h.z+s.dir.z*.9))};s.body.unshift(head);s.body.pop();}
       const ci=g.coins.findIndex(c=>Math.hypot(c.x-head.x,c.z-head.z)<1.8);
       if(ci>=0){g.coins.splice(ci,1);s.score++;s.body.push({...s.body[s.body.length-1]});if(g.coins.length<26)for(let i=0;i<12;i++)g.coins.push({x:4+Math.random()*92,z:4+Math.random()*92,value:1});}
       const si=g.shields.findIndex(c=>Math.hypot(c.x-head.x,c.z-head.z)<2);
@@ -360,13 +365,32 @@ function connect(mode="multi",duration=300){
  $("leaveBtn").onclick=()=>{exitGameScreen();manualLeave=true;if(localLoop){clearInterval(localLoop);localLoop=null;}localSolo=false;localGame=null;ws?.close();ws=null;running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA"};
 $("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
 const dirs={up:{x:0,z:-1},down:{x:0,z:1},left:{x:-1,z:0},right:{x:1,z:0}};
-function turn(d){if(localSolo&&localGame){const s=localGame.snakes.find(x=>x.id===myId);if(s&&s.alive){const next=dirs[d];if(!(next.x===-s.dir.x&&next.z===-s.dir.z))s.nextDir=next;}return;}if(ws?.readyState===1)ws.send(JSON.stringify({type:"turn",dir:dirs[d]}))}
-function initJoystick(){
- const base=$("joystickBase"),knob=$("joystickKnob");if(!base||!knob)return;let activePointer=null;
- const reset=()=>{activePointer=null;knob.style.transform="translate(-50%,-50%)";};
- function move(e){if(activePointer!==e.pointerId)return;const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const max=r.width*.34,len=Math.hypot(dx,dy)||1;if(len>max){dx=dx/len*max;dy=dy/len*max;}knob.style.transform="translate(calc(-50% + "+dx+"px),calc(-50% + "+dy+"px))";if(Math.hypot(dx,dy)>max*.28){const dir=Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up");turn(dir);}}
- base.addEventListener("pointerdown",e=>{activePointer=e.pointerId;base.setPointerCapture(e.pointerId);move(e);});base.addEventListener("pointermove",move);base.addEventListener("pointerup",e=>{if(activePointer===e.pointerId)reset();});base.addEventListener("pointercancel",reset);base.addEventListener("lostpointercapture",reset);
+function steer(vector){
+ const len=Math.hypot(vector.x,vector.z);if(len<.15)return;
+ const next={x:vector.x/len,z:vector.z/len};
+ if(localSolo&&localGame){const s=localGame.snakes.find(x=>x.id===myId);if(s&&s.alive&&next.x*s.dir.x+next.z*s.dir.z>-.85)s.nextDir=next;return;}
+ if(ws?.readyState===1)ws.send(JSON.stringify({type:"turn",dir:next}));
 }
+function turn(d){steer(dirs[d])}
+function initJoystick(){
+ const base=$("joystickBase"),knob=$("joystickKnob");if(!base||!knob)return;let activePointer=null,lastSent={x:0,z:0},lastSentAt=0;
+ const reset=()=>{activePointer=null;knob.style.transform="translate(-50%,-50%)";};
+ function move(e){
+  if(activePointer!==e.pointerId)return;
+  const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  let dx=e.clientX-cx,dy=e.clientY-cy;const max=r.width*.34,len=Math.hypot(dx,dy)||1;
+  if(len>max){dx=dx/len*max;dy=dy/len*max;}
+  knob.style.transform="translate(calc(-50% + "+dx+"px),calc(-50% + "+dy+"px))";
+  if(Math.hypot(dx,dy)>max*.18){
+   const vector={x:dx/max,z:dy/max},now=Date.now();
+   if(Math.hypot(vector.x-lastSent.x,vector.z-lastSent.z)>.055||now-lastSentAt>65){steer(vector);lastSent=vector;lastSentAt=now;}
+  }
+ }
+ base.addEventListener("pointerdown",e=>{activePointer=e.pointerId;base.setPointerCapture(e.pointerId);lastSentAt=0;move(e);});
+ base.addEventListener("pointermove",move);base.addEventListener("pointerup",e=>{if(activePointer===e.pointerId)reset();});
+ base.addEventListener("pointercancel",reset);base.addEventListener("lostpointercapture",reset);
+}
+
 initJoystick();
 window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowup","w"].includes(k))turn("up");if(["arrowdown","s"].includes(k))turn("down");if(["arrowleft","a"].includes(k))turn("left");if(["arrowright","d"].includes(k))turn("right")});
 
