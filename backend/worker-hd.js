@@ -287,7 +287,10 @@ export class SnakeRoomHD {
     if ((t-this.startedAt)/1000 >= this.roundSeconds) { this.endRound(); return; }
     for (const s of this.snakes.values()) {
       if (!s.alive) continue;
-      if (s.bot) this.botThink(s);
+      if (s.bot) {
+        this.botThink(s);
+        if (s.nextDir) s.dir = { x: s.nextDir.x, z: s.nextDir.z };
+      }
       if (!s.bot && s.turnInput) {
         const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.10;
         s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
