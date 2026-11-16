@@ -8,9 +8,9 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#29204f 0,#090914 48%);color:var(--text);font-family:system-ui,Segoe UI,Arial,sans-serif;min-height:100vh}
 header{display:flex;align-items:center;justify-content:space-between;padding:14px 4vw;border-bottom:1px solid #24243b;background:#090914dd;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
 .brand{font-weight:900;font-size:22px;letter-spacing:.5px}.brand b{color:var(--gold)}button,input{font:inherit}button{border:1px solid var(--line);background:#1a1b32;color:white;padding:10px 15px;border-radius:12px;cursor:pointer}button.primary{background:linear-gradient(100deg,#7545e8,#167dba);border:0;font-weight:800}button:disabled{opacity:.45;cursor:not-allowed}
-main{max-width:1280px;margin:auto;padding:22px 4vw}.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:center}.card{background:linear-gradient(145deg,#17182d,#0f1020);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 15px 45px #0005}.eyebrow{color:var(--cyan);font-weight:800;font-size:12px;letter-spacing:2px}.hero h1{font-size:clamp(32px,5vw,58px);line-height:1.05;margin:12px 0}.hero h1 span{color:var(--gold)}.muted{color:var(--muted)}.stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.stat{background:#0b0c19;border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-width:105px}.stat strong{display:block;font-size:20px}.arena-wrap{position:relative;margin-top:18px}#arenaWrap{display:none}.arena{width:100%;height:min(65vh,620px);min-height:360px;border-radius:20px;overflow:hidden;background:#090b19;border:1px solid #34365a;position:relative}.arena canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:absolute;z-index:7;inset:12px 12px auto;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:8px}.hud span{background:#090914dd;border:1px solid #ffffff22;padding:8px 11px;border-radius:10px;font-weight:800;white-space:nowrap}.hud-left{position:absolute;left:0;display:flex;gap:7px;align-items:center}.hud-right{position:absolute;right:0;display:flex;gap:7px;align-items:center;direction:rtl}#hudTimer{position:absolute;left:50%;transform:translateX(-50%)}.hud-coins{color:#f7c948}.arena-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}.list{display:grid;gap:8px}.row{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;background:#0b0c19}.skin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.skin{padding:10px;border-radius:13px;background:#0b0c19;border:1px solid var(--line);text-align:center;cursor:pointer}.skin i{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 7px;box-shadow:0 0 18px currentColor}.auth{display:flex;gap:7px;flex-wrap:wrap}.auth input{background:#0b0c19;border:1px solid var(--line);color:white;padding:10px;border-radius:10px;min-width:130px;max-width:180px}.notice{font-size:12px;color:var(--muted);line-height:1.6}.mobile-controls{display:none;position:absolute;z-index:8;left:18px;bottom:18px;touch-action:none}.joystick-base{width:132px;height:132px;border-radius:50%;border:2px solid #ffffff55;background:radial-gradient(circle,#27365cbb,#080c1dcc);box-shadow:0 8px 30px #0009,inset 0 0 18px #7dd3fc22;position:relative;touch-action:none;user-select:none}.joystick-knob{position:absolute;width:54px;height:54px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;border:2px solid #bdefff;background:linear-gradient(145deg,#38bdf8dd,#6d42d9ee);box-shadow:0 0 22px #22d3ee88;pointer-events:none}.ad-slot{border:1px dashed #3a3b5c;border-radius:12px;padding:12px;text-align:center;color:#777b9d;margin-top:14px;font-size:12px}
+main{max-width:1280px;margin:auto;padding:22px 4vw}.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:center}.card{background:linear-gradient(145deg,#17182d,#0f1020);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 15px 45px #0005}.eyebrow{color:var(--cyan);font-weight:800;font-size:12px;letter-spacing:2px}.hero h1{font-size:clamp(32px,5vw,58px);line-height:1.05;margin:12px 0}.hero h1 span{color:var(--gold)}.muted{color:var(--muted)}.stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.stat{background:#0b0c19;border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-width:105px}.stat strong{display:block;font-size:20px}.arena-wrap{position:relative;margin-top:18px}#arenaWrap{display:none}.arena{width:100%;height:min(65vh,620px);min-height:360px;border-radius:20px;overflow:hidden;background:#090b19;border:1px solid #34365a;position:relative}.arena canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:absolute;z-index:7;inset:12px 12px auto;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:8px}.hud span{background:#090914dd;border:1px solid #ffffff22;padding:8px 11px;border-radius:10px;font-weight:800;white-space:nowrap}.hud-left{position:absolute;left:0;display:flex;gap:7px;align-items:center}.hud-right{position:absolute;right:0;display:flex;gap:7px;align-items:center;direction:rtl}#hudTimer{position:absolute;left:50%;transform:translateX(-50%)}.hud-coins{color:#f7c948}.arena-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.mode-option{border:1px solid var(--line)}.mode-option.selected{border:2px solid var(--gold);background:#34304a;box-shadow:0 0 0 2px #f7c94833}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}.list{display:grid;gap:8px}.row{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;background:#0b0c19}.skin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.skin{padding:10px;border-radius:13px;background:#0b0c19;border:1px solid var(--line);text-align:center;cursor:pointer}.skin i{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 7px;box-shadow:0 0 18px currentColor}.auth{display:flex;gap:7px;flex-wrap:wrap}.auth input{background:#0b0c19;border:1px solid var(--line);color:white;padding:10px;border-radius:10px;min-width:130px;max-width:180px}.notice{font-size:12px;color:var(--muted);line-height:1.6}.mobile-controls{display:none;position:absolute;z-index:8;left:18px;bottom:18px;touch-action:none}.joystick-base{width:132px;height:132px;border-radius:50%;border:2px solid #ffffff55;background:radial-gradient(circle,#27365cbb,#080c1dcc);box-shadow:0 8px 30px #0009,inset 0 0 18px #7dd3fc22;position:relative;touch-action:none;user-select:none}.joystick-knob{position:absolute;width:54px;height:54px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;border:2px solid #bdefff;background:linear-gradient(145deg,#38bdf8dd,#6d42d9ee);box-shadow:0 0 22px #22d3ee88;pointer-events:none}.ad-slot{border:1px dashed #3a3b5c;border-radius:12px;padding:12px;text-align:center;color:#777b9d;margin-top:14px;font-size:12px}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d2040;padding:12px 18px;border:1px solid #494c7c;border-radius:12px;display:none;z-index:1200}
-body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fullscreen .hero,body.game-fullscreen .grid,body.game-fullscreen main>section:not(.arena-wrap),body.game-fullscreen footer{display:none!important}body.game-fullscreen main{display:contents}body.game-fullscreen .arena-wrap{display:block;position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;margin:0!important;padding:0;border:0;border-radius:0;z-index:1100;background:#090b19;box-shadow:none}body.game-fullscreen .arena{position:absolute;inset:0;width:100%;height:100%;min-height:0;border:0;border-radius:0}body.game-fullscreen .hud{inset:calc(env(safe-area-inset-top) + 10px) 10px auto}body.game-fullscreen .arena-actions{position:absolute;z-index:8;right:10px;bottom:calc(env(safe-area-inset-bottom) + 12px);margin:0;max-width:calc(100% - 170px);gap:6px}body.game-fullscreen .arena-actions button{padding:8px 10px;font-size:12px}body.game-fullscreen .mobile-controls{display:block!important;left:calc(env(safe-area-inset-left) + 14px);bottom:calc(env(safe-area-inset-bottom) + 12px)}body.game-fullscreen #deathPanel{position:absolute;z-index:9;left:50%;bottom:calc(env(safe-area-inset-bottom) + 160px);transform:translateX(-50%);width:min(90%,420px);background:#321b25ee!important}
+body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fullscreen .hero,body.game-fullscreen .grid,body.game-fullscreen main>section:not(.arena-wrap),body.game-fullscreen footer{display:none!important}body.game-fullscreen main{display:block;max-width:none;width:100%;height:100%;margin:0;padding:0}body.game-fullscreen .arena-wrap{display:block;position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;margin:0!important;padding:0;border:0;border-radius:0;z-index:1100;background:#090b19;box-shadow:none}body.game-fullscreen .arena{position:absolute;inset:0;width:100%;height:100%;min-height:0;border:0;border-radius:0}body.game-fullscreen .hud{inset:calc(env(safe-area-inset-top) + 10px) 10px auto}body.game-fullscreen .arena-actions{position:absolute;z-index:8;right:10px;bottom:calc(env(safe-area-inset-bottom) + 12px);margin:0;max-width:calc(100% - 170px);gap:6px}body.game-fullscreen .arena-actions button{padding:8px 10px;font-size:12px}body.game-fullscreen .mobile-controls{display:block!important;left:calc(env(safe-area-inset-left) + 14px);bottom:calc(env(safe-area-inset-bottom) + 12px)}body.game-fullscreen #deathPanel{position:absolute;z-index:9;left:50%;bottom:calc(env(safe-area-inset-bottom) + 160px);transform:translateX(-50%);width:min(90%,420px);background:#321b25ee!important}
 @media(max-width:800px){.hero,.grid{grid-template-columns:1fr}.hero .card:nth-child(2){order:-1}.arena{height:58vh;min-height:330px}.skin-grid{grid-template-columns:repeat(3,1fr)}header{padding:12px 4vw}.brand{font-size:18px}.mobile-controls{display:block}.auth input{max-width:100%;flex:1}}
 </style>
 </head>
@@ -23,7 +23,7 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
   <h1 id="headline">اجمع العملات… <span>وكن ملك الساحة</span></h1>
   <p class="muted" id="subhead">لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.</p>
   <div class="stats"><div class="stat"><strong id="playersCount">—</strong><small class="muted" id="playersLabel">في الساحة</small></div><div class="stat"><strong id="timeCount">05:00</strong><small class="muted" id="timeLabel">وقت الجولة</small></div><div class="stat"><strong id="myScore">0</strong><small class="muted" id="scoreLabel">عملات الجولة</small></div></div>
-  <div class="arena-actions"><button class="primary" id="playBtn">منافسة جماعية · 5 دقائق</button><button id="play10Btn">منافسة جماعية · 10 دقائق</button><button id="soloBtn">تدريب فردي · 5 دقائق</button><button id="howBtn">طريقة اللعب</button></div>
+  <div class="arena-actions"><button class="mode-option selected" id="playBtn" type="button" aria-pressed="true">منافسة جماعية · 5 دقائق</button><button class="mode-option" id="play10Btn" type="button" aria-pressed="false">منافسة جماعية · 10 دقائق</button><button class="mode-option" id="soloBtn" type="button" aria-pressed="false">تدريب فردي · 5 دقائق</button><button class="primary" id="startSelectedBtn" type="button">بدء اللعب</button><button id="howBtn">طريقة اللعب</button></div>
   <div class="notice" id="rules">الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.</div>
  </div>
  <div class="card">
@@ -65,7 +65,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.m
 const API_BASE = "https://btc-snake-api.motazfaysel5.workers.dev";
 const FB_CONFIG_URL = "./firebase-config.js";
 let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), coinMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
-let lastMode = "multi", lastDuration = 300, roundEndedByServer = false, manualLeave = false, wasAlive = null, cameraViewMode = 0;
+let lastMode = "multi", lastDuration = 300, roundEndedByServer = false, manualLeave = false, wasAlive = null, cameraViewMode = 0, selectedMode = "multi", selectedDuration = 300;
 const $ = id => document.getElementById(id);
 const skins = [
  {id:"mint",name:"Mint",color:"#35e0a1",unlock:"Free"},
@@ -78,12 +78,12 @@ const skins = [
  {id:"diamond",name:"Diamond",color:"#d7f7ff",unlock:"Achievement"}
 ];
 const text = {
- ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 5 دقائق",play10:"منافسة جماعية · 10 دقائق",solo:"تدريب فردي · 5 دقائق",how:"طريقة اللعب",rules:"الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN"},
- en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 5 min",play10:"Live multiplayer · 10 min",solo:"Solo practice · 5 min",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head = both eliminated. Shields protect temporarily.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي"}
+ ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 5 دقائق",play10:"منافسة جماعية · 10 دقائق",solo:"تدريب فردي · 5 دقائق",how:"طريقة اللعب",rules:"الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
+ en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 5 min",play10:"Live multiplayer · 10 min",solo:"Solo practice · 5 min",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head = both eliminated. Shields protect temporarily.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
 };
 let lang="ar";
 function toast(s){$("toast").textContent=s;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2600)}
-function applyLang(){document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";const t=text[lang];$("langBtn").textContent=t.language;$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("play10Btn").textContent=t.play10;$("soloBtn").textContent=t.solo;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("emailLogin").textContent=t.login2;$("authStatus").textContent=t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin}
+function applyLang(){document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";const t=text[lang];$("langBtn").textContent=t.language;$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("play10Btn").textContent=t.play10;$("soloBtn").textContent=t.solo;$("startSelectedBtn").textContent=t.start;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("emailLogin").textContent=t.login2;$("authStatus").textContent=t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin}
 $("langBtn").onclick=()=>{lang=lang==="ar"?"en":"ar";applyLang()};applyLang();
 
 async function loadFirebase(){
@@ -111,25 +111,33 @@ $("googleLogin").onclick=async()=>{if(!firebase)return toast("Firebase setup req
 $("logout").onclick=()=>firebase?.signOut(auth);
 $("loginTop").onclick=()=>$("email").focus();
 
+function resizeGameRenderer(){
+ if(!renderer||!camera)return;
+ const host=$("arena");if(!host)return;
+ const width=Math.max(1,host.clientWidth||window.innerWidth||360);
+ const height=Math.max(1,host.clientHeight||window.innerHeight||640);
+ camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);
+}
 function init3D(){
  const host=$("arena");scene=new THREE.Scene();scene.background=new THREE.Color("#090b19");
- camera=new THREE.PerspectiveCamera(48,host.clientWidth/host.clientHeight,.1,500);camera.position.set(50,85,85);camera.lookAt(50,0,50);
- renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(host.clientWidth,host.clientHeight);host.appendChild(renderer.domElement);
+ const width=Math.max(1,host.clientWidth||window.innerWidth||360),height=Math.max(1,host.clientHeight||window.innerHeight||640);
+ camera=new THREE.PerspectiveCamera(58,width/height,.1,500);camera.position.set(50,85,85);camera.lookAt(50,0,50);
+ renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(width,height);host.appendChild(renderer.domElement);
  scene.add(new THREE.HemisphereLight(0xbacaff,0x182033,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(40,80,20);scene.add(light);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({color:"#10142b",roughness:.8}));floor.rotation.x=-Math.PI/2;floor.position.set(50,-.5,50);scene.add(floor);
  const grid=new THREE.GridHelper(100,50,"#353a6c","#202541");grid.position.set(50,.02,50);scene.add(grid);
  const border=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(100,.4,100)),new THREE.LineBasicMaterial({color:"#7864e8"}));border.position.set(50,.2,50);scene.add(border);
- const resize=()=>{camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();renderer.setSize(host.clientWidth,host.clientHeight)};new ResizeObserver(resize).observe(host);
+ const resize=()=>resizeGameRenderer();new ResizeObserver(resize).observe(host);window.addEventListener("resize",resizeGameRenderer);document.addEventListener("fullscreenchange",()=>requestAnimationFrame(resizeGameRenderer));requestAnimationFrame(resizeGameRenderer);
  function animate(){requestAnimationFrame(animate);renderer.render(scene,camera)}animate();
 }
 function updateFollowCamera(snake){
  if(!camera||!snake?.body||snake.body.length<2)return;
  const head=snake.body[0],neck=snake.body[1];
  let dx=head.x-neck.x,dz=head.z-neck.z;const len=Math.hypot(dx,dz)||1;dx/=len;dz/=len;
- const views=[{back:7,height:3.8,look:5},{back:12,height:6,look:7},{back:20,height:10,look:10}];
+ const views=[{back:8,height:4.8,look:2},{back:14,height:7,look:3},{back:22,height:11,look:4}];
  const v=views[cameraViewMode];
  camera.position.set(head.x-dx*v.back, v.height, head.z-dz*v.back);
- camera.lookAt(head.x+dx*v.look, .7, head.z+dz*v.look);
+ camera.lookAt(head.x+dx*v.look, .65, head.z+dz*v.look);
 }
 function cycleCameraView(){
  cameraViewMode=(cameraViewMode+1)%3;
@@ -163,8 +171,9 @@ function updateWorld(state){
 function enterGameView(){
  document.body.classList.add("game-fullscreen");
  const target=$("arenaWrap");
- if(target?.requestFullscreen){target.requestFullscreen().then(()=>{if(screen.orientation?.lock)screen.orientation.lock("landscape").catch(()=>{});}).catch(()=>{});}
- else if(screen.orientation?.lock)screen.orientation.lock("landscape").catch(()=>{});
+ let request=Promise.resolve();
+ if(target?.requestFullscreen)request=target.requestFullscreen().catch(()=>{});
+ return request.then(()=>{if(screen.orientation?.lock)screen.orientation.lock("landscape").catch(()=>{});});
 }
 function exitGameView(){
  document.body.classList.remove("game-fullscreen");
@@ -172,7 +181,11 @@ function exitGameView(){
  if(screen.orientation?.unlock)try{screen.orientation.unlock()}catch{}
 }
 function startGame(mode,duration){
- enterGameView();requestAnimationFrame(()=>{if(!renderer)init3D();if(!running)connect(mode,duration);});
+ enterGameView().then(()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  if(!renderer)init3D();else resizeGameRenderer();
+  resizeGameRenderer();
+  if(!running)connect(mode,duration);
+ })));
 }
 function connect(mode="multi",duration=300){
   if(ws)ws.close();
@@ -209,9 +222,14 @@ function connect(mode="multi",duration=300){
   if(mine)$("resultsSummary").textContent+=lang==="ar"?` مركزك ${mine.rank} — نقاطك ${mine.score}.`:` Your rank: ${mine.rank} — score: ${mine.score}.`;
   $("playAgainBtn").textContent=lang==="ar"?"العب جولة جديدة":"Play another round";
  }
- $("playBtn").onclick=()=>startGame("multi",300);
- $("play10Btn").onclick=()=>startGame("multi",600);
- $("soloBtn").onclick=()=>startGame("solo",300);
+ function chooseMode(mode,duration){
+  selectedMode=mode;selectedDuration=duration;
+  for(const id of ["playBtn","play10Btn","soloBtn"]){const b=$(id);const active=(id==="playBtn"&&mode==="multi"&&duration===300)||(id==="play10Btn"&&mode==="multi"&&duration===600)||(id==="soloBtn"&&mode==="solo"&&duration===300);b.classList.toggle("selected",active);b.setAttribute("aria-pressed",String(active));}
+ }
+ $("playBtn").onclick=()=>chooseMode("multi",300);
+ $("play10Btn").onclick=()=>chooseMode("multi",600);
+ $("soloBtn").onclick=()=>chooseMode("solo",300);
+ $("startSelectedBtn").onclick=()=>startGame(selectedMode,selectedDuration);
  $("playAgainBtn").onclick=()=>startGame(lastMode,lastDuration);
  $("leaveBtn").onclick=()=>{manualLeave=true;ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA";exitGameView()};
 $("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
