@@ -8,8 +8,9 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#29204f 0,#090914 48%);color:var(--text);font-family:system-ui,Segoe UI,Arial,sans-serif;min-height:100vh}
 header{display:flex;align-items:center;justify-content:space-between;padding:14px 4vw;border-bottom:1px solid #24243b;background:#090914dd;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
 .brand{font-weight:900;font-size:22px;letter-spacing:.5px}.brand b{color:var(--gold)}button,input{font:inherit}button{border:1px solid var(--line);background:#1a1b32;color:white;padding:10px 15px;border-radius:12px;cursor:pointer}button.primary{background:linear-gradient(100deg,#7545e8,#167dba);border:0;font-weight:800}button:disabled{opacity:.45;cursor:not-allowed}
-main{max-width:1280px;margin:auto;padding:22px 4vw}.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:center}.card{background:linear-gradient(145deg,#17182d,#0f1020);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 15px 45px #0005}.eyebrow{color:var(--cyan);font-weight:800;font-size:12px;letter-spacing:2px}.hero h1{font-size:clamp(32px,5vw,58px);line-height:1.05;margin:12px 0}.hero h1 span{color:var(--gold)}.muted{color:var(--muted)}.stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.stat{background:#0b0c19;border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-width:105px}.stat strong{display:block;font-size:20px}.arena-wrap{position:relative;margin-top:18px}.arena{width:100%;height:min(65vh,620px);min-height:360px;border-radius:20px;overflow:hidden;background:#090b19;border:1px solid #34365a;position:relative}.arena canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:absolute;inset:12px 12px auto;display:flex;justify-content:space-between;pointer-events:none;gap:8px}.hud span{background:#090914bb;border:1px solid #ffffff22;padding:8px 11px;border-radius:10px;font-weight:800}.arena-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}.list{display:grid;gap:8px}.row{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;background:#0b0c19}.skin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.skin{padding:10px;border-radius:13px;background:#0b0c19;border:1px solid var(--line);text-align:center;cursor:pointer}.skin i{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 7px;box-shadow:0 0 18px currentColor}.auth{display:flex;gap:7px;flex-wrap:wrap}.auth input{background:#0b0c19;border:1px solid var(--line);color:white;padding:10px;border-radius:10px;min-width:130px;max-width:180px}.notice{font-size:12px;color:var(--muted);line-height:1.6}.mobile-controls{display:none;position:absolute;z-index:8;left:18px;bottom:18px;touch-action:none}.joystick-base{width:132px;height:132px;border-radius:50%;border:2px solid #ffffff55;background:radial-gradient(circle,#27365cbb,#080c1dcc);box-shadow:0 8px 30px #0009,inset 0 0 18px #7dd3fc22;position:relative;touch-action:none;user-select:none}.joystick-knob{position:absolute;width:54px;height:54px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;border:2px solid #bdefff;background:linear-gradient(145deg,#38bdf8dd,#6d42d9ee);box-shadow:0 0 22px #22d3ee88;pointer-events:none}.ad-slot{border:1px dashed #3a3b5c;border-radius:12px;padding:12px;text-align:center;color:#777b9d;margin-top:14px;font-size:12px}
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d2040;padding:12px 18px;border:1px solid #494c7c;border-radius:12px;display:none;z-index:20}
+main{max-width:1280px;margin:auto;padding:22px 4vw}.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:center}.card{background:linear-gradient(145deg,#17182d,#0f1020);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 15px 45px #0005}.eyebrow{color:var(--cyan);font-weight:800;font-size:12px;letter-spacing:2px}.hero h1{font-size:clamp(32px,5vw,58px);line-height:1.05;margin:12px 0}.hero h1 span{color:var(--gold)}.muted{color:var(--muted)}.stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.stat{background:#0b0c19;border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-width:105px}.stat strong{display:block;font-size:20px}.arena-wrap{position:relative;margin-top:18px}.arena{width:100%;height:min(65vh,620px);min-height:360px;border-radius:20px;overflow:hidden;background:#090b19;border:1px solid #34365a;position:relative}.arena canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:absolute;z-index:7;inset:12px 12px auto;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:8px}.hud span{background:#090914dd;border:1px solid #ffffff22;padding:8px 11px;border-radius:10px;font-weight:800;white-space:nowrap}.hud-left,.hud-right{display:flex;gap:7px;align-items:center}.hud-coins{color:#f7c948}.arena-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}.list{display:grid;gap:8px}.row{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;background:#0b0c19}.skin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.skin{padding:10px;border-radius:13px;background:#0b0c19;border:1px solid var(--line);text-align:center;cursor:pointer}.skin i{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 7px;box-shadow:0 0 18px currentColor}.auth{display:flex;gap:7px;flex-wrap:wrap}.auth input{background:#0b0c19;border:1px solid var(--line);color:white;padding:10px;border-radius:10px;min-width:130px;max-width:180px}.notice{font-size:12px;color:var(--muted);line-height:1.6}.mobile-controls{display:none;position:absolute;z-index:8;left:18px;bottom:18px;touch-action:none}.joystick-base{width:132px;height:132px;border-radius:50%;border:2px solid #ffffff55;background:radial-gradient(circle,#27365cbb,#080c1dcc);box-shadow:0 8px 30px #0009,inset 0 0 18px #7dd3fc22;position:relative;touch-action:none;user-select:none}.joystick-knob{position:absolute;width:54px;height:54px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;border:2px solid #bdefff;background:linear-gradient(145deg,#38bdf8dd,#6d42d9ee);box-shadow:0 0 22px #22d3ee88;pointer-events:none}.ad-slot{border:1px dashed #3a3b5c;border-radius:12px;padding:12px;text-align:center;color:#777b9d;margin-top:14px;font-size:12px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d2040;padding:12px 18px;border:1px solid #494c7c;border-radius:12px;display:none;z-index:1200}
+body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fullscreen .hero,body.game-fullscreen .grid,body.game-fullscreen main>section:not(.arena-wrap),body.game-fullscreen footer{display:none!important}body.game-fullscreen main{display:contents}body.game-fullscreen .arena-wrap{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;margin:0!important;padding:0;border:0;border-radius:0;z-index:1100;background:#090b19;box-shadow:none}body.game-fullscreen .arena{position:absolute;inset:0;width:100%;height:100%;min-height:0;border:0;border-radius:0}body.game-fullscreen .hud{inset:calc(env(safe-area-inset-top) + 10px) 10px auto}body.game-fullscreen .arena-actions{position:absolute;z-index:8;right:10px;bottom:calc(env(safe-area-inset-bottom) + 12px);margin:0;max-width:calc(100% - 170px);gap:6px}body.game-fullscreen .arena-actions button{padding:8px 10px;font-size:12px}body.game-fullscreen .mobile-controls{left:calc(env(safe-area-inset-left) + 14px);bottom:calc(env(safe-area-inset-bottom) + 12px)}body.game-fullscreen #deathPanel{position:absolute;z-index:9;left:50%;bottom:calc(env(safe-area-inset-bottom) + 160px);transform:translateX(-50%);width:min(90%,420px);background:#321b25ee!important}
 @media(max-width:800px){.hero,.grid{grid-template-columns:1fr}.hero .card:nth-child(2){order:-1}.arena{height:58vh;min-height:330px}.skin-grid{grid-template-columns:repeat(3,1fr)}header{padding:12px 4vw}.brand{font-size:18px}.mobile-controls{display:block}.auth input{max-width:100%;flex:1}}
 </style>
 </head>
@@ -34,8 +35,8 @@ main{max-width:1280px;margin:auto;padding:22px 4vw}.hero{display:grid;grid-templ
  </div>
 </section>
 
-<section class="arena-wrap card">
- <div class="hud"><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div>
+<section class="arena-wrap card" id="arenaWrap">
+ <div class="hud"><div class="hud-left"><span id="hudCoins" class="hud-coins">🪙 0</span><span id="hudTimer">05:00</span></div><div class="hud-right"><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div></div>
  <div class="arena" id="arena"></div>
  <div class="arena-actions"><button id="shieldBtn">🛡 الدرع: اجمعه من الساحة</button><button id="leaveBtn">الخروج من الجولة</button><button id="skinBtn">تخصيص الأفعى</button></div>
  <div id="deathPanel" class="notice" hidden style="margin-top:12px;padding:14px;border:1px solid #ff623e;border-radius:12px;background:#321b25">
@@ -123,10 +124,10 @@ function init3D(){
 }
 function makeSphere(color,r=.65){return new THREE.Mesh(new THREE.SphereGeometry(r,14,10),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.25,roughness:.35}))}
 function updateWorld(state){
- lastState=state;$("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent=String(Math.floor(state.remaining/60)).padStart(2,"0")+":"+String(state.remaining%60).padStart(2,"0");
+ lastState=state;const clock=String(Math.floor(state.remaining/60)).padStart(2,"0")+":"+String(state.remaining%60).padStart(2,"0");$("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent=clock;$("hudTimer").textContent=clock;
  const mine=state.snakes?.find(s=>s.id===myId);
  if(mine){
-  $("myScore").textContent=mine.score;
+  $("myScore").textContent=mine.score;$("hudCoins").textContent="🪙 "+mine.score;
   $("statusPill").textContent=mine.alive?(lang==="ar"?"داخل الساحة":"IN ARENA"):(lang==="ar"?"تم إقصاؤك":"ELIMINATED");
   if(wasAlive===true&&!mine.alive){$("deathPanel").hidden=false;toast(lang==="ar"?"تم إقصاؤك — يمكنك المشاهدة أو الخروج":"Eliminated — spectate or leave");}
   wasAlive=mine.alive;
@@ -143,6 +144,20 @@ function updateWorld(state){
  shieldMeshes.forEach(m=>scene.remove(m));shieldMeshes=[];
  for(const c of state.shields||[]){const m=makeSphere("#54e7ff",.7);m.position.set(c.x,.7,c.z);scene.add(m);shieldMeshes.push(m)}
 }
+function enterGameView(){
+ document.body.classList.add("game-fullscreen");
+ const target=$("arenaWrap");
+ if(target?.requestFullscreen){target.requestFullscreen().then(()=>{if(screen.orientation?.lock)screen.orientation.lock("landscape").catch(()=>{});}).catch(()=>{});}
+ else if(screen.orientation?.lock)screen.orientation.lock("landscape").catch(()=>{});
+}
+function exitGameView(){
+ document.body.classList.remove("game-fullscreen");
+ if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+ if(screen.orientation?.unlock)try{screen.orientation.unlock()}catch{}
+}
+function startGame(mode,duration){
+ enterGameView();requestAnimationFrame(()=>{if(!renderer)init3D();if(!running)connect(mode,duration);});
+}
 function connect(mode="multi",duration=300){
   if(ws)ws.close();
   lastMode=mode;lastDuration=duration;roundEndedByServer=false;manualLeave=false;wasAlive=null;myId=null;
@@ -158,7 +173,7 @@ function connect(mode="multi",duration=300){
    ws.onopen=()=>{running=true;$("statusPill").textContent=lang==="ar"?"متصل بالساحة":"CONNECTED";toast(lang==="ar"?"تم الاتصال بالساحة":"Connected to arena")};
    ws.onmessage=e=>{
     let d;try{d=JSON.parse(e.data)}catch{return}
-    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6);$("timeCount").textContent=duration===600?"10:00":"05:00"}
+    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6);const initialClock=duration===600?"10:00":"05:00";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🪙 0"}
     else if(d.type==="state")updateWorld(d);
     else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration);}
     else if(d.type==="full")toast(lang==="ar"?"الساحة ممتلئة، حاول لاحقاً":"Arena is full. Try again soon.");
@@ -169,7 +184,7 @@ function connect(mode="multi",duration=300){
   openSocket();
  }
  function showResults(results,duration){
-  roundEndedByServer=true;$("deathPanel").hidden=true;$("roundResults").hidden=false;$("playAgainBtn").disabled=true;
+  roundEndedByServer=true;exitGameView();$("deathPanel").hidden=true;$("roundResults").hidden=false;$("playAgainBtn").disabled=true;
   $("resultsTitle").textContent=lang==="ar"?"🏆 نتائج الجولة":"🏆 Round results";
   $("resultsSummary").textContent=lang==="ar"?`انتهت جولة ${duration/60} دقائق.`:`${duration/60}-minute round finished.`;
   $("resultsList").innerHTML=results.map(r=>`<div class="row"><b>#${r.rank} ${escapeHtml(r.name)}${r.bot?" · BOT":""}</b><span>${r.score} 🪙</span></div>`).join("")||'<div class="row muted">No results.</div>';
@@ -178,11 +193,11 @@ function connect(mode="multi",duration=300){
   if(mine)$("resultsSummary").textContent+=lang==="ar"?` مركزك ${mine.rank} — نقاطك ${mine.score}.`:` Your rank: ${mine.rank} — score: ${mine.score}.`;
   $("playAgainBtn").textContent=lang==="ar"?"العب جولة جديدة":"Play another round";
  }
- $("playBtn").onclick=()=>{if(!renderer)init3D();if(!running)connect("multi",300)};
- $("play10Btn").onclick=()=>{if(!renderer)init3D();if(!running)connect("multi",600)};
- $("soloBtn").onclick=()=>{if(!renderer)init3D();if(!running)connect("solo",300)};
- $("playAgainBtn").onclick=()=>{if(!renderer)init3D();if(!running)connect(lastMode,lastDuration)};
- $("leaveBtn").onclick=()=>{manualLeave=true;ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA"};
+ $("playBtn").onclick=()=>startGame("multi",300);
+ $("play10Btn").onclick=()=>startGame("multi",600);
+ $("soloBtn").onclick=()=>startGame("solo",300);
+ $("playAgainBtn").onclick=()=>startGame(lastMode,lastDuration);
+ $("leaveBtn").onclick=()=>{manualLeave=true;ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA";exitGameView()};
 $("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
 function steerTurn(value){
  const amount=Math.max(-1,Math.min(1,value));
