@@ -16,5 +16,14 @@ tag = "v1"
 new_sqlite_classes = ["SnakeRoom"]
 
 [vars]
-ALLOWED_ORIGIN = "https://moatazgames1.github.io"
+ALLOWED_ORIGIN = "https://moatazgames1.github.io,https://btc-snake-test-2026.pages.dev"
 FRONTEND_URL = "https://moatazgames1.github.io/btc-snake-game-2026/"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
