@@ -260,7 +260,7 @@ function smoothDirection(current,target,maxAngle=.18){
  const angle=a+delta;return {x:Math.cos(angle),z:Math.sin(angle)};
 }
 function startLocalSolo(duration=300){
-  localSolo=true;running=true;ws=null;localMoveHeld=false;
+  localSolo=true;running=true;ws=null;
   lastMode="solo";lastDuration=duration;roundEndedByServer=false;manualLeave=false;wasAlive=null;
   myId="local-player";
   $("roundResults").hidden=true;$("deathPanel").hidden=true;$("myScore").textContent="0";
