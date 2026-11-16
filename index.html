@@ -393,7 +393,7 @@ function initJoystick(){
    if(Math.hypot(vector.x-lastSent.x,vector.z-lastSent.z)>.055||now-lastSentAt>65){steer(vector);lastSent=vector;lastSentAt=now;}
   }
  }
- base.addEventListener("pointerdown",e=>{activePointer=e.pointerId;base.setPointerCapture(e.pointerId);lastSentAt=0;move(e);});
+ base.addEventListener("pointerdown",e=>{activePointer=e.pointerId;base.setPointerCapture(e.pointerId);lastSentAt=0;if(localSolo)localMoveHeld=true;move(e);});
  base.addEventListener("pointermove",move);base.addEventListener("pointerup",e=>{if(activePointer===e.pointerId)reset();});
  base.addEventListener("pointercancel",reset);base.addEventListener("lostpointercapture",reset);
 }
