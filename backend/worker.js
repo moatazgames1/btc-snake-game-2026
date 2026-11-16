@@ -224,7 +224,7 @@ export class SnakeRoom {
     const x = 10 + Math.random() * 80, z = 10 + Math.random() * 80;
     const palette = { mint:"#35e0a1", gold:"#f7c948", fire:"#ff623e", ice:"#49d9ff", galaxy:"#a78bfa", toxic:"#b7f34a", royal:"#f472b6", diamond:"#d7f7ff" };
     return { id: pid, name, registered, bot, alive: true, score: 0, xp: 0,
-      body: [{x,z},{x:x-1,z},{x:x-2,z}], dir: {x:1,z:0}, nextDir: {x:1,z:0},
+      body: [{x,z},{x:x-1,z},{x:x-2,z}], dir: {x:1,z:0}, nextDir: {x:1,z:0}, turnInput: 0,
       shieldUntil: 0, color: bot ? ["#a78bfa","#22d3ee","#f59e0b","#34d399","#fb7185"][Math.floor(Math.random()*5)] : (palette[skin] || palette.mint), skin };
   }
 
@@ -253,6 +253,10 @@ export class SnakeRoom {
     try { data = JSON.parse(raw); } catch { return; }
     const s = this.snakes.get(pid);
     if (!s || !s.alive) return;
+    if (data.type === "steer" && Number.isFinite(data.value)) {
+      s.turnInput = Math.max(-1, Math.min(1, data.value));
+      return;
+    }
     if (data.type === "turn" && data.dir && Number.isInteger(data.dir.x) && Number.isInteger(data.dir.z)) {
       const d = { x: Math.max(-1, Math.min(1, data.dir.x)), z: Math.max(-1, Math.min(1, data.dir.z)) };
       if (Math.abs(d.x) + Math.abs(d.z) === 1 && !(d.x === -s.dir.x && d.z === -s.dir.z)) s.nextDir = d;
@@ -284,8 +288,13 @@ export class SnakeRoom {
     for (const s of this.snakes.values()) {
       if (!s.alive) continue;
       if (s.bot) this.botThink(s);
+      if (!s.bot && s.turnInput) {
+        const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.10;
+        s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
+      } else if (!s.bot) {
+        s.dir = s.nextDir;
+      }
       if (this.tickNo % 2) continue;
-      s.dir = s.nextDir;
       const h = s.body[0];
       const nh = {x: Math.max(0,Math.min(100,h.x+s.dir.x*0.9)), z: Math.max(0,Math.min(100,h.z+s.dir.z*0.9))};
       s.body.unshift(nh); s.body.pop();
