@@ -286,6 +286,7 @@ export class SnakeRoomHD {
     if (data.type === "joystick" && typeof data.active === "boolean") {
       s.joystickActive = data.active;
       s.lastManualInputAt = data.active ? Date.now() : 0;
+      if (!data.active) s.turnInput = 0;
       return;
     }
     if (data.type === "autoWalk" && typeof data.enabled === "boolean") {
@@ -333,11 +334,11 @@ export class SnakeRoomHD {
         s.dir = { x: s.nextDir.x, z: s.nextDir.z };
         s.pendingTurn = false;
       }
-      if (!s.bot && s.turnInput) {
+      const manualMove = s.joystickActive && (t - (s.lastManualInputAt || 0) < 650);
+      if (!s.bot && manualMove && s.turnInput) {
         const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.10;
         s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
       }
-      const manualMove = s.joystickActive && (t - (s.lastManualInputAt || 0) < 650);
       if (!s.bot && !s.autoWalk && !manualMove) continue;
       if (this.tickNo % 2) continue;
       const h = s.body[0];
