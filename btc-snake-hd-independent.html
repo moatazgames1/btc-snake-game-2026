@@ -23,7 +23,7 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
   <h1 id="headline">اجمع العملات… <span>وكن ملك الساحة</span></h1>
   <p class="muted" id="subhead">لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.</p>
   <div class="stats"><div class="stat"><strong id="playersCount">—</strong><small class="muted" id="playersLabel">في الساحة</small></div><div class="stat"><strong id="timeCount">05:00</strong><small class="muted" id="timeLabel">وقت الجولة</small></div><div class="stat"><strong id="myScore">0</strong><small class="muted" id="scoreLabel">عملات الجولة</small></div></div>
-  <div class="arena-actions"><button class="mode-option selected" id="playBtn" type="button" aria-pressed="true">منافسة جماعية · 5 دقائق</button><button class="mode-option" id="play10Btn" type="button" aria-pressed="false">منافسة جماعية · 10 دقائق</button><button class="mode-option" id="soloBtn" type="button" aria-pressed="false">تدريب فردي · 5 دقائق</button><button class="primary" id="startSelectedBtn" type="button">بدء اللعب</button><button id="howBtn">طريقة اللعب</button></div>
+  <div class="arena-actions"><button class="mode-option selected" id="playBtn" type="button" aria-pressed="true">منافسة جماعية · 20 دقيقة</button><button class="mode-option" id="soloBtn" type="button" aria-pressed="false">تدريب فردي · 5 دقائق</button><button class="primary" id="startSelectedBtn" type="button">بدء اللعب</button><button id="howBtn">طريقة اللعب</button></div>
   <div class="notice" id="rules">الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.</div>
  </div>
  <div class="card">
@@ -36,7 +36,7 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
 </section>
 
 <section class="arena-wrap card" id="arenaWrap">
- <div class="hud"><div class="hud-left"><span id="hudCoins" class="hud-coins">🪙 0</span></div><span id="hudTimer">05:00</span><div class="hud-right"><button id="cameraBtn" type="button" aria-label="تغيير زاوية الكاميرا">📷 1/3</button><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div></div>
+ <div class="hud"><div class="hud-left"><span id="hudCoins" class="hud-coins">🪙 0</span><span id="zoneLabel">المنطقة الآمنة</span></div><span id="hudTimer">20:00</span><div class="hud-right"><button id="cameraBtn" type="button" aria-label="تغيير زاوية الكاميرا">📷 1/3</button><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div></div>
  <div class="arena" id="arena"></div>
  <div class="arena-actions"><button id="shieldBtn">🛡 الدرع: اجمعه من الساحة</button><button id="leaveBtn">الخروج من الجولة</button><button id="skinBtn">تخصيص الأفعى</button></div>
  <div id="deathPanel" class="notice" hidden style="margin-top:12px;padding:14px;border:1px solid #ff623e;border-radius:12px;background:#321b25">
@@ -65,7 +65,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.m
 const API_BASE = "https://btc-snake-hd-api.motazfaysel5.workers.dev";
 const FB_CONFIG_URL = "./firebase-config.js";
 let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), coinMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
-let lastMode = "multi", lastDuration = 300, roundEndedByServer = false, manualLeave = false, wasAlive = null, cameraViewMode = 0, selectedMode = "multi", selectedDuration = 300;
+let lastMode = "multi", lastDuration = 1200, roundEndedByServer = false, manualLeave = false, wasAlive = null, cameraViewMode = 0, selectedMode = "multi", selectedDuration = 1200, zoneMesh = null;
 const $ = id => document.getElementById(id);
 const skins = [
  {id:"mint",name:"Mint",color:"#35e0a1",unlock:"Free"},
@@ -78,12 +78,12 @@ const skins = [
  {id:"diamond",name:"Diamond",color:"#d7f7ff",unlock:"Achievement"}
 ];
 const text = {
- ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 5 دقائق",play10:"منافسة جماعية · 10 دقائق",solo:"تدريب فردي · 5 دقائق",how:"طريقة اللعب",rules:"الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
- en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 5 min",play10:"Live multiplayer · 10 min",solo:"Solo practice · 5 min",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head = both eliminated. Shields protect temporarily.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
+ ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 20 دقيقة",solo:"تدريب فردي · 5 دقائق",how:"طريقة اللعب",rules:"الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
+ en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 20 min",solo:"Solo practice · 5 min",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head = both eliminated. Shields protect temporarily.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
 };
 let lang="ar";
 function toast(s){$("toast").textContent=s;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2600)}
-function applyLang(){document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";const t=text[lang];$("langBtn").textContent=t.language;$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("play10Btn").textContent=t.play10;$("soloBtn").textContent=t.solo;$("startSelectedBtn").textContent=t.start;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("emailLogin").textContent=t.login2;$("authStatus").textContent=t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin}
+function applyLang(){document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";const t=text[lang];$("langBtn").textContent=t.language;$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("soloBtn").textContent=t.solo;$("startSelectedBtn").textContent=t.start;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("emailLogin").textContent=t.login2;$("authStatus").textContent=t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin}
 $("langBtn").onclick=()=>{lang=lang==="ar"?"en":"ar";applyLang()};applyLang();
 
 async function loadFirebase(){
@@ -137,6 +137,8 @@ function init3D(){
  const stoneMat=new THREE.MeshStandardMaterial({color:"#77796c",roughness:1});
  for(let i=0;i<34;i++){const a=Math.random()*Math.PI*2,r=34+Math.random()*18,stone=new THREE.Mesh(new THREE.DodecahedronGeometry(.35+Math.random()*.7,0),stoneMat);stone.position.set(50+Math.cos(a)*r,.05,50+Math.sin(a)*r);stone.scale.y=.55;scene.add(stone)}
  const edge=new THREE.Mesh(new THREE.TorusGeometry(50,.35,5,96),new THREE.MeshStandardMaterial({color:"#7c8c68",roughness:1}));edge.rotation.x=Math.PI/2;edge.position.set(50,-.15,50);scene.add(edge);
+ zoneMesh=new THREE.Mesh(new THREE.TorusGeometry(1,.16,8,128),new THREE.MeshStandardMaterial({color:"#35c9ff",emissive:"#0876a5",emissiveIntensity:.65,roughness:.25,transparent:true,opacity:.95}));
+ zoneMesh.rotation.x=Math.PI/2;zoneMesh.position.y=.16;zoneMesh.visible=false;scene.add(zoneMesh);
  const resize=()=>resizeGameRenderer();new ResizeObserver(resize).observe(host);window.addEventListener("resize",resizeGameRenderer);document.addEventListener("fullscreenchange",()=>requestAnimationFrame(resizeGameRenderer));requestAnimationFrame(resizeGameRenderer);
  function animate(){requestAnimationFrame(animate);renderer.render(scene,camera)}animate();
 }
@@ -165,7 +167,13 @@ function makeSnakeSegment(color,r=.62,head=false){
 }
 function iRadius(total,index){return Math.max(.36,.59-index*.008)}
 function updateWorld(state){
- lastState=state;const clock=String(Math.floor(state.remaining/60)).padStart(2,"0")+":"+String(state.remaining%60).padStart(2,"0");$("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent=clock;$("hudTimer").textContent=clock;
+ lastState=state;
+ const overtime=state.remaining<=0&&state.overtimeRemaining>0;
+ const clock=overtime?("+"+String(Math.floor(state.overtimeRemaining/60)).padStart(2,"0")+":"+String(state.overtimeRemaining%60).padStart(2,"0")):String(Math.floor(state.remaining/60)).padStart(2,"0")+":"+String(state.remaining%60).padStart(2,"0");
+ $("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent=clock;$("hudTimer").textContent=clock;
+ const zone=state.zone||{};
+ if(zoneMesh){zoneMesh.visible=!!zone.active;zoneMesh.position.set(zone.x??50,.16,zone.z??50);zoneMesh.scale.set(zone.radius||1,1,zone.radius||1);zoneMesh.material.color.set(zone.phase==="final"?"#ff684f":zone.warning?"#ffd166":"#35c9ff");}
+ $("zoneLabel").textContent=zone.warning?(lang==="ar"?"⚠️ الزون يبدأ خلال 30 ثانية":"⚠️ Zone closes in 30s"):zone.phase==="final"?(lang==="ar"?"المنطقة النهائية":"FINAL ZONE"):zone.active?(lang==="ar"?"الزون يتقلص":"ZONE CLOSING"):(lang==="ar"?"المنطقة الآمنة":"SAFE ZONE");
  const mine=state.snakes?.find(s=>s.id===myId);
  if(mine){
   $("myScore").textContent=mine.score;$("hudCoins").textContent="🪙 "+mine.score;
@@ -208,7 +216,8 @@ function startGame(mode,duration){
   if(!running)connect(mode,duration);
  })));
 }
-function connect(mode="multi",duration=300){
+function connect(mode="multi",duration=1200){
+  duration=mode==="solo"?300:1200;
   if(ws)ws.close();
   lastMode=mode;lastDuration=duration;roundEndedByServer=false;manualLeave=false;wasAlive=null;myId=null;
   $("roundResults").hidden=true;$("deathPanel").hidden=true;$("myScore").textContent="0";
@@ -223,7 +232,7 @@ function connect(mode="multi",duration=300){
    ws.onopen=()=>{running=true;$("statusPill").textContent=lang==="ar"?"متصل بالساحة":"CONNECTED";toast(lang==="ar"?"تم الاتصال بالساحة":"Connected to arena")};
    ws.onmessage=e=>{
     let d;try{d=JSON.parse(e.data)}catch{return}
-    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6);const initialClock=duration===600?"10:00":"05:00";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🪙 0"}
+    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6);const initialClock=mode==="multi"?"20:00":"05:00";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🪙 0";$("zoneLabel").textContent=mode==="multi"?(lang==="ar"?"المنطقة الآمنة":"SAFE ZONE"):(lang==="ar"?"التدريب":"PRACTICE")}
     else if(d.type==="state")updateWorld(d);
     else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration);}
     else if(d.type==="full")toast(lang==="ar"?"الساحة ممتلئة، حاول لاحقاً":"Arena is full. Try again soon.");
@@ -244,11 +253,10 @@ function connect(mode="multi",duration=300){
   $("playAgainBtn").textContent=lang==="ar"?"العب جولة جديدة":"Play another round";
  }
  function chooseMode(mode,duration){
-  selectedMode=mode;selectedDuration=duration;
-  for(const id of ["playBtn","play10Btn","soloBtn"]){const b=$(id);const active=(id==="playBtn"&&mode==="multi"&&duration===300)||(id==="play10Btn"&&mode==="multi"&&duration===600)||(id==="soloBtn"&&mode==="solo"&&duration===300);b.classList.toggle("selected",active);b.setAttribute("aria-pressed",String(active));}
+  selectedMode=mode;selectedDuration=mode==="solo"?300:1200;
+  for(const id of ["playBtn","soloBtn"]){const b=$(id);const active=(id==="playBtn"&&mode==="multi")||(id==="soloBtn"&&mode==="solo");b.classList.toggle("selected",active);b.setAttribute("aria-pressed",String(active));}
  }
- $("playBtn").onclick=()=>chooseMode("multi",300);
- $("play10Btn").onclick=()=>chooseMode("multi",600);
+ $("playBtn").onclick=()=>chooseMode("multi",1200);
  $("soloBtn").onclick=()=>chooseMode("solo",300);
  $("startSelectedBtn").onclick=()=>startGame(selectedMode,selectedDuration);
  $("playAgainBtn").onclick=()=>startGame(lastMode,lastDuration);
