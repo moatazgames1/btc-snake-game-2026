@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#090914"><title>BTC Snake — Play & Grow</title>
+<meta name="theme-color" content="#090914"><title>BTC Snake — Battle Royale</title>
 <style>
 :root{--bg:#080812;--panel:#111326;--line:#282b48;--purple:#8b5cf6;--cyan:#22d3ee;--gold:#f7c948;--text:#f5f5ff;--muted:#a3a5c2}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#29204f 0,#090914 48%);color:var(--text);font-family:system-ui,Segoe UI,Arial,sans-serif;min-height:100vh}
@@ -15,15 +15,15 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
 </style>
 </head>
 <body>
-<header><div class="brand">🐍 <b>BTC</b> SNAKE</div><div style="display:flex;gap:8px"><button id="langBtn">EN</button><button id="loginTop">Login</button></div></header>
+<header><div class="brand">🐍 <b>BTC</b> SNAKE · BATTLE ROYALE</div><div style="display:flex;gap:8px"><button id="langBtn">EN</button><button id="loginTop">Login</button></div></header>
 <main>
 <section class="hero">
  <div class="card">
   <div class="eyebrow">GROW • SURVIVE • DOMINATE</div>
   <h1 id="headline">اجمع العملات… <span>وكن ملك الساحة</span></h1>
   <p class="muted" id="subhead">لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.</p>
-  <div class="stats"><div class="stat"><strong id="playersCount">—</strong><small class="muted" id="playersLabel">في الساحة</small></div><div class="stat"><strong id="timeCount">05:00</strong><small class="muted" id="timeLabel">وقت الجولة</small></div><div class="stat"><strong id="myScore">0</strong><small class="muted" id="scoreLabel">عملات الجولة</small></div></div>
-  <div class="arena-actions"><button class="mode-option selected" id="playBtn" type="button" aria-pressed="true">منافسة جماعية · 5 دقائق</button><button class="mode-option" id="play10Btn" type="button" aria-pressed="false">منافسة جماعية · 10 دقائق</button><button class="mode-option" id="soloBtn" type="button" aria-pressed="false">تدريب فردي · 5 دقائق</button><button class="primary" id="startSelectedBtn" type="button">بدء اللعب</button><button id="howBtn">طريقة اللعب</button></div>
+  <div class="stats"><div class="stat"><strong id="playersCount">—</strong><small class="muted" id="playersLabel">في الساحة</small></div><div class="stat"><strong id="timeCount">20:00</strong><small class="muted" id="timeLabel">وقت الجولة</small></div><div class="stat"><strong id="myScore">0</strong><small class="muted" id="scoreLabel">عملات الجولة</small></div></div>
+  <div class="arena-actions"><button class="mode-option selected" id="playBtn" type="button" aria-pressed="true">منافسة جماعية · 20 دقيقة</button><button class="mode-option" id="soloBtn" type="button" aria-pressed="false">تدريب فردي</button><button class="primary" id="startSelectedBtn" type="button">بدء اللعب</button><button id="howBtn">طريقة اللعب</button></div>
   <div class="notice" id="rules">الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.</div>
  </div>
  <div class="card">
@@ -36,9 +36,9 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
 </section>
 
 <section class="arena-wrap card" id="arenaWrap">
- <div class="hud"><div class="hud-left"><span id="hudCoins" class="hud-coins">🪙 0</span></div><span id="hudTimer">05:00</span><div class="hud-right"><button id="cameraBtn" type="button" aria-label="تغيير زاوية الكاميرا">📷 1/3</button><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div></div>
+ <div class="hud"><div class="hud-left"><span id="hudCoins" class="hud-coins">🪙 0</span><span id="zoneLabel">المنطقة الآمنة</span></div><span id="hudTimer">20:00</span><div class="hud-right"><button id="cameraBtn" type="button" aria-label="تغيير زاوية الكاميرا">📷 1/3</button><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div></div>
  <div class="arena" id="arena"></div>
- <div class="arena-actions"><button id="shieldBtn">🛡 الدرع: اجمعه من الساحة</button><button id="leaveBtn">الخروج من الجولة</button><button id="skinBtn">تخصيص الأفعى</button></div>
+ <div class="arena-actions"><button id="shieldBtn">🛡 الدرع: اجمعه من الساحة</button><button id="autoWalkBtn" type="button" aria-pressed="false">🚶 المشي التلقائي: متوقف</button><button id="leaveBtn">الخروج من الجولة</button><button id="skinBtn">تخصيص الأفعى</button></div>
  <div id="deathPanel" class="notice" hidden style="margin-top:12px;padding:14px;border:1px solid #ff623e;border-radius:12px;background:#321b25">
   <strong>تم إقصاؤك من الجولة 🐍</strong>
   <div>لن تعود الأفعى للحياة. يمكنك مشاهدة بقية المنافسة أو الخروج من الجولة.</div>
@@ -62,10 +62,11 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
 
 <script type="module">
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
-const API_BASE = "https://btc-snake-api.motazfaysel5.workers.dev";
+const API_BASE = "https://btc-snake-hd-api.motazfaysel5.workers.dev";
 const FB_CONFIG_URL = "./firebase-config.js";
 let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), coinMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
-let lastMode = "multi", lastDuration = 300, roundEndedByServer = false, manualLeave = false, wasAlive = null, cameraViewMode = 0, selectedMode = "multi", selectedDuration = 300;
+let lastMode = "multi", lastDuration = 1200, roundEndedByServer = false, manualLeave = false, wasAlive = null, cameraViewMode = 0, selectedMode = "multi", selectedDuration = 1200, zoneMesh = null;
+let autoWalkEnabled = false, joystickActive = false, controlHeartbeat = null;
 const $ = id => document.getElementById(id);
 const skins = [
  {id:"mint",name:"Mint",color:"#35e0a1",unlock:"Free"},
@@ -78,12 +79,12 @@ const skins = [
  {id:"diamond",name:"Diamond",color:"#d7f7ff",unlock:"Achievement"}
 ];
 const text = {
- ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 5 دقائق",play10:"منافسة جماعية · 10 دقائق",solo:"تدريب فردي · 5 دقائق",how:"طريقة اللعب",rules:"الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
- en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 5 min",play10:"Live multiplayer · 10 min",solo:"Solo practice · 5 min",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head = both eliminated. Shields protect temporarily.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
+ ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 20 دقيقة",solo:"تدريب فردي · 5 دقائق",how:"طريقة اللعب",rules:"الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
+ en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 20 min",solo:"Solo practice · 5 min",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head = both eliminated. Shields protect temporarily.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
 };
 let lang="ar";
 function toast(s){$("toast").textContent=s;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2600)}
-function applyLang(){document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";const t=text[lang];$("langBtn").textContent=t.language;$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("play10Btn").textContent=t.play10;$("soloBtn").textContent=t.solo;$("startSelectedBtn").textContent=t.start;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("emailLogin").textContent=t.login2;$("authStatus").textContent=t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin}
+function applyLang(){document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";const t=text[lang];$("langBtn").textContent=t.language;$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("soloBtn").textContent=t.solo;$("startSelectedBtn").textContent=t.start;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("emailLogin").textContent=t.login2;$("authStatus").textContent=t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin}
 $("langBtn").onclick=()=>{lang=lang==="ar"?"en":"ar";applyLang()};applyLang();
 
 async function loadFirebase(){
@@ -124,9 +125,21 @@ function init3D(){
  camera=new THREE.PerspectiveCamera(58,width/height,.1,500);camera.position.set(50,85,85);camera.lookAt(50,0,50);
  renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(width,height,false);renderer.domElement.style.cssText="position:absolute;inset:0;display:block;width:100%;height:100%;z-index:1;touch-action:none";host.appendChild(renderer.domElement);
  scene.add(new THREE.HemisphereLight(0xbacaff,0x182033,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(40,80,20);scene.add(light);
- const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({color:"#10142b",roughness:.8}));floor.rotation.x=-Math.PI/2;floor.position.set(50,-.5,50);scene.add(floor);
- const grid=new THREE.GridHelper(100,50,"#353a6c","#202541");grid.position.set(50,.02,50);scene.add(grid);
- const border=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(100,.4,100)),new THREE.LineBasicMaterial({color:"#7864e8"}));border.position.set(50,.2,50);scene.add(border);
+ scene.background=new THREE.Color("#a9c5b2");scene.fog=new THREE.FogExp2("#a9c5b2",.012);
+ const grassCanvas=document.createElement("canvas");grassCanvas.width=grassCanvas.height=256;
+ const gx=grassCanvas.getContext("2d");gx.fillStyle="#527d39";gx.fillRect(0,0,256,256);
+ for(let i=0;i<6200;i++){const x=Math.random()*256,y=Math.random()*256;gx.strokeStyle=["#315d2d","#477337","#72934a","#91a85b","#3d6930"][i%5];gx.globalAlpha=.22+Math.random()*.35;gx.lineWidth=.5+Math.random();gx.beginPath();gx.moveTo(x,y);gx.lineTo(x+(Math.random()-.5)*4,y-2-Math.random()*6);gx.stroke()}gx.globalAlpha=1;
+ const grassTex=new THREE.CanvasTexture(grassCanvas);grassTex.wrapS=grassTex.wrapT=THREE.RepeatWrapping;grassTex.repeat.set(12,12);grassTex.colorSpace=THREE.SRGBColorSpace;
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),new THREE.MeshStandardMaterial({map:grassTex,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.set(50,-.5,50);scene.add(floor);
+ const earth=new THREE.Mesh(new THREE.CylinderGeometry(72,72,3,48),new THREE.MeshStandardMaterial({color:"#59412d",roughness:1}));earth.position.set(50,-2,50);scene.add(earth);
+ const bark=new THREE.MeshStandardMaterial({color:"#59402b",roughness:1}),leafMats=["#294f2e","#37683a","#4b7540"].map(color=>new THREE.MeshStandardMaterial({color,roughness:.96}));
+ const trunkGeo=new THREE.CylinderGeometry(.22,.36,3.4,7),crownGeo=new THREE.IcosahedronGeometry(1.65,1);
+ for(let i=0;i<42;i++){const a=Math.random()*Math.PI*2,r=40+Math.random()*17,x=50+Math.cos(a)*r,z=50+Math.sin(a)*r;const tree=new THREE.Group();tree.position.set(x,0,z);const h=2.2+Math.random()*1.8;const trunk=new THREE.Mesh(trunkGeo,bark);trunk.scale.y=h/3.4;trunk.position.y=h/2;tree.add(trunk);for(let j=0;j<3;j++){const crown=new THREE.Mesh(crownGeo,leafMats[(i+j)%3]);crown.scale.set(.9+Math.random()*.25,.85+Math.random()*.35,.9+Math.random()*.25);crown.position.set((Math.random()-.5)*.45,h+j*.62,(Math.random()-.5)*.45);tree.add(crown)}scene.add(tree)}
+ const stoneMat=new THREE.MeshStandardMaterial({color:"#77796c",roughness:1});
+ for(let i=0;i<34;i++){const a=Math.random()*Math.PI*2,r=34+Math.random()*18,stone=new THREE.Mesh(new THREE.DodecahedronGeometry(.35+Math.random()*.7,0),stoneMat);stone.position.set(50+Math.cos(a)*r,.05,50+Math.sin(a)*r);stone.scale.y=.55;scene.add(stone)}
+ const edge=new THREE.Mesh(new THREE.TorusGeometry(50,.35,5,96),new THREE.MeshStandardMaterial({color:"#7c8c68",roughness:1}));edge.rotation.x=Math.PI/2;edge.position.set(50,-.15,50);scene.add(edge);
+ zoneMesh=new THREE.Mesh(new THREE.TorusGeometry(1,.16,8,128),new THREE.MeshStandardMaterial({color:"#35c9ff",emissive:"#0876a5",emissiveIntensity:.65,roughness:.25,transparent:true,opacity:.95}));
+ zoneMesh.rotation.x=Math.PI/2;zoneMesh.position.y=.16;zoneMesh.visible=false;scene.add(zoneMesh);
  const resize=()=>resizeGameRenderer();new ResizeObserver(resize).observe(host);window.addEventListener("resize",resizeGameRenderer);document.addEventListener("fullscreenchange",()=>requestAnimationFrame(resizeGameRenderer));requestAnimationFrame(resizeGameRenderer);
  function animate(){requestAnimationFrame(animate);renderer.render(scene,camera)}animate();
 }
@@ -145,22 +158,35 @@ function cycleCameraView(){
  if(lastState&&myId){const mine=lastState.snakes?.find(s=>s.id===myId);if(mine)updateFollowCamera(mine)}
 }
 $("cameraBtn").onclick=cycleCameraView;
-function makeSphere(color,r=.65){return new THREE.Mesh(new THREE.SphereGeometry(r,14,10),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.25,roughness:.35}))}
+function makeSphere(color,r=.65){return new THREE.Mesh(new THREE.SphereGeometry(r,18,14),new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.04}))}
+function makeSnakeSegment(color,r=.62,head=false){
+ const g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({color,roughness:.34,metalness:.08});
+ const core=new THREE.Mesh(new THREE.SphereGeometry(r,20,16),mat);core.scale.set(1.08,.82,1);g.add(core);
+ if(!head){const band=new THREE.Mesh(new THREE.TorusGeometry(r*.88,.045,6,16),new THREE.MeshStandardMaterial({color:"#b4d66b",roughness:.3,metalness:.12}));band.rotation.x=Math.PI/2;band.position.y=.1;g.add(band)}
+ else {const eyeMat=new THREE.MeshStandardMaterial({color:"#f4d46a",roughness:.2});for(const side of [-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.105,12,10),eyeMat);eye.position.set(.25,.25,side*.38);g.add(eye)}}
+ return g;
+}
+function iRadius(total,index){return Math.max(.36,.59-index*.008)}
 function updateWorld(state){
- lastState=state;const clock=String(Math.floor(state.remaining/60)).padStart(2,"0")+":"+String(state.remaining%60).padStart(2,"0");$("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent=clock;$("hudTimer").textContent=clock;
+ lastState=state;
+ const clock=String(Math.floor(state.remaining/60)).padStart(2,"0")+":"+String(state.remaining%60).padStart(2,"0");
+ $("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent=clock;$("hudTimer").textContent=clock;
+ const zone=state.zone||{};
+ if(zoneMesh){zoneMesh.visible=!!zone.active;zoneMesh.position.set(zone.x??50,.16,zone.z??50);zoneMesh.scale.set(zone.radius||1,zone.radius||1,1);zoneMesh.material.color.set(zone.phase==="final"?"#ff684f":zone.warning?"#ffd166":"#35c9ff");}
+ $("zoneLabel").textContent=zone.warning?(lang==="ar"?"⚠️ الزون يبدأ خلال 30 ثانية":"⚠️ Zone closes in 30s"):zone.phase==="final"?(lang==="ar"?"المنطقة النهائية":"FINAL ZONE"):zone.active?(lang==="ar"?"الزون يتقلص":"ZONE CLOSING"):(lang==="ar"?"المنطقة الآمنة":"SAFE ZONE");
  const mine=state.snakes?.find(s=>s.id===myId);
  if(mine){
   $("myScore").textContent=mine.score;$("hudCoins").textContent="🪙 "+mine.score;
   $("statusPill").textContent=mine.alive?(lang==="ar"?"داخل الساحة":"IN ARENA"):(lang==="ar"?"تم إقصاؤك":"ELIMINATED");
-  if(wasAlive===true&&!mine.alive){$("deathPanel").hidden=false;toast(lang==="ar"?"تم إقصاؤك — يمكنك المشاهدة أو الخروج":"Eliminated — spectate or leave");}
+  if(wasAlive===true&&!mine.alive){setAutoWalk(false);setJoystickActive(false);$("deathPanel").hidden=false;toast(lang==="ar"?"تم إقصاؤك — يمكنك المشاهدة أو الخروج":"Eliminated — spectate or leave");}
   wasAlive=mine.alive;
   if(mine.alive)updateFollowCamera(mine);
  }
  const aliveIds=new Set();
  for(const s of state.snakes||[]){aliveIds.add(s.id);let group=meshes.get(s.id);if(!group){group=new THREE.Group();meshes.set(s.id,group);scene.add(group)}
-  while(group.children.length<s.body.length){const m=makeSphere(s.color||"#22d3ee",.65);group.add(m)}
+  while(group.children.length<s.body.length){const m=makeSnakeSegment(s.color||"#35a853",iRadius(s.body.length,group.children.length),group.children.length===0);group.add(m)}
   group.children.forEach((m,i)=>{const p=s.body[i];m.visible=!!p;if(p)m.position.set(p.x,.5,p.z);});
-  group.children.forEach((m,i)=>{if(i===0)m.scale.setScalar(1.18)});
+  group.children.forEach((m,i)=>{m.scale.setScalar(i===0?1.16:1)});
  }
  for(const [k,g] of meshes){if(!aliveIds.has(k)){scene.remove(g);meshes.delete(k)}}
  coinMeshes.forEach(m=>scene.remove(m));coinMeshes=[];
@@ -190,8 +216,11 @@ function startGame(mode,duration){
   if(!running)connect(mode,duration);
  })));
 }
-function connect(mode="multi",duration=300){
+function connect(mode="multi",duration=1200){
+  duration=mode==="solo"?300:1200;
   if(ws)ws.close();
+  autoWalkEnabled=false;joystickActive=false;updateAutoWalkButton();
+  if(controlHeartbeat){clearInterval(controlHeartbeat);controlHeartbeat=null;}
   lastMode=mode;lastDuration=duration;roundEndedByServer=false;manualLeave=false;wasAlive=null;myId=null;
   $("roundResults").hidden=true;$("deathPanel").hidden=true;$("myScore").textContent="0";
   const openSocket=async()=>{
@@ -202,23 +231,26 @@ function connect(mode="multi",duration=300){
    }
    const url=API_BASE.replace(/^http/,"ws")+"/ws?mode="+mode+"&duration="+duration+"&skin="+encodeURIComponent(selectedSkin)+(ticket?"&ticket="+encodeURIComponent(ticket):"");
    ws=new WebSocket(url);
-   ws.onopen=()=>{running=true;$("statusPill").textContent=lang==="ar"?"متصل بالساحة":"CONNECTED";toast(lang==="ar"?"تم الاتصال بالساحة":"Connected to arena")};
+   ws.onopen=()=>{running=true;ws.send(JSON.stringify({type:"joystick",active:false}));ws.send(JSON.stringify({type:"autoWalk",enabled:false}));$("statusPill").textContent=lang==="ar"?"متصل بالساحة":"CONNECTED";toast(lang==="ar"?"تم الاتصال بالساحة":"Connected to arena")};
    ws.onmessage=e=>{
     let d;try{d=JSON.parse(e.data)}catch{return}
-    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6);const initialClock=duration===600?"10:00":"05:00";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🪙 0"}
+    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6);const initialClock=mode==="multi"?"20:00":"05:00";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🪙 0";$("zoneLabel").textContent=mode==="multi"?(lang==="ar"?"المنطقة الآمنة":"SAFE ZONE"):(lang==="ar"?"التدريب":"PRACTICE")}
     else if(d.type==="state")updateWorld(d);
-    else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration);}
+    else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration,d.winner||null);}
     else if(d.type==="full")toast(lang==="ar"?"الساحة ممتلئة، حاول لاحقاً":"Arena is full. Try again soon.");
    };
-   ws.onclose=()=>{running=false;if(roundEndedByServer)$("playAgainBtn").disabled=false;if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=lang==="ar"?"غير متصل":"DISCONNECTED"};
+   ws.onclose=()=>{running=false;setJoystickActive(false);if(roundEndedByServer)$("playAgainBtn").disabled=false;if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=lang==="ar"?"غير متصل":"DISCONNECTED"};
    ws.onerror=()=>toast("Connection error. Check API deployment.");
   };
   openSocket();
  }
- function showResults(results,duration){
+ function showResults(results,duration,winner=null){
   roundEndedByServer=true;exitGameView();$("deathPanel").hidden=true;$("roundResults").hidden=false;$("playAgainBtn").disabled=true;
   $("resultsTitle").textContent=lang==="ar"?"🏆 نتائج الجولة":"🏆 Round results";
-  $("resultsSummary").textContent=lang==="ar"?`انتهت جولة ${duration/60} دقائق.`:`${duration/60}-minute round finished.`;
+  $("resultsSummary").textContent=lang==="ar"?`انتهت الجولة بعد ${Math.floor(duration/60)} دقيقة.`:`Round finished after ${Math.floor(duration/60)} minutes.`;
+  if(winner){
+   $("resultsSummary").textContent+=lang==="ar"?(winner.bot?` الفائز: ${winner.name} (روبوت).`:` 🏆 الفائز: ${winner.name}.`):(winner.bot?` Winner: ${winner.name} (bot).`:` 🏆 Winner: ${winner.name}.`);
+  }
   $("resultsList").innerHTML=results.map(r=>`<div class="row"><b>#${r.rank} ${escapeHtml(r.name)}${r.bot?" · BOT":""}</b><span>${r.score} 🪙</span></div>`).join("")||'<div class="row muted">No results.</div>';
   const mine=results.find(r=>r.id===myId);
   $("statusPill").textContent=mine?(lang==="ar"?`مركزك: ${mine.rank}`:`Your rank: ${mine.rank}`):(lang==="ar"?"انتهت الجولة":"ROUND FINISHED");
@@ -226,23 +258,42 @@ function connect(mode="multi",duration=300){
   $("playAgainBtn").textContent=lang==="ar"?"العب جولة جديدة":"Play another round";
  }
  function chooseMode(mode,duration){
-  selectedMode=mode;selectedDuration=duration;
-  for(const id of ["playBtn","play10Btn","soloBtn"]){const b=$(id);const active=(id==="playBtn"&&mode==="multi"&&duration===300)||(id==="play10Btn"&&mode==="multi"&&duration===600)||(id==="soloBtn"&&mode==="solo"&&duration===300);b.classList.toggle("selected",active);b.setAttribute("aria-pressed",String(active));}
+  selectedMode=mode;selectedDuration=mode==="solo"?300:1200;
+  for(const id of ["playBtn","soloBtn"]){const b=$(id);const active=(id==="playBtn"&&mode==="multi")||(id==="soloBtn"&&mode==="solo");b.classList.toggle("selected",active);b.setAttribute("aria-pressed",String(active));}
  }
- $("playBtn").onclick=()=>chooseMode("multi",300);
- $("play10Btn").onclick=()=>chooseMode("multi",600);
+ $("playBtn").onclick=()=>chooseMode("multi",1200);
  $("soloBtn").onclick=()=>chooseMode("solo",300);
  $("startSelectedBtn").onclick=()=>startGame(selectedMode,selectedDuration);
  $("playAgainBtn").onclick=()=>startGame(lastMode,lastDuration);
- $("leaveBtn").onclick=()=>{manualLeave=true;ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA";exitGameView()};
+ $("leaveBtn").onclick=()=>{manualLeave=true;setAutoWalk(false);setJoystickActive(false);ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=lang==="ar"?"غادرت الساحة":"LEFT ARENA";exitGameView()};
+ $("shieldBtn").onclick=()=>toast(lang==="ar"?"التقط الدرع الأزرق داخل الساحة لتحصل على حماية مؤقتة.":"Collect the blue shield in the arena for temporary protection.");
+ $("skinBtn").onclick=()=>{exitGameView();requestAnimationFrame(()=>$("skins").scrollIntoView({behavior:"smooth",block:"center"}));};
 $("howBtn").onclick=()=>toast(lang==="ar"?"اجمع العملات، تجنب أجسام الأفاعي، والتقط الدرع.":"Collect coins, avoid snake bodies, and pick up shields.");
 function steerTurn(value){
  const amount=Math.max(-1,Math.min(1,value));
  if(ws?.readyState===1)ws.send(JSON.stringify({type:"steer",value:amount}));
 }
+function updateAutoWalkButton(){
+ const b=$("autoWalkBtn");if(!b)return;
+ b.textContent=lang==="ar"?(autoWalkEnabled?"🚶 المشي التلقائي: يعمل":"🚶 المشي التلقائي: متوقف"):(autoWalkEnabled?"🚶 Auto-walk: ON":"🚶 Auto-walk: OFF");
+ b.classList.toggle("active",autoWalkEnabled);b.setAttribute("aria-pressed",String(autoWalkEnabled));
+}
+function setAutoWalk(enabled){
+ autoWalkEnabled=!!enabled;
+ if(ws?.readyState===1)ws.send(JSON.stringify({type:"autoWalk",enabled:autoWalkEnabled}));
+ updateAutoWalkButton();
+}
+function setJoystickActive(active){
+ joystickActive=!!active;
+ if(ws?.readyState===1)ws.send(JSON.stringify({type:"joystick",active:joystickActive}));
+ if(joystickActive&&!controlHeartbeat)controlHeartbeat=setInterval(()=>{if(joystickActive&&ws?.readyState===1)ws.send(JSON.stringify({type:"joystick",active:true}));},250);
+ if(!joystickActive&&controlHeartbeat){clearInterval(controlHeartbeat);controlHeartbeat=null;}
+}
+$("autoWalkBtn").onclick=()=>setAutoWalk(!autoWalkEnabled);
+updateAutoWalkButton();
 function initJoystick(){
  const base=$("joystickBase"),knob=$("joystickKnob");if(!base||!knob)return;let activePointer=null,lastSent=0,lastSentAt=0;
- const reset=()=>{activePointer=null;steerTurn(0);knob.style.transform="translate(-50%,-50%)";};
+ const reset=()=>{activePointer=null;setJoystickActive(false);steerTurn(0);knob.style.transform="translate(-50%,-50%)";};
  function move(e){
   if(activePointer!==e.pointerId)return;
   const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
@@ -252,13 +303,13 @@ function initJoystick(){
   const turnAmount=Math.abs(dx/max)>.08?dx/max:0,now=Date.now();
   if(Math.abs(turnAmount-lastSent)>.035||now-lastSentAt>65){steerTurn(turnAmount);lastSent=turnAmount;lastSentAt=now;}
  }
- base.addEventListener("pointerdown",e=>{activePointer=e.pointerId;base.setPointerCapture(e.pointerId);lastSentAt=0;steerTurn(0);move(e);});
+ base.addEventListener("pointerdown",e=>{activePointer=e.pointerId;base.setPointerCapture(e.pointerId);lastSentAt=0;setJoystickActive(true);steerTurn(0);move(e);});
  base.addEventListener("pointermove",move);base.addEventListener("pointerup",e=>{if(activePointer===e.pointerId)reset();});
  base.addEventListener("pointercancel",reset);base.addEventListener("lostpointercapture",reset);
 }
 initJoystick();
-window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowleft","a"].includes(k))steerTurn(-1);if(["arrowright","d"].includes(k))steerTurn(1)});
-window.addEventListener("keyup",e=>{if(["arrowleft","arrowright","a","d"].includes(e.key.toLowerCase()))steerTurn(0)});
+window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowleft","a"].includes(k)){setJoystickActive(true);steerTurn(-1)}if(["arrowright","d"].includes(k)){setJoystickActive(true);steerTurn(1)}});
+window.addEventListener("keyup",e=>{if(["arrowleft","arrowright","a","d"].includes(e.key.toLowerCase())){setJoystickActive(false);steerTurn(0)}});
 function drawSkins(){
  $("skins").innerHTML="";for(const s of skins){const d=document.createElement("button");d.className="skin";d.innerHTML=`<i style="background:${s.color};color:${s.color}"></i><b>${s.name}</b><small class="muted" style="display:block">${s.unlock}</small>`;d.onclick=()=>{selectedSkin=s.id;toast(`${s.name} selected (cosmetic preview)`)};$("skins").appendChild(d)}
 }
