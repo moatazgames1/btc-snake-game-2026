@@ -62,6 +62,8 @@ export default {
       if (url.pathname === "/api/ws-ticket" && request.method === "POST") {
         const user = await firebaseUser(request, env);
         if (!user) return json({ ok: false, error: "auth_required" }, 401, headers);
+        const account = await env.DB.prepare("SELECT is_banned FROM players WHERE uid = ?").bind(user.uid).first();
+        if (account?.is_banned) return json({ ok: false, error: "account_banned" }, 403, headers);
         const ticket = crypto.randomUUID();
         await env.DB.prepare("INSERT INTO ws_tickets(ticket,uid,display_name,expires_at) VALUES(?,?,?,?)")
           .bind(ticket, user.uid, user.name, now() + 45).run();
@@ -107,15 +109,21 @@ export default {
           const row = await env.DB.prepare("SELECT uid,display_name,expires_at FROM ws_tickets WHERE ticket = ?").bind(ticket).first();
           await env.DB.prepare("DELETE FROM ws_tickets WHERE ticket = ?").bind(ticket).run();
           if (!row || row.expires_at < now()) return json({ ok: false, error: "invalid_ws_ticket" }, 401, headers);
+          const account = await env.DB.prepare("SELECT is_banned FROM players WHERE uid = ?").bind(row.uid).first();
+          if (account?.is_banned) return json({ ok: false, error: "account_banned" }, 403, headers);
           user = { uid: row.uid, name: row.display_name };
         }
         const mode = url.searchParams.get("mode") === "solo" ? "solo" : "multi";
-        const requestedDuration = Number(url.searchParams.get("duration") || 300);
-        const duration = requestedDuration === 600 ? 600 : 300;
+        // Competitive matches are fixed at 20 minutes plus up to 3 minutes of final-zone overtime.
+        const duration = mode === "solo" ? 300 : 1380;
         if (origin && !allowedOrigins(env).includes(origin)) return json({ ok: false, error: "origin_not_allowed" }, 403, headers);
+        if (user) {
+          const account = await env.DB.prepare("SELECT is_banned FROM players WHERE uid = ?").bind(user.uid).first();
+          if (account?.is_banned) return json({ ok: false, error: "account_banned" }, 403, headers);
+        }
         const roomId = mode === "solo"
-          ? `solo-${user?.uid || crypto.randomUUID()}-${duration}`
-          : `public-${duration}`;
+          ? `solo-${user?.uid || crypto.randomUUID()}-300`
+          : "public-1380";
         const stub = env.ROOMS.get(env.ROOMS.idFromName(roomId));
         const guest = !user;
         const headersForRoom = new Headers(request.headers);
@@ -146,7 +154,8 @@ export class SnakeRoomHD {
     this.coins = [];
     this.shields = [];
     this.startedAt = Date.now();
-    this.roundSeconds = 300;
+    this.roundSeconds = 1380;
+    this.mainRoundSeconds = 1200;
     this.roundEnded = false;
     this.endRoundInProgress = false;
     this.botFillDone = false;
@@ -154,6 +163,7 @@ export class SnakeRoomHD {
     this.tickNo = 0;
     this.roundId = crypto.randomUUID();
     this.lastBroadcast = 0;
+    this.zoneDamageTick = 0;
     this.spawnCoins(36);
     this.timer = setInterval(() => this.tick(), 100);
   }
@@ -166,7 +176,8 @@ export class SnakeRoomHD {
     server.accept();
     this.mode = request.headers.get("X-Game-Mode") === "solo" ? "solo" : "multi";
     const requestedDuration = Number(request.headers.get("X-Round-Seconds") || 300);
-    this.roundSeconds = requestedDuration === 600 ? 600 : 300;
+    this.roundSeconds = this.mode === "solo" ? 300 : 1380;
+    this.mainRoundSeconds = this.mode === "solo" ? 300 : 1200;
     if (this.roundEnded && this.clients.size === 0) this.resetRound();
     const pid = request.headers.get("X-Player-Id") || `guest-${crypto.randomUUID()}`;
     const name = (request.headers.get("X-Player-Name") || "Player").slice(0, 24);
@@ -214,6 +225,7 @@ export class SnakeRoomHD {
     this.roundId = crypto.randomUUID();
     this.startedAt = Date.now();
     this.tickNo = 0;
+    this.zoneDamageTick = 0;
     this.roundEnded = false;
     this.endRoundInProgress = false;
     this.botFillDone = false;
@@ -225,7 +237,8 @@ export class SnakeRoomHD {
     const palette = { mint:"#35e0a1", gold:"#f7c948", fire:"#ff623e", ice:"#49d9ff", galaxy:"#a78bfa", toxic:"#b7f34a", royal:"#f472b6", diamond:"#d7f7ff" };
     return { id: pid, name, registered, bot, alive: true, score: 0, xp: 0,
       body: [{x,z},{x:x-1,z},{x:x-2,z}], dir: {x:1,z:0}, nextDir: {x:1,z:0}, turnInput: 0,
-      shieldUntil: 0, color: bot ? ["#a78bfa","#22d3ee","#f59e0b","#34d399","#fb7185"][Math.floor(Math.random()*5)] : (palette[skin] || palette.mint), skin };
+      shieldUntil: 0, zoneDamage: 0, pendingTurn: false,
+      color: bot ? ["#a78bfa","#22d3ee","#f59e0b","#34d399","#fb7185"][Math.floor(Math.random()*5)] : (palette[skin] || palette.mint), skin };
   }
 
   fillBots() {
@@ -259,7 +272,7 @@ export class SnakeRoomHD {
     }
     if (data.type === "turn" && data.dir && Number.isInteger(data.dir.x) && Number.isInteger(data.dir.z)) {
       const d = { x: Math.max(-1, Math.min(1, data.dir.x)), z: Math.max(-1, Math.min(1, data.dir.z)) };
-      if (Math.abs(d.x) + Math.abs(d.z) === 1 && !(d.x === -s.dir.x && d.z === -s.dir.z)) s.nextDir = d;
+      if (Math.abs(d.x) + Math.abs(d.z) === 1 && !(d.x === -s.dir.x && d.z === -s.dir.z)) { s.nextDir = d; s.pendingTurn = true; }
     }
   }
 
@@ -290,6 +303,9 @@ export class SnakeRoomHD {
       if (s.bot) {
         this.botThink(s);
         if (s.nextDir) s.dir = { x: s.nextDir.x, z: s.nextDir.z };
+      } else if (s.pendingTurn) {
+        s.dir = { x: s.nextDir.x, z: s.nextDir.z };
+        s.pendingTurn = false;
       }
       if (!s.bot && s.turnInput) {
         const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.10;
@@ -311,34 +327,49 @@ export class SnakeRoomHD {
     if (t-this.lastBroadcast > 100) { this.lastBroadcast=t; this.broadcast(); }
   }
 
+  zoneState(t = Date.now()) {
+    const elapsed = Math.max(0, (t - this.startedAt) / 1000);
+    if (this.mode === "solo") return { active: false, warning: false, x: 50, z: 50, radius: 72, phase: "practice" };
+    const warning = elapsed >= 570 && elapsed < 600;
+    let radius = 72;
+    if (elapsed >= 600 && elapsed < 1200) radius = 72 - (62 * Math.min(1, (elapsed - 600) / 600));
+    else if (elapsed >= 1200) radius = Math.max(0.8, 10 - (9.2 * Math.min(1, (elapsed - 1200) / 180)));
+    return { active: elapsed >= 600, warning, x: 50, z: 50, radius, phase: elapsed < 600 ? "warning" : elapsed < 1200 ? "closing" : "final" };
+  }
+
   resolveCollisions(t) {
     const all = [...this.snakes.values()].filter(s=>s.alive);
     const dead = new Set();
+    const collision = new Set();
+    const zone = this.zoneState(t);
     for (let i=0;i<all.length;i++) {
       const a=all[i], ah=a.body[0];
-      if (ah.x<=0.5||ah.x>=99.5||ah.z<=0.5||ah.z>=99.5) { if (a.shieldUntil<t) dead.add(a.id); else a.shieldUntil=0; }
-      // Self-collision is handled separately from collisions with other snakes.
+      if (ah.x<=0.5||ah.x>=99.5||ah.z<=0.5||ah.z>=99.5) collision.add(a.id);
       for (let k=1;k<a.body.length;k++) {
         const seg=a.body[k];
-        if (Math.hypot(ah.x-seg.x,ah.z-seg.z)<0.85) {
-          if (a.shieldUntil<t) dead.add(a.id); else a.shieldUntil=0;
-          break;
-        }
+        if (Math.hypot(ah.x-seg.x,ah.z-seg.z)<0.85) { collision.add(a.id); break; }
       }
       for (let j=0;j<all.length;j++) {
         if (i===j) continue;
         const b=all[j], bh=b.body[0];
-        if (Math.hypot(ah.x-bh.x,ah.z-bh.z)<1.1) {
-          if (a.shieldUntil<t) dead.add(a.id); else a.shieldUntil=0;
-        }
+        if (Math.hypot(ah.x-bh.x,ah.z-bh.z)<1.1) collision.add(a.id);
         for (let k=1;k<b.body.length;k++) {
           const seg=b.body[k];
-          if (Math.hypot(ah.x-seg.x,ah.z-seg.z)<0.85) {
-            if (a.shieldUntil<t) dead.add(a.id); else a.shieldUntil=0;
-            break;
-          }
+          if (Math.hypot(ah.x-seg.x,ah.z-seg.z)<0.85) { collision.add(a.id); break; }
         }
       }
+      if (zone.active) {
+        const outside = Math.hypot(ah.x-zone.x, ah.z-zone.z) > zone.radius;
+        a.zoneDamage = outside ? (a.zoneDamage || 0) + 0.8 : Math.max(0, (a.zoneDamage || 0) - 1.6);
+        if (a.zoneDamage >= 100) dead.add(a.id);
+      } else a.zoneDamage = 0;
+    }
+    // Resolve collision protection only after every snake has been checked, so order cannot decide who survives.
+    for (const pid of collision) {
+      const s = this.snakes.get(pid);
+      if (!s || dead.has(pid)) continue;
+      if (s.shieldUntil >= t) s.shieldUntil = 0;
+      else dead.add(pid);
     }
     for (const pid of dead) {
       const s=this.snakes.get(pid); if (!s) continue;
@@ -358,7 +389,7 @@ export class SnakeRoomHD {
       .map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:false}));
     const end=Date.now();
     const matchId=this.roundId;
-    this.broadcast({type:"roundEnd",results,roundId:this.roundId,durationSeconds:this.roundSeconds});
+    this.broadcast({type:"roundEnd",results,roundId:this.roundId,durationSeconds:Math.floor((end-this.startedAt)/1000)});
     try {
       if (this.mode !== "solo") {
         await this.env.DB.prepare("INSERT INTO matches(id,started_at,ended_at,duration_seconds,winner_uid,created_at) VALUES(?,?,?,?,?,?)")
@@ -396,8 +427,14 @@ export class SnakeRoomHD {
   }
 
   snapshot() {
-    return { type:"state", roundId:this.roundId, remaining:Math.max(0,this.roundSeconds-Math.floor((Date.now()-this.startedAt)/1000)),
-      snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,alive:s.alive,score:s.score,body:s.body,color:s.color,shield:s.shieldUntil>Date.now()})),
+    const t = Date.now();
+    const elapsed = Math.floor((t - this.startedAt) / 1000);
+    const zone = this.zoneState(t);
+    return { type:"state", roundId:this.roundId,
+      remaining:Math.max(0,this.mainRoundSeconds-elapsed),
+      overtimeRemaining:Math.max(0,this.roundSeconds-elapsed),
+      elapsed, zone,
+      snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,alive:s.alive,score:s.score,body:s.body,color:s.color,shield:s.shieldUntil>t})),
       coins:this.coins,shields:this.shields };
   }
   broadcast(extra=null) {
