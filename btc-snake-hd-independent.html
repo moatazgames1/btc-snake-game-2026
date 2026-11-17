@@ -234,7 +234,7 @@ function connect(mode="multi",duration=1200){
     let d;try{d=JSON.parse(e.data)}catch{return}
     if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6);const initialClock=mode==="multi"?"20:00":"05:00";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🪙 0";$("zoneLabel").textContent=mode==="multi"?(lang==="ar"?"المنطقة الآمنة":"SAFE ZONE"):(lang==="ar"?"التدريب":"PRACTICE")}
     else if(d.type==="state")updateWorld(d);
-    else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration);}
+    else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration,d.winner||null);}
     else if(d.type==="full")toast(lang==="ar"?"الساحة ممتلئة، حاول لاحقاً":"Arena is full. Try again soon.");
    };
    ws.onclose=()=>{running=false;if(roundEndedByServer)$("playAgainBtn").disabled=false;if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=lang==="ar"?"غير متصل":"DISCONNECTED"};
@@ -242,10 +242,13 @@ function connect(mode="multi",duration=1200){
   };
   openSocket();
  }
- function showResults(results,duration){
+ function showResults(results,duration,winner=null){
   roundEndedByServer=true;exitGameView();$("deathPanel").hidden=true;$("roundResults").hidden=false;$("playAgainBtn").disabled=true;
   $("resultsTitle").textContent=lang==="ar"?"🏆 نتائج الجولة":"🏆 Round results";
-  $("resultsSummary").textContent=lang==="ar"?`انتهت جولة ${duration/60} دقائق.`:`${duration/60}-minute round finished.`;
+  $("resultsSummary").textContent=lang==="ar"?`انتهت الجولة بعد ${Math.floor(duration/60)} دقيقة.`:`Round finished after ${Math.floor(duration/60)} minutes.`;
+  if(winner){
+   $("resultsSummary").textContent+=lang==="ar"?(winner.bot?` الفائز: ${winner.name} (روبوت).`:` 🏆 الفائز: ${winner.name}.`):(winner.bot?` Winner: ${winner.name} (bot).`:` 🏆 Winner: ${winner.name}.`);
+  }
   $("resultsList").innerHTML=results.map(r=>`<div class="row"><b>#${r.rank} ${escapeHtml(r.name)}${r.bot?" · BOT":""}</b><span>${r.score} 🪙</span></div>`).join("")||'<div class="row muted">No results.</div>';
   const mine=results.find(r=>r.id===myId);
   $("statusPill").textContent=mine?(lang==="ar"?`مركزك: ${mine.rank}`:`Your rank: ${mine.rank}`):(lang==="ar"?"انتهت الجولة":"ROUND FINISHED");
