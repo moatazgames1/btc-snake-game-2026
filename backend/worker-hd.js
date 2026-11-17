@@ -317,6 +317,14 @@ export class SnakeRoomHD {
     for (let i=0;i<all.length;i++) {
       const a=all[i], ah=a.body[0];
       if (ah.x<=0.5||ah.x>=99.5||ah.z<=0.5||ah.z>=99.5) { if (a.shieldUntil<t) dead.add(a.id); else a.shieldUntil=0; }
+      // Self-collision is handled separately from collisions with other snakes.
+      for (let k=1;k<a.body.length;k++) {
+        const seg=a.body[k];
+        if (Math.hypot(ah.x-seg.x,ah.z-seg.z)<0.85) {
+          if (a.shieldUntil<t) dead.add(a.id); else a.shieldUntil=0;
+          break;
+        }
+      }
       for (let j=0;j<all.length;j++) {
         if (i===j) continue;
         const b=all[j], bh=b.body[0];
@@ -343,9 +351,11 @@ export class SnakeRoomHD {
   async endRound() {
     if (this.roundEnded || this.endRoundInProgress) return;
     this.endRoundInProgress = true;
+    // Official round results include human players only; bots never receive ranks or rewards.
     const results=[...this.snakes.values()]
+      .filter(s=>!s.bot)
       .sort((a,b)=>b.score-a.score)
-      .map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:s.bot}));
+      .map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:false}));
     const end=Date.now();
     const matchId=this.roundId;
     this.broadcast({type:"roundEnd",results,roundId:this.roundId,durationSeconds:this.roundSeconds});
@@ -356,8 +366,19 @@ export class SnakeRoomHD {
         for (const r of results.filter(x=>x.registered&&!x.bot)) {
           await this.env.DB.prepare("INSERT INTO match_results(match_id,uid,display_name,score,rank,is_bot,created_at) VALUES(?,?,?,?,?,?,?)")
             .bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000)).run();
-          await this.env.DB.prepare("INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,virtual_points,xp,level) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(uid) DO UPDATE SET display_name=excluded.display_name,last_seen_at=excluded.last_seen_at,best_score=MAX(players.best_score,excluded.best_score),total_matches=players.total_matches+1,total_wins=players.total_wins+CASE WHEN excluded.total_wins>0 THEN 1 ELSE 0 END,virtual_points=players.virtual_points+excluded.virtual_points,xp=players.xp+excluded.xp")
-            .bind(r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),r.score,1,r.rank===1?1:0,r.rank===1?25:r.rank===2?12:r.rank===3?6:2,r.score,1).run();
+          await this.env.DB.prepare(`
+            INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,virtual_points,xp,level)
+            VALUES(?,?,?,?,?,?,?,?,?,(CAST(? AS INTEGER)/100)+1)
+            ON CONFLICT(uid) DO UPDATE SET
+              display_name=excluded.display_name,
+              last_seen_at=excluded.last_seen_at,
+              best_score=MAX(players.best_score,excluded.best_score),
+              total_matches=players.total_matches+1,
+              total_wins=players.total_wins+CASE WHEN excluded.total_wins>0 THEN 1 ELSE 0 END,
+              virtual_points=players.virtual_points+excluded.virtual_points,
+              xp=players.xp+excluded.xp,
+              level=CAST((players.xp+excluded.xp)/100 AS INTEGER)+1
+          `).bind(r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),r.score,1,r.rank===1?1:0,r.rank===1?25:r.rank===2?12:r.rank===3?6:2,r.score,r.score).run();
         }
       }
     } catch (e) {
