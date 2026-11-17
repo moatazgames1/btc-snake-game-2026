@@ -180,6 +180,13 @@ export class SnakeRoomHD {
     this.mainRoundSeconds = this.mode === "solo" ? 300 : 1200;
     if (this.roundEnded && this.clients.size === 0) this.resetRound();
     const pid = request.headers.get("X-Player-Id") || `guest-${crypto.randomUUID()}`;
+    const previousSocket = this.clients.get(pid);
+    if (previousSocket) {
+      this.clients.delete(pid);
+      this.snakes.delete(pid);
+      this.playerMeta.delete(pid);
+      try { previousSocket.close(4001, "Replaced by a newer connection"); } catch {}
+    }
     const name = (request.headers.get("X-Player-Name") || "Player").slice(0, 24);
     const registered = request.headers.get("X-Player-Registered") === "1";
     const oldBot = [...this.snakes.values()].find(s => s.bot);
@@ -198,8 +205,8 @@ export class SnakeRoomHD {
     this.broadcast();
     this.scheduleBotFill();
     server.addEventListener("message", ev => this.onMessage(pid, ev.data));
-    server.addEventListener("close", () => this.remove(pid));
-    server.addEventListener("error", () => this.remove(pid));
+    server.addEventListener("close", () => this.remove(pid, server));
+    server.addEventListener("error", () => this.remove(pid, server));
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -252,7 +259,8 @@ export class SnakeRoomHD {
     }
   }
 
-  remove(pid) {
+  remove(pid, socket = null) {
+    if (socket && this.clients.get(pid) !== socket) return;
     this.clients.delete(pid);
     this.snakes.delete(pid);
     const wasReal = this.playerMeta.has(pid);
