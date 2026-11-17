@@ -1,8 +1,9 @@
 const allowedOrigins = env => (env.ALLOWED_ORIGIN || "")
   .split(",").map(value => value.trim()).filter(Boolean);
+const isAllowedOrigin = (origin, env) => !origin || allowedOrigins(env).includes(origin) || /^https:\/\/[a-z0-9-]+\.btc-snake-test-2026\.pages\.dev$/i.test(origin);
 const cors = (origin, env) => {
   const allowed = allowedOrigins(env);
-  const allowedOrigin = allowed.includes(origin) ? origin : (allowed[0] || "null");
+  const allowedOrigin = isAllowedOrigin(origin, env) ? (origin || allowed[0] || "null") : (allowed[0] || "null");
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
@@ -115,15 +116,15 @@ export default {
         }
         const mode = url.searchParams.get("mode") === "solo" ? "solo" : "multi";
         // Competitive matches are fixed at 20 minutes plus up to 3 minutes of final-zone overtime.
-        const duration = mode === "solo" ? 300 : 1380;
-        if (origin && !allowedOrigins(env).includes(origin)) return json({ ok: false, error: "origin_not_allowed" }, 403, headers);
+        const duration = mode === "solo" ? 300 : 1200;
+        if (origin && !isAllowedOrigin(origin, env)) return json({ ok: false, error: "origin_not_allowed" }, 403, headers);
         if (user) {
           const account = await env.DB.prepare("SELECT is_banned FROM players WHERE uid = ?").bind(user.uid).first();
           if (account?.is_banned) return json({ ok: false, error: "account_banned" }, 403, headers);
         }
         const roomId = mode === "solo"
           ? `solo-${user?.uid || crypto.randomUUID()}-300`
-          : "public-1380";
+          : "public-1200";
         const stub = env.ROOMS.get(env.ROOMS.idFromName(roomId));
         const guest = !user;
         const headersForRoom = new Headers(request.headers);
@@ -154,7 +155,7 @@ export class SnakeRoomHD {
     this.coins = [];
     this.shields = [];
     this.startedAt = Date.now();
-    this.roundSeconds = 1380;
+    this.roundSeconds = 1200;
     this.mainRoundSeconds = 1200;
     this.roundEnded = false;
     this.endRoundInProgress = false;
@@ -181,8 +182,7 @@ export class SnakeRoomHD {
     const [client, server] = Object.values(pair);
     server.accept();
     this.mode = request.headers.get("X-Game-Mode") === "solo" ? "solo" : "multi";
-    const requestedDuration = Number(request.headers.get("X-Round-Seconds") || 300);
-    this.roundSeconds = this.mode === "solo" ? 300 : 1380;
+    this.roundSeconds = this.mode === "solo" ? 300 : 1200;
     this.mainRoundSeconds = this.mode === "solo" ? 300 : 1200;
     if (this.roundEnded && this.clients.size === 0) this.resetRound();
     const pid = request.headers.get("X-Player-Id") || `guest-${crypto.randomUUID()}`;
@@ -209,7 +209,7 @@ export class SnakeRoomHD {
     this.playerMeta.set(pid, { name, registered, skin });
     server.send(JSON.stringify({ type: "welcome", playerId: pid, roundId: this.roundId, roundSeconds: this.roundSeconds }));
     this.broadcast();
-    this.scheduleBotFill();
+    if (this.mode === "multi") this.scheduleBotFill();
     server.addEventListener("message", ev => this.onMessage(pid, ev.data));
     server.addEventListener("close", () => this.remove(pid, server));
     server.addEventListener("error", () => this.remove(pid, server));
@@ -251,11 +251,13 @@ export class SnakeRoomHD {
     const palette = { mint:"#35e0a1", gold:"#f7c948", fire:"#ff623e", ice:"#49d9ff", galaxy:"#a78bfa", toxic:"#b7f34a", royal:"#f472b6", diamond:"#d7f7ff" };
     return { id: pid, name, registered, bot, alive: true, score: 0, xp: 0,
       body: [{x,z},{x:x-1,z},{x:x-2,z}], dir: {x:1,z:0}, nextDir: {x:1,z:0}, turnInput: 0,
+      joystickActive: false, autoWalk: false, lastManualInputAt: 0,
       shieldUntil: 0, zoneDamage: 0, pendingTurn: false,
       color: bot ? ["#a78bfa","#22d3ee","#f59e0b","#34d399","#fb7185"][Math.floor(Math.random()*5)] : (palette[skin] || palette.mint), skin };
   }
 
   fillBots() {
+    if (this.mode !== "multi") return;
     const bots = [...this.snakes.values()].filter(s => s.bot).length;
     const real = [...this.snakes.values()].filter(s => !s.bot).length;
     const targetBots = 50;
@@ -281,6 +283,15 @@ export class SnakeRoomHD {
     try { data = JSON.parse(raw); } catch { return; }
     const s = this.snakes.get(pid);
     if (!s || !s.alive) return;
+    if (data.type === "joystick" && typeof data.active === "boolean") {
+      s.joystickActive = data.active;
+      s.lastManualInputAt = data.active ? Date.now() : 0;
+      return;
+    }
+    if (data.type === "autoWalk" && typeof data.enabled === "boolean") {
+      s.autoWalk = data.enabled;
+      return;
+    }
     if (data.type === "steer" && Number.isFinite(data.value)) {
       s.turnInput = Math.max(-1, Math.min(1, data.value));
       return;
@@ -326,6 +337,8 @@ export class SnakeRoomHD {
         const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.10;
         s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
       }
+      const manualMove = s.joystickActive && (t - (s.lastManualInputAt || 0) < 650);
+      if (!s.bot && !s.autoWalk && !manualMove) continue;
       if (this.tickNo % 2) continue;
       const h = s.body[0];
       const nh = {x: Math.max(0,Math.min(100,h.x+s.dir.x*0.9)), z: Math.max(0,Math.min(100,h.z+s.dir.z*0.9))};
@@ -339,7 +352,7 @@ export class SnakeRoomHD {
       if (si >= 0) { this.shields.splice(si,1); s.shieldUntil = t+5000; }
     }
     this.resolveCollisions(t);
-    if (this.botFillDone) {
+    if (this.mode === "multi" && this.botFillDone) {
       const alive = [...this.snakes.values()].filter(s => s.alive);
       if (alive.length <= 1) {
         this.endRound(alive[0]?.id || null);
@@ -352,11 +365,12 @@ export class SnakeRoomHD {
   zoneState(t = Date.now()) {
     const elapsed = Math.max(0, (t - this.startedAt) / 1000);
     if (this.mode === "solo") return { active: false, warning: false, x: 50, z: 50, radius: 72, phase: "practice" };
-    const warning = elapsed >= 570 && elapsed < 600;
-    let radius = 72;
-    if (elapsed >= 600 && elapsed < 1200) radius = 72 - (62 * Math.min(1, (elapsed - 600) / 600));
-    else if (elapsed >= 1200) radius = Math.max(0.8, 10 - (9.2 * Math.min(1, (elapsed - 1200) / 180)));
-    return { active: elapsed >= 600, warning, x: 50, z: 50, radius, phase: elapsed < 600 ? "warning" : elapsed < 1200 ? "closing" : "final" };
+    const warning = elapsed >= 150 && elapsed < 180;
+    const active = elapsed >= 180;
+    const progress = Math.min(1, Math.max(0, (elapsed - 180) / 1020));
+    const radius = 72 - (71 * progress);
+    const phase = elapsed >= 1140 ? "final" : active ? "closing" : "warning";
+    return { active, warning, x: 50, z: 50, radius: Math.max(1, radius), phase };
   }
 
   resolveCollisions(t) {
