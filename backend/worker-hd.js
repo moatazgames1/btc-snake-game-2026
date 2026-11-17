@@ -165,6 +165,12 @@ export class SnakeRoomHD {
     this.lastBroadcast = 0;
     this.zoneDamageTick = 0;
     this.spawnCoins(36);
+    this.timer = null;
+    this.startTicker();
+  }
+
+  startTicker() {
+    if (this.timer) return;
     this.timer = setInterval(() => this.tick(), 100);
   }
 
@@ -237,6 +243,7 @@ export class SnakeRoomHD {
     this.endRoundInProgress = false;
     this.botFillDone = false;
     this.botFillScheduled = false;
+    this.startTicker();
   }
 
   makeSnake(pid, name, registered, bot, skin = "mint") {
@@ -332,6 +339,13 @@ export class SnakeRoomHD {
       if (si >= 0) { this.shields.splice(si,1); s.shieldUntil = t+5000; }
     }
     this.resolveCollisions(t);
+    if (this.botFillDone) {
+      const alive = [...this.snakes.values()].filter(s => s.alive);
+      if (alive.length <= 1) {
+        this.endRound(alive[0]?.id || null);
+        return;
+      }
+    }
     if (t-this.lastBroadcast > 100) { this.lastBroadcast=t; this.broadcast(); }
   }
 
@@ -387,21 +401,27 @@ export class SnakeRoomHD {
     }
   }
 
-  async endRound() {
+  async endRound(winnerId = null) {
     if (this.roundEnded || this.endRoundInProgress) return;
     this.endRoundInProgress = true;
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+    const survivor = winnerId ? this.snakes.get(winnerId) : null;
+    const winner = survivor ? { id: survivor.id, name: survivor.name, bot: !!survivor.bot } : null;
     // Official round results include human players only; bots never receive ranks or rewards.
     const results=[...this.snakes.values()]
       .filter(s=>!s.bot)
-      .sort((a,b)=>b.score-a.score)
+      .sort((a,b)=>Number(b.alive)-Number(a.alive) || b.score-a.score)
       .map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:false}));
     const end=Date.now();
     const matchId=this.roundId;
-    this.broadcast({type:"roundEnd",results,roundId:this.roundId,durationSeconds:Math.floor((end-this.startedAt)/1000)});
+    this.broadcast({type:"roundEnd",results,winner,roundId:this.roundId,durationSeconds:Math.floor((end-this.startedAt)/1000)});
     try {
       if (this.mode !== "solo") {
         await this.env.DB.prepare("INSERT INTO matches(id,started_at,ended_at,duration_seconds,winner_uid,created_at) VALUES(?,?,?,?,?,?)")
-          .bind(matchId,Math.floor(this.startedAt/1000),Math.floor(end/1000),this.roundSeconds,(results[0]?.registered&&!results[0]?.bot)?results[0].id:null,Math.floor(end/1000)).run();
+          .bind(matchId,Math.floor(this.startedAt/1000),Math.floor(end/1000),this.roundSeconds,(winner && !winner.bot && survivor.registered) ? winner.id : (!winner && results[0]?.registered ? results[0].id : null),Math.floor(end/1000)).run();
         for (const r of results.filter(x=>x.registered&&!x.bot)) {
           await this.env.DB.prepare("INSERT INTO match_results(match_id,uid,display_name,score,rank,is_bot,created_at) VALUES(?,?,?,?,?,?,?)")
             .bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000)).run();
