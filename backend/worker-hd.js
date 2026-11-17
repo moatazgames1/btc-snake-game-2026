@@ -1,3 +1,5 @@
+import { DurableObject } from "cloudflare:workers";
+
 const allowedOrigins = env => (env.ALLOWED_ORIGIN || "")
   .split(",").map(value => value.trim()).filter(Boolean);
 const isAllowedOrigin = (origin, env) => !origin || allowedOrigins(env).includes(origin) || /^https:\/\/[a-z0-9-]+\.btc-snake-test-2026\.pages\.dev$/i.test(origin);
@@ -144,8 +146,9 @@ export default {
   }
 };
 
-export class SnakeRoomHD {
+export class SnakeRoomHD extends DurableObject {
   constructor(state, env) {
+    super(state, env);
     this.state = state;
     this.env = env;
     this.clients = new Map();
