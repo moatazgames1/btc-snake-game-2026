@@ -172,7 +172,7 @@ function updateWorld(state){
  const clock=overtime?("+"+String(Math.floor(state.overtimeRemaining/60)).padStart(2,"0")+":"+String(state.overtimeRemaining%60).padStart(2,"0")):String(Math.floor(state.remaining/60)).padStart(2,"0")+":"+String(state.remaining%60).padStart(2,"0");
  $("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent=clock;$("hudTimer").textContent=clock;
  const zone=state.zone||{};
- if(zoneMesh){zoneMesh.visible=!!zone.active;zoneMesh.position.set(zone.x??50,.16,zone.z??50);zoneMesh.scale.set(zone.radius||1,1,zone.radius||1);zoneMesh.material.color.set(zone.phase==="final"?"#ff684f":zone.warning?"#ffd166":"#35c9ff");}
+ if(zoneMesh){zoneMesh.visible=!!zone.active;zoneMesh.position.set(zone.x??50,.16,zone.z??50);zoneMesh.scale.set(zone.radius||1,zone.radius||1,1);zoneMesh.material.color.set(zone.phase==="final"?"#ff684f":zone.warning?"#ffd166":"#35c9ff");}
  $("zoneLabel").textContent=zone.warning?(lang==="ar"?"⚠️ الزون يبدأ خلال 30 ثانية":"⚠️ Zone closes in 30s"):zone.phase==="final"?(lang==="ar"?"المنطقة النهائية":"FINAL ZONE"):zone.active?(lang==="ar"?"الزون يتقلص":"ZONE CLOSING"):(lang==="ar"?"المنطقة الآمنة":"SAFE ZONE");
  const mine=state.snakes?.find(s=>s.id===myId);
  if(mine){
