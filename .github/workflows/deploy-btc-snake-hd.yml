@@ -1,0 +1,38 @@
+name: Deploy BTC Snake HD Worker
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/battle-royale-20m-manual-stop
+    paths:
+      - "backend/worker-hd.js"
+      - "backend/wrangler-hd.toml"
+      - "backend/schema-hd.sql"
+      - ".github/workflows/deploy-btc-snake-hd.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    # Keep live deployment disabled until the owner explicitly enables it.
+    if: vars.HD_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Deploy dedicated HD Worker
+        run: npx wrangler deploy --config wrangler-hd.toml
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
