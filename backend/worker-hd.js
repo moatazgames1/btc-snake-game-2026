@@ -117,7 +117,7 @@ export default {
           user = { uid: row.uid, name: row.display_name };
         }
         const mode = url.searchParams.get("mode") === "solo" ? "solo" : "multi";
-        // Competitive matches are fixed at 20 minutes plus up to 3 minutes of final-zone overtime.
+        // Competitive matches are fixed at 20 minutes.
         const duration = mode === "solo" ? 300 : 1200;
         if (origin && !isAllowedOrigin(origin, env)) return json({ ok: false, error: "origin_not_allowed" }, 403, headers);
         if (user) {
@@ -440,7 +440,7 @@ export class SnakeRoomHD extends DurableObject {
     // Official round results include human players only; bots never receive ranks or rewards.
     const results=[...this.snakes.values()]
       .filter(s=>!s.bot)
-      .sort((a,b)=>Number(b.alive)-Number(a.alive) || b.score-a.score)
+      .sort((a,b)=>Number(b.alive)-Number(a.alive) || b.score-a.score || (b.health||0)-(a.health||0))
       .map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:false}));
     const end=Date.now();
     const matchId=this.roundId;
