@@ -118,7 +118,7 @@ export default {
         }
         const mode = url.searchParams.get("mode") === "solo" ? "solo" : "multi";
         // Competitive matches are fixed at 20 minutes.
-        const duration = mode === "solo" ? 300 : 1200;
+        const duration = mode === "solo" ? 0 : 1200;
         if (origin && !isAllowedOrigin(origin, env)) return json({ ok: false, error: "origin_not_allowed" }, 403, headers);
         if (user) {
           const account = await env.DB.prepare("SELECT is_banned FROM players WHERE uid = ?").bind(user.uid).first();
