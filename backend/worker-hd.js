@@ -167,7 +167,6 @@ export class SnakeRoomHD extends DurableObject {
     this.tickNo = 0;
     this.roundId = crypto.randomUUID();
     this.lastBroadcast = 0;
-    this.zoneDamageTick = 0;
     this.spawnCoins(36);
     this.timer = null;
     this.startTicker();
@@ -242,7 +241,6 @@ export class SnakeRoomHD extends DurableObject {
     this.roundId = crypto.randomUUID();
     this.startedAt = Date.now();
     this.tickNo = 0;
-    this.zoneDamageTick = 0;
     this.roundEnded = false;
     this.endRoundInProgress = false;
     this.botFillDone = false;
