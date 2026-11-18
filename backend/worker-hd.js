@@ -210,6 +210,9 @@ export class SnakeRoomHD extends DurableObject {
     this.snakes.set(pid, snake);
     this.clients.set(pid, server);
     this.playerMeta.set(pid, { name, registered, skin });
+    // If the arena was already filled with bots, replace the bot removed for this
+    // incoming player so the room returns to its 50-snake target.
+    if (this.mode === "multi" && this.botFillDone) this.fillBots();
     server.send(JSON.stringify({ type: "welcome", playerId: pid, roundId: this.roundId, roundSeconds: this.roundSeconds }));
     this.broadcast();
     if (this.mode === "multi") this.scheduleBotFill();
