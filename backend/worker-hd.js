@@ -185,8 +185,9 @@ export class SnakeRoomHD extends DurableObject {
     const [client, server] = Object.values(pair);
     server.accept();
     this.mode = request.headers.get("X-Game-Mode") === "solo" ? "solo" : "multi";
-    this.roundSeconds = this.mode === "solo" ? 300 : 1200;
-    this.mainRoundSeconds = this.mode === "solo" ? 300 : 1200;
+    // Battle Royale has a hard 20-minute limit. Solo practice has no timer.
+    this.roundSeconds = this.mode === "solo" ? 0 : 1200;
+    this.mainRoundSeconds = this.mode === "solo" ? 0 : 1200;
     if (this.roundEnded && this.clients.size === 0) this.resetRound();
     const pid = request.headers.get("X-Player-Id") || `guest-${crypto.randomUUID()}`;
     const previousSocket = this.clients.get(pid);
@@ -255,7 +256,7 @@ export class SnakeRoomHD extends DurableObject {
     return { id: pid, name, registered, bot, alive: true, score: 0, xp: 0,
       body: [{x,z},{x:x-1,z},{x:x-2,z}], dir: {x:1,z:0}, nextDir: {x:1,z:0}, turnInput: 0,
       joystickActive: false, autoWalk: false, lastManualInputAt: 0,
-      shieldUntil: 0, zoneDamage: 0, pendingTurn: false,
+      shieldUntil: 0, health: 100, pendingTurn: false,
       color: bot ? ["#a78bfa","#22d3ee","#f59e0b","#34d399","#fb7185"][Math.floor(Math.random()*5)] : (palette[skin] || palette.mint), skin };
   }
 
@@ -327,7 +328,6 @@ export class SnakeRoomHD extends DurableObject {
     if (this.roundEnded || this.endRoundInProgress) return;
     this.tickNo++;
     const t = Date.now();
-    if ((t-this.startedAt)/1000 >= this.roundSeconds) { this.endRound(); return; }
     for (const s of this.snakes.values()) {
       if (!s.alive) continue;
       if (s.bot) {
@@ -356,9 +356,17 @@ export class SnakeRoomHD extends DurableObject {
       if (si >= 0) { this.shields.splice(si,1); s.shieldUntil = t+5000; }
     }
     this.resolveCollisions(t);
+
     if (this.mode === "multi" && this.botFillDone) {
       const alive = [...this.snakes.values()].filter(s => s.alive);
       if (alive.length <= 1) {
+        this.endRound(alive[0]?.id || null);
+        return;
+      }
+      // At exactly 20 minutes the match ends. If the zone has not left one
+      // survivor, the best surviving snake by score (then health) wins.
+      if ((t-this.startedAt)/1000 >= this.mainRoundSeconds) {
+        alive.sort((a,b) => b.score-a.score || (b.health||0)-(a.health||0));
         this.endRound(alive[0]?.id || null);
         return;
       }
@@ -400,9 +408,12 @@ export class SnakeRoomHD extends DurableObject {
       }
       if (zone.active) {
         const outside = Math.hypot(ah.x-zone.x, ah.z-zone.z) > zone.radius;
-        a.zoneDamage = outside ? (a.zoneDamage || 0) + 0.8 : Math.max(0, (a.zoneDamage || 0) - 1.6);
-        if (a.zoneDamage >= 100) dead.add(a.id);
-      } else a.zoneDamage = 0;
+        const progress = Math.min(1, Math.max(0, ((t-this.startedAt)/1000 - 180) / 1020));
+        // Damage rises as the safe zone gets smaller: about 1.2 to 12 health/sec.
+        if (outside) a.health = Math.max(0, (a.health ?? 100) - (0.12 + 1.08*progress));
+        else a.health = Math.min(100, (a.health ?? 100) + 0.2);
+        if (a.health <= 0) dead.add(a.id);
+      } else a.health = 100;
     }
     // Resolve collision protection only after every snake has been checked, so order cannot decide who survives.
     for (const pid of collision) {
@@ -439,7 +450,7 @@ export class SnakeRoomHD extends DurableObject {
     try {
       if (this.mode !== "solo") {
         await this.env.DB.prepare("INSERT INTO matches(id,started_at,ended_at,duration_seconds,winner_uid,created_at) VALUES(?,?,?,?,?,?)")
-          .bind(matchId,Math.floor(this.startedAt/1000),Math.floor(end/1000),this.roundSeconds,(winner && !winner.bot && survivor.registered) ? winner.id : (!winner && results[0]?.registered ? results[0].id : null),Math.floor(end/1000)).run();
+          .bind(matchId,Math.floor(this.startedAt/1000),Math.floor(end/1000),Math.floor((end-this.startedAt)/1000),(winner && !winner.bot && survivor.registered) ? winner.id : null,Math.floor(end/1000)).run();
         for (const r of results.filter(x=>x.registered&&!x.bot)) {
           await this.env.DB.prepare("INSERT INTO match_results(match_id,uid,display_name,score,rank,is_bot,created_at) VALUES(?,?,?,?,?,?,?)")
             .bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000)).run();
@@ -477,10 +488,10 @@ export class SnakeRoomHD extends DurableObject {
     const elapsed = Math.floor((t - this.startedAt) / 1000);
     const zone = this.zoneState(t);
     return { type:"state", roundId:this.roundId,
-      remaining:Math.max(0,this.mainRoundSeconds-elapsed),
-      overtimeRemaining:Math.max(0,this.roundSeconds-elapsed),
+      remaining:this.mode === "solo" ? null : Math.max(0,this.mainRoundSeconds-elapsed),
+      overtimeRemaining:this.mode === "solo" ? null : Math.max(0,this.roundSeconds-elapsed),
       elapsed, zone,
-      snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,alive:s.alive,score:s.score,body:s.body,color:s.color,shield:s.shieldUntil>t})),
+      snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,alive:s.alive,score:s.score,health:Math.max(0,Math.round(s.health ?? 100)),body:s.body,color:s.color,shield:s.shieldUntil>t})),
       coins:this.coins,shields:this.shields };
   }
   broadcast(extra=null) {
