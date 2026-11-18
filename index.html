@@ -134,7 +134,7 @@ for(const [code,values] of Object.entries(localePacks)){const pack={...text.en};
 function resolveLanguage(choice){if(choice&&choice!=="auto"&&text[choice])return choice;const raw=(navigator.languages&&navigator.languages[0]||navigator.language||"en").toLowerCase();const code=raw.split("-")[0];return text[code]?code:"en";}
 let lang=resolveLanguage(localStorage.getItem("btcSnakeLanguage")||"auto");
 function applyLang(){const t=text[lang]||text.en;const rtl=["ar","ur"].includes(lang);document.documentElement.lang=lang;document.documentElement.dir=rtl?"rtl":"ltr";$("languageSelect").value=localStorage.getItem("btcSnakeLanguage")||"auto";$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("soloBtn").textContent=t.solo;$("startSelectedBtn").textContent=t.start;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("accountLabel").textContent=tr("accountLabel");$("email").placeholder=tr("email");$("password").placeholder=tr("password");$("emailLogin").textContent=t.login2;$("authStatus").textContent=currentUser?("Signed in: "+(currentUser.displayName||currentUser.email)):t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin;$("adminText").textContent=tr("adminHint");$("adminBtn").textContent=tr("adminButton");$("cameraBtn").setAttribute("aria-label",tr("camera"));$("shieldBtn").textContent=tr("shield");$("leaveBtn").textContent=tr("leave");$("skinBtn").textContent=tr("customize");$("deathPanel").querySelector("strong").textContent=tr("deathTitle");$("deathPanel").querySelector("div").textContent=tr("deathDesc");$("resultsTitle").textContent=tr("results");$("playAgainBtn").textContent=tr("playAgain");$("adNotice").textContent=tr("adNotice");$("footerText").textContent=tr("footer");updateAutoWalkButton();if(lastState)updateWorld(lastState);}
-$("languageSelect").onchange=()=>{localStorage.setItem("btcSnakeLanguage",$("languageSelect").value);lang=resolveLanguage($("languageSelect").value);applyLang();};applyLang();
+$("languageSelect").onchange=()=>{localStorage.setItem("btcSnakeLanguage",$("languageSelect").value);lang=resolveLanguage($("languageSelect").value);applyLang();refreshLeaderboard();};applyLang();
 async function loadFirebase(){
  try{
   const cfg=await import(FB_CONFIG_URL);
@@ -142,7 +142,7 @@ async function loadFirebase(){
   const authMod=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js");
   const app=appMod.initializeApp(cfg.firebaseConfig);auth=authMod.getAuth(app);
   firebase={...authMod};
-  authMod.onAuthStateChanged(auth,u=>{currentUser=u;$("authStatus").textContent=u?`Signed in: ${u.displayName||u.email}`:text[lang].auth;$("logout").hidden=!u;refreshLeaderboard();});
+  authMod.onAuthStateChanged(auth,u=>{currentUser=u;$("authStatus").textContent=u?(text[lang].login+": "+(u.displayName||u.email)):text[lang].auth;$("logout").hidden=!u;$("logout").textContent=lang==="ar"?"خروج":"Logout";refreshLeaderboard();});
  }catch(e){$("authStatus").textContent=tr("firebaseMissing")}
 }
 async function token(){return currentUser?await currentUser.getIdToken():null}
@@ -156,7 +156,7 @@ $("emailLogin").onclick=async()=>{
  try{await firebase.signInWithEmailAndPassword(auth,email,password).catch(async e=>{if(e.code==="auth/user-not-found"||e.code==="auth/invalid-credential")return firebase.createUserWithEmailAndPassword(auth,email,password);throw e});toast(tr("welcome"))}
  catch(e){toast(firebaseError(e))}
 };
-$("googleLogin").onclick=async()=>{if(!firebase)return toast(tr("firebaseRequired"));try{await firebase.signInWithPopup(auth,new firebase.GoogleAuthProvider())}catch(e){toast(e.message)}};
+$("googleLogin").onclick=async()=>{if(!firebase)return toast(tr("firebaseRequired"));try{await firebase.signInWithPopup(auth,new firebase.GoogleAuthProvider())}catch(e){toast(firebaseError(e))}};
 $("logout").onclick=()=>firebase?.signOut(auth);
 $("loginTop").onclick=()=>$("email").focus();
 
@@ -283,7 +283,7 @@ function connect(mode="multi",duration=1200){
    ws.onopen=()=>{running=true;ws.send(JSON.stringify({type:"joystick",active:false}));ws.send(JSON.stringify({type:"autoWalk",enabled:false}));$("statusPill").textContent=tr("connected");toast(tr("connected"))};
    ws.onmessage=e=>{
     let d;try{d=JSON.parse(e.data)}catch{return}
-    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent="ROUND "+d.roundId.slice(0,6);const initialClock=mode==="multi"?"20:00":"∞";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🪙 0";$("zoneLabel").textContent=mode==="multi"?(lang==="ar"?"المنطقة الآمنة":"SAFE ZONE"):(tr("zonePractice"))}
+    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent=tr("round")+" "+d.roundId.slice(0,6);const initialClock=mode==="multi"?"20:00":"∞";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🪙 0";$("zoneLabel").textContent=mode==="multi"?tr("zoneSafe"):tr("zonePractice")}
     else if(d.type==="state")updateWorld(d);
     else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration,d.winner||null);}
     else if(d.type==="full")toast(tr("arenaFull"));
