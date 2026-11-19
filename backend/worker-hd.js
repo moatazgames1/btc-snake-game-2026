@@ -198,6 +198,7 @@ export class SnakeRoomHD extends DurableObject {
     const [client, server] = Object.values(pair);
     server.accept();
     this.mode = request.headers.get("X-Game-Mode") === "solo" ? "solo" : "multi";
+    if (this.mode === "solo") this.chests = [];
     // Battle Royale has a hard 20-minute limit. Solo practice has no timer.
     this.roundSeconds = this.mode === "solo" ? 0 : 1200;
     this.mainRoundSeconds = this.mode === "solo" ? 0 : 1200;
@@ -254,7 +255,7 @@ export class SnakeRoomHD extends DurableObject {
     this.playerMeta.clear();
     this.chests = [];
     this.shields = [];
-    this.spawnChests(12);
+    if (this.mode === "multi") this.spawnChests(12);
     this.roundId = crypto.randomUUID();
     this.startedAt = Date.now();
     this.tickNo = 0;
