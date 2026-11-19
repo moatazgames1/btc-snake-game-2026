@@ -534,8 +534,8 @@ export class SnakeRoomHD extends DurableObject {
       remaining:this.mode === "solo" ? null : Math.max(0,this.mainRoundSeconds-elapsed),
       overtimeRemaining:this.mode === "solo" ? null : Math.max(0,this.roundSeconds-elapsed),
       elapsed, zone,
-      snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,alive:s.alive,score:s.score,health:Math.max(0,Math.round(s.health ?? 100)),body:s.body,color:s.color,shield:s.shieldUntil>t})),
-      chests:this.chests,shields:this.shields };
+      snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,alive:s.alive,score:s.score,chestsFound:s.chestsFound||0,health:Math.max(0,Math.round(s.health ?? 100)),body:s.body,color:s.color,shield:s.shieldUntil>t})),
+      chests:this.chests.map(c=>({id:c.id,x:c.x,z:c.z})),shields:this.shields };
   }
   broadcast(extra=null) {
     const payload=JSON.stringify(extra || this.snapshot());
