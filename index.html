@@ -443,7 +443,7 @@ function drawSkins(){
 }
 drawSkins();
 async function refreshLeaderboard(){
- try{const d=await api("/api/leaderboard");$("leaderboard").innerHTML=(d.leaderboard||[]).map((p,i)=>`<div class="row"><b>#${i+1} ${escapeHtml(p.display_name)}</b><span>${p.best_score} 📦</span></div>`).join("")||`<div class="row muted">${tr("leaderEmpty")}</div>`}catch{$("leaderboard").innerHTML=`<div class="row muted">${tr("leaderApi")}</div>`}
+ try{const d=await api("/api/leaderboard");$("leaderboard").innerHTML=(d.leaderboard||[]).map((p,i)=>`<div class="row"><b>#${i+1} ${escapeHtml(p.display_name)} <small class="muted">Lv.${Number(p.level||1)}</small></b><span>${Number(p.virtual_points||0).toLocaleString(lang)} 🏆 <small class="muted">${Number(p.total_wins||0)} ${lang==="ar"?"فوز":"wins"}</small></span></div>`).join("")||`<div class="row muted">${tr("leaderEmpty")}</div>`}catch{$("leaderboard").innerHTML=`<div class="row muted">${tr("leaderApi")}</div>`}
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 $("adminBtn").onclick=async()=>{try{const d=await api("/api/admin/summary");$("adminOutput").textContent=JSON.stringify(d,null,2)}catch{$("adminOutput").textContent=tr("adminUnavailable")}};
