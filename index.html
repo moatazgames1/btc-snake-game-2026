@@ -299,10 +299,10 @@ function makeSnakeSegment(color,r=.62,head=false){
  const skin=new THREE.MeshStandardMaterial({color,map:scales,roughness:.42,metalness:.06});
  const bellyMat=new THREE.MeshStandardMaterial({color:"#d7c5a0",roughness:.72});
  const core=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),skin);
- core.scale.set(head?.68:.57,head?.45:.39,head?.92:.76);
+ core.scale.set(head ? .68 : .57,head ? .45 : .39,head?.92:.76);
  core.castShadow=true;core.receiveShadow=true;g.add(core);
  const belly=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),bellyMat);
- belly.scale.set(head?.49:.43,.16,head?.72:.62);belly.position.set(0,-.29,.02);g.add(belly);
+ belly.scale.set(head ? .49 : .43,.16,head ? .72 : .62);belly.position.set(0,-.29,.02);g.add(belly);
  if(head){
   const snout=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),skin);
   snout.scale.set(.43,.27,.48);snout.position.set(0,-.015,.62);snout.castShadow=true;g.add(snout);
