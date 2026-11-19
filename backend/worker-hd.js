@@ -349,7 +349,12 @@ export class SnakeRoomHD extends DurableObject {
         return false;
       });
     this.pendingChestWrites.add(write);
-    write.finally(() => this.pendingChestWrites.delete(write));
+    // Cleanup is attached as a two-branch handler so it cannot create an
+    // unobserved rejected promise as finally() would.
+    write.then(
+      () => this.pendingChestWrites.delete(write),
+      () => this.pendingChestWrites.delete(write)
+    );
     return write;
   }
 
@@ -499,12 +504,26 @@ export class SnakeRoomHD extends DurableObject {
     this.broadcast({type:"roundEnd",results,winner,roundId:this.roundId,durationSeconds:Math.floor((end-this.startedAt)/1000)});
     try {
       if (this.mode !== "solo") {
-        await this.env.DB.prepare("INSERT INTO matches(id,started_at,ended_at,duration_seconds,winner_uid,created_at) VALUES(?,?,?,?,?,?)")
-          .bind(matchId,Math.floor(this.startedAt/1000),Math.floor(end/1000),Math.floor((end-this.startedAt)/1000),(winner && !winner.bot && survivor.registered) ? winner.id : null,Math.floor(end/1000)).run();
+        // Persist the match, human results, and player aggregates atomically.
+        const statements = [
+          this.env.DB.prepare(
+            "INSERT INTO matches(id,started_at,ended_at,duration_seconds,winner_uid,created_at) VALUES(?,?,?,?,?,?)"
+          ).bind(
+            matchId,
+            Math.floor(this.startedAt/1000),
+            Math.floor(end/1000),
+            Math.floor((end-this.startedAt)/1000),
+            (winner && !winner.bot && survivor.registered) ? winner.id : null,
+            Math.floor(end/1000)
+          )
+        ];
         for (const r of results.filter(x=>x.registered&&!x.bot)) {
-          await this.env.DB.prepare("INSERT INTO match_results(match_id,uid,display_name,score,rank,is_bot,created_at) VALUES(?,?,?,?,?,?,?)")
-            .bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000)).run();
-          await this.env.DB.prepare(`
+          statements.push(
+            this.env.DB.prepare(
+              "INSERT INTO match_results(match_id,uid,display_name,score,rank,is_bot,created_at) VALUES(?,?,?,?,?,?,?)"
+            ).bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000))
+          );
+          statements.push(this.env.DB.prepare(`
             INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,virtual_points,xp,level)
             VALUES(?,?,?,?,?,?,?,?,?,(CAST(? AS INTEGER)/100)+1)
             ON CONFLICT(uid) DO UPDATE SET
@@ -516,11 +535,17 @@ export class SnakeRoomHD extends DurableObject {
               virtual_points=players.virtual_points+excluded.virtual_points,
               xp=players.xp+excluded.xp,
               level=CAST((players.xp+excluded.xp)/100 AS INTEGER)+1
-          `).bind(r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),r.score,1,r.rank===1?1:0,r.rank===1?25:r.rank===2?12:r.rank===3?6:2,r.score,r.score).run();
+          `).bind(
+            r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),
+            r.score,1,r.rank===1?1:0,
+            r.rank===1?25:r.rank===2?12:r.rank===3?6:2,
+            r.score,r.score
+          ));
         }
+        await this.env.DB.batch(statements);
       }
     } catch (e) {
-      console.error("Failed to save round results:", e);
+      console.error("Failed to save round results atomically:", e);
     }
     this.roundEnded = true;
     this.endRoundInProgress = false;
