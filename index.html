@@ -275,12 +275,62 @@ function cycleCameraView(){
  if(lastState&&myId){const mine=lastState.snakes?.find(s=>s.id===myId);if(mine)updateFollowCamera(mine)}
 }
 $("cameraBtn").onclick=cycleCameraView;
-function makeSphere(color,r=.65){return new THREE.Mesh(new THREE.SphereGeometry(r,18,14),new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.04}))}
+function makeSphere(color,r=.65){return new THREE.Mesh(new THREE.SphereGeometry(r,24,18),new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.04}))}
+let snakeScaleTexture=null;
+function getSnakeScaleTexture(){
+ if(snakeScaleTexture)return snakeScaleTexture;
+ const canvas=document.createElement("canvas");canvas.width=canvas.height=512;
+ const ctx=canvas.getContext("2d");ctx.fillStyle="#e8e1d4";ctx.fillRect(0,0,512,512);
+ for(let row=0;row<22;row++)for(let col=0;col<18;col++){
+  const x=col*30+(row%2)*15+15,y=row*24+12;
+  ctx.beginPath();ctx.ellipse(x,y,14,11,0,0,Math.PI*2);
+  ctx.fillStyle=(row+col)%4===0?"#ffffff":"#d5cbb8";ctx.fill();
+  ctx.strokeStyle="#766b5e";ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(x,y-2,8,Math.PI*1.08,Math.PI*1.92);
+  ctx.strokeStyle="#ffffff";ctx.lineWidth=2;ctx.stroke();
+ }
+ snakeScaleTexture=new THREE.CanvasTexture(canvas);
+ snakeScaleTexture.wrapS=snakeScaleTexture.wrapT=THREE.RepeatWrapping;
+ snakeScaleTexture.repeat.set(1.5,1);snakeScaleTexture.colorSpace=THREE.SRGBColorSpace;
+ return snakeScaleTexture;
+}
 function makeSnakeSegment(color,r=.62,head=false){
- const g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({color,roughness:.34,metalness:.08});
- const core=new THREE.Mesh(new THREE.SphereGeometry(r,28,22),mat);core.scale.set(1.08,.82,1);core.castShadow=true;core.receiveShadow=true;g.add(core);
- if(!head){const band=new THREE.Mesh(new THREE.TorusGeometry(r*.88,.045,6,16),new THREE.MeshStandardMaterial({color:"#b4d66b",roughness:.3,metalness:.12}));band.rotation.x=Math.PI/2;band.position.y=.1;g.add(band)}
- else {const eyeMat=new THREE.MeshStandardMaterial({color:"#f4d46a",roughness:.2});for(const side of [-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.105,12,10),eyeMat);eye.position.set(.25,.25,side*.38);g.add(eye)}}
+ const g=new THREE.Group(),scales=getSnakeScaleTexture();
+ const skin=new THREE.MeshStandardMaterial({color,map:scales,roughness:.42,metalness:.06});
+ const bellyMat=new THREE.MeshStandardMaterial({color:"#d7c5a0",roughness:.72});
+ const core=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),skin);
+ core.scale.set(head?.68:.57,head?.45:.39,head?.92:.76);
+ core.castShadow=true;core.receiveShadow=true;g.add(core);
+ const belly=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),bellyMat);
+ belly.scale.set(head?.49:.43,.16,head?.72:.62);belly.position.set(0,-.29,.02);g.add(belly);
+ if(head){
+  const snout=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),skin);
+  snout.scale.set(.43,.27,.48);snout.position.set(0,-.015,.62);snout.castShadow=true;g.add(snout);
+  const jaw=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),bellyMat);
+  jaw.scale.set(.43,.13,.48);jaw.position.set(0,-.24,.55);g.add(jaw);
+  const eyeWhite=new THREE.MeshStandardMaterial({color:"#f4c95d",roughness:.2,metalness:.04});
+  const pupilMat=new THREE.MeshStandardMaterial({color:"#160d09",roughness:.22});
+  const glintMat=new THREE.MeshBasicMaterial({color:"#ffffff"});
+  for(const side of [-1,1]){
+   const eye=new THREE.Mesh(new THREE.SphereGeometry(.145,18,14),eyeWhite);
+   eye.position.set(side*.49,.22,.12);eye.scale.set(1,.9,1.05);g.add(eye);
+   const pupil=new THREE.Mesh(new THREE.SphereGeometry(.055,12,10),pupilMat);
+   pupil.position.set(side*.535,.225,.205);pupil.scale.set(.72,1.5,.55);g.add(pupil);
+   const glint=new THREE.Mesh(new THREE.SphereGeometry(.022,8,8),glintMat);
+   glint.position.set(side*.55,.27,.23);g.add(glint);
+   const nostril=new THREE.Mesh(new THREE.SphereGeometry(.035,10,8),pupilMat);
+   nostril.position.set(side*.19,.08,1.025);g.add(nostril);
+  }
+  const mouthCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-.39,-.13,.78),new THREE.Vector3(0,-.19,.94),new THREE.Vector3(.39,-.13,.78)]);
+  const mouth=new THREE.Mesh(new THREE.TubeGeometry(mouthCurve,18,.018,6,false),pupilMat);g.add(mouth);
+  const tongue=new THREE.Group(),tongueMat=new THREE.MeshStandardMaterial({color:"#d71942",roughness:.3});
+  const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.42,8),tongueMat);stem.rotation.x=Math.PI/2;stem.position.set(0,-.1,1.18);tongue.add(stem);
+  for(const side of [-1,1]){
+   const fork=new THREE.Mesh(new THREE.CylinderGeometry(.009,.02,.2,7),tongueMat);
+   fork.rotation.x=Math.PI/2+(side*.34);fork.position.set(side*.055,-.1,1.39);tongue.add(fork);
+  }
+  tongue.name="snakeTongue";g.add(tongue);
+ }
  return g;
 }
 function iRadius(total,index){return Math.max(.36,.59-index*.008)}
@@ -303,8 +353,8 @@ function updateWorld(state){
  const aliveIds=new Set();
  for(const s of state.snakes||[]){aliveIds.add(s.id);let group=meshes.get(s.id);if(!group){group=new THREE.Group();meshes.set(s.id,group);scene.add(group)}
   while(group.children.length<s.body.length){const m=makeSnakeSegment(s.color||"#35a853",iRadius(s.body.length,group.children.length),group.children.length===0);group.add(m)}
-  group.children.forEach((m,i)=>{const p=s.body[i];m.visible=!!p;if(p)m.position.set(p.x,.5,p.z);});
-  group.children.forEach((m,i)=>{m.scale.setScalar(i===0?1.16:1)});
+  group.children.forEach((m,i)=>{const p=s.body[i];m.visible=!!p;if(p){m.position.set(p.x,.48,p.z);const before=s.body[Math.max(0,i-1)]||p,after=s.body[Math.min(s.body.length-1,i+1)]||p;const dx=before.x-after.x,dz=before.z-after.z;m.rotation.y=Math.atan2(dx,dz);}});
+  group.children.forEach((m,i)=>{m.scale.setScalar(i===0?1.08:Math.max(.72,1-i*.004))});
  }
  for(const [k,g] of meshes){if(!aliveIds.has(k)){scene.remove(g);meshes.delete(k)}}
  chestMeshes.forEach(m=>scene.remove(m));chestMeshes=[];
