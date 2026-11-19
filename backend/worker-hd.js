@@ -336,6 +336,7 @@ export class SnakeRoomHD extends DurableObject {
     const write = this.env.DB.prepare(
       "INSERT OR IGNORE INTO player_chests(chest_id,uid,match_id,chest_type,status,found_at) VALUES(?,?,?,?,'pending',?)"
     ).bind(chest.id, s.id, this.roundId, chest.type, now()).run()
+      .then(() => true)
       .catch(error => {
         console.error("Failed to save found chest:", error);
         if (!this.roundEnded && this.snakes.get(s.id) === s) {
@@ -344,9 +345,11 @@ export class SnakeRoomHD extends DurableObject {
           s.score = Math.max(0, s.score - 1);
         }
         try { this.clients.get(s.id)?.send(JSON.stringify({type:"chestSaveFailed"})); } catch {}
+        return false;
       });
     this.pendingChestWrites.add(write);
     write.finally(() => this.pendingChestWrites.delete(write));
+    return write;
   }
 
   botThink(s) {
@@ -391,8 +394,11 @@ export class SnakeRoomHD extends DurableObject {
           this.chests.splice(ci,1);
           s.chestsFound += 1;
           s.score += 1;
-          this.saveFoundChest(s, chest);
-          try { this.clients.get(s.id)?.send(JSON.stringify({type:"chestFound",chestsFound:s.chestsFound})); } catch {}
+          this.saveFoundChest(s, chest).then(saved => {
+            if (saved) {
+              try { this.clients.get(s.id)?.send(JSON.stringify({type:"chestFound",chestsFound:s.chestsFound})); } catch {}
+            }
+          });
         }
       }
       const si = this.shields.findIndex(c => Math.hypot(c.x-nh.x,c.z-nh.z)<2);
