@@ -33,8 +33,8 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
   <p class="notice" id="authStatus">اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.</p>
   <div class="row" id="walletBalanceRow" hidden style="margin-top:10px"><b id="walletLabel">🪙 رصيد الصناديق</b><strong id="walletBalance">0</strong></div>
   <div class="row" id="rankPointsRow" hidden style="margin-top:8px"><b id="rankPointsLabel">🏆 نقاط التصنيف</b><strong id="rankPoints">0</strong></div>
-  <div class="row" id="chestInventoryRow" hidden style="margin-top:8px"><b>📦 الصناديق المحفوظة</b><strong id="chestInventoryCount">0</strong></div>
-  <p class="notice" id="chestAdNotice">الصناديق تبقى محفوظة. فتحها بالإعلان سيُفعّل بعد ربط التحقق الرسمي للإعلانات.</p>
+  <div class="row" id="chestInventoryRow" hidden style="margin-top:8px"><b>📦 البيض المحفوظ</b><strong id="chestInventoryCount">0</strong></div>
+  <p class="notice" id="chestAdNotice">البيض يبقى محفوظاً في مخزونك. فتحه بإعلان مكافأة سيُفعّل بعد ربط التحقق الرسمي للإعلانات.</p>
   <div class="ad-slot" id="adNotice">مساحة إعلانية غير مفعّلة — لن تظهر إعلانات أثناء اللعب.</div>
  </div>
 </section>
@@ -83,8 +83,8 @@ const skins = [
  {id:"diamond",name:"Diamond",color:"#d7f7ff",unlock:"Achievement"}
 ];
 const text = {
- ar:{login:"دخول",headline:'ابحث عن الصناديق… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 20 دقيقة",solo:"تدريب فردي · بلا وقت",how:"طريقة اللعب",rules:"الاصطدام بجسم أفعى يسبب الإقصاء. اصطدام الرأسين يقصي الاثنين إلا إذا كان الدرع فعالاً.",players:"في الساحة",time:"وقت الجولة",score:"صناديق الجولة",account:"احفظ تقدمك",wallet:"🪙 رصيد الصناديق",rankPoints:"🏆 نقاط التصنيف",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
- en:{login:"Login",headline:'Find hidden chests… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 20 min",solo:"Solo practice · untimed",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head eliminates both unless a shield is active.",players:"In arena",time:"Round time",score:"Round chests",account:"Save your progress",wallet:"🪙 Chest wallet",rankPoints:"🏆 Ranking points",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
+ ar:{login:"دخول",headline:'ابحث عن البيض المخفي… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 20 دقيقة",solo:"تدريب فردي · بلا وقت",how:"طريقة اللعب",rules:"الاصطدام بجسم أفعى يسبب الإقصاء. اصطدام الرأسين يقصي الاثنين إلا إذا كان الدرع فعالاً.",players:"في الساحة",time:"وقت الجولة",score:"صناديق الجولة",account:"احفظ تقدمك",wallet:"🪙 رصيد الصناديق",rankPoints:"🏆 نقاط التصنيف",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
+ en:{login:"Login",headline:'Find hidden eggs… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 20 min",solo:"Solo practice · untimed",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head eliminates both unless a shield is active.",players:"In arena",time:"Round time",score:"Round eggs",account:"Save your progress",wallet:"🪙 Egg inventory",rankPoints:"🏆 Ranking points",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
 };
 const localePacks={
 fr:["Connexion","Collectez des pièces… <span>Dominez l’arène</span>","Arène de serpents 3D. Jouez comme invité ou connectez-vous pour sauvegarder votre progression.","Multijoueur · 20 min","Entraînement solo · sans limite","Comment jouer","Toucher le corps d’un serpent élimine. Un choc tête-à-tête élimine les deux, sauf bouclier actif.","Dans l’arène","Durée","Pièces du tour","Sauvegardez votre progression","Connexion / Inscription","Le jeu invité est disponible. Connectez-vous pour sauvegarder vos résultats.","Prêt à jouer","🏆 Classement mondial","🎨 Apparences","Les apparences sont cosmétiques, sans avantage.","Administration","Jouer"],
@@ -307,12 +307,17 @@ function updateWorld(state){
  chestMeshes.forEach(m=>scene.remove(m));chestMeshes=[];
  for(const c of state.chests||[]){
   const g=new THREE.Group();
-  const wood=new THREE.MeshStandardMaterial({color:"#8b552e",roughness:.92});
-  const dark=new THREE.MeshStandardMaterial({color:"#3d2a20",roughness:.82,metalness:.08});
-  const base=new THREE.Mesh(new THREE.BoxGeometry(1.25,.82,1),wood);base.position.y=.42;g.add(base);
-  const lid=new THREE.Mesh(new THREE.BoxGeometry(1.3,.22,1.05),wood);lid.position.y=.94;g.add(lid);
-  const band=new THREE.Mesh(new THREE.BoxGeometry(.16,1.02,1.08),dark);band.position.set(0,.55,0);g.add(band);
-  const lock=new THREE.Mesh(new THREE.BoxGeometry(.22,.28,.08),dark);lock.position.set(0,.66,.56);g.add(lock);
+  const shellColor=c.type==="legendary"?"#f7c948":c.type==="rare"?"#83d8ff":"#f1e6c8";
+  const shell=new THREE.Mesh(new THREE.LatheGeometry([
+   new THREE.Vector2(0,-.68),new THREE.Vector2(.22,-.65),new THREE.Vector2(.43,-.48),
+   new THREE.Vector2(.55,-.15),new THREE.Vector2(.54,.2),new THREE.Vector2(.4,.48),
+   new THREE.Vector2(.2,.67),new THREE.Vector2(0,.72)
+  ],28),new THREE.MeshStandardMaterial({color:shellColor,roughness:.3,metalness:.04}));
+  shell.position.y=.82;shell.castShadow=true;g.add(shell);
+  const band=new THREE.Mesh(new THREE.TorusGeometry(.49,.035,8,32),new THREE.MeshStandardMaterial({color:c.type==="legendary"?"#fff0a8":"#a7a18d",roughness:.35}));
+  band.rotation.x=Math.PI/2;band.position.y=.82;g.add(band);
+  const glow=new THREE.PointLight(c.type==="legendary"?0xffd45a:c.type==="rare"?0x70cfff:0xfff1cf,.45,3);
+  glow.position.y=1.15;g.add(glow);
   g.position.set(c.x,0,c.z);scene.add(g);chestMeshes.push(g);
  }
  shieldMeshes.forEach(m=>scene.remove(m));shieldMeshes=[];
@@ -360,7 +365,7 @@ function connect(mode="multi",duration=1200){
     let d;try{d=JSON.parse(e.data)}catch{return}
     if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent=tr("round")+" "+d.roundId.slice(0,6);const initialClock=mode==="multi"?"20:00":"∞";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="📦 0";$("zoneLabel").textContent=mode==="multi"?tr("zoneSafe"):tr("zonePractice")}
     else if(d.type==="state")updateWorld(d);
-     else if(d.type==="chestFound"){toast(lang==="ar"?"وجدت صندوقاً! تم حفظه في مخزونك 📦":"Chest found and saved to your inventory! 📦");refreshChests();}
+     else if(d.type==="chestFound"){toast(lang==="ar"?"وجدت بيضة! تم حفظها في مخزونك 🥚":"Egg found and saved to your inventory! 🥚");refreshChests();}
      else if(d.type==="chestLoginRequired")toast(lang==="ar"?"سجّل الدخول أولاً حتى يُحفظ الصندوق بعد المباراة.":"Sign in first so your chest can be saved after the match.");
      else if(d.type==="chestSaveFailed")toast(lang==="ar"?"تعذّر حفظ الصندوق الآن. حاول مجدداً.":"Could not save the chest. Please try again.");
     else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration,d.winner||null,d.resultsSaved===true);}
