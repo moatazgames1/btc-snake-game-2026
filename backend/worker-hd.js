@@ -58,8 +58,12 @@ export default {
       if (url.pathname === "/api/me" && request.method === "GET") {
         const user = await firebaseUser(request, env);
         if (!user) return json({ ok: false, error: "auth_required" }, 401, headers);
-        const row = await env.DB.prepare("SELECT * FROM players WHERE uid = ?").bind(user.uid).first();
-        return json({ ok: true, player: row || { uid: user.uid, display_name: user.name, best_score: 0, total_matches: 0, total_wins: 0, xp: 0, level: 1, virtual_points: 0 } }, 200, headers);
+        const [row, wallet] = await Promise.all([
+          env.DB.prepare("SELECT * FROM players WHERE uid = ?").bind(user.uid).first(),
+          env.DB.prepare("SELECT COALESCE(SUM(amount), 0) AS balance FROM wallet_ledger WHERE uid = ?").bind(user.uid).first()
+        ]);
+        const player = row || { uid: user.uid, display_name: user.name, best_score: 0, total_matches: 0, total_wins: 0, xp: 0, level: 1, virtual_points: 0 };
+        return json({ ok: true, player: { ...player, wallet_balance: Number(wallet?.balance || 0) } }, 200, headers);
       }
 
       if (url.pathname === "/api/ws-ticket" && request.method === "POST") {
