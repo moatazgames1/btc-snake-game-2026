@@ -501,7 +501,7 @@ export class SnakeRoomHD extends DurableObject {
       .map((s,i)=>({id:s.id,name:s.name,score:s.score,chestsFound:s.chestsFound||0,rank:i+1,registered:s.registered,bot:false}));
     const end=Date.now();
     const matchId=this.roundId;
-    this.broadcast({type:"roundEnd",results,winner,roundId:this.roundId,durationSeconds:Math.floor((end-this.startedAt)/1000)});
+    let resultsSaved = this.mode === "solo";
     try {
       if (this.mode !== "solo") {
         // Persist the match, human results, and player aggregates atomically.
@@ -544,9 +544,16 @@ export class SnakeRoomHD extends DurableObject {
         }
         await this.env.DB.batch(statements);
       }
+      resultsSaved = true;
     } catch (e) {
       console.error("Failed to save round results atomically:", e);
     }
+    // Notify clients only after the persistence attempt has completed.
+    this.broadcast({
+      type:"roundEnd",results,winner,roundId:this.roundId,
+      durationSeconds:Math.floor((end-this.startedAt)/1000),
+      resultsSaved
+    });
     this.roundEnded = true;
     this.endRoundInProgress = false;
     const sockets = [...this.clients.values()];
