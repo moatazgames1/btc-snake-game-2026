@@ -258,7 +258,15 @@ function init3D(){
  zoneMesh=new THREE.Mesh(new THREE.TorusGeometry(1,.16,8,128),new THREE.MeshStandardMaterial({color:"#35c9ff",emissive:"#0876a5",emissiveIntensity:.65,roughness:.25,transparent:true,opacity:.95}));
  zoneMesh.rotation.x=Math.PI/2;zoneMesh.position.y=.16;zoneMesh.visible=false;scene.add(zoneMesh);
  const resize=()=>resizeGameRenderer();new ResizeObserver(resize).observe(host);window.addEventListener("resize",resizeGameRenderer);document.addEventListener("fullscreenchange",()=>requestAnimationFrame(resizeGameRenderer));requestAnimationFrame(resizeGameRenderer);
- function animate(){requestAnimationFrame(animate);renderer.render(scene,camera)}animate();
+ function animate(){
+ requestAnimationFrame(animate);
+ const t=performance.now()*.001;
+ for(const group of meshes.values()){
+  const tongue=group.userData.headMesh?.getObjectByName("snakeTongue");
+  if(tongue){tongue.visible=Math.sin(t*3.2+group.position.x*.1)>.15;tongue.scale.z=.85+.15*Math.sin(t*5);}
+ }
+ renderer.render(scene,camera);
+}animate();
 }
 function updateFollowCamera(snake){
  if(!camera||!snake?.body||snake.body.length<2)return;
@@ -299,7 +307,7 @@ function makeSnakeSegment(color,r=.62,head=false){
  const skin=new THREE.MeshStandardMaterial({color,map:scales,roughness:.42,metalness:.06});
  const bellyMat=new THREE.MeshStandardMaterial({color:"#d7c5a0",roughness:.72});
  const core=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),skin);
- core.scale.set(head ? .68 : .57,head ? .45 : .39,head?.92:.76);
+ core.scale.set(head ? .68 : .57,head ? .45 : .39,head ? .92 : .76);
  core.castShadow=true;core.receiveShadow=true;g.add(core);
  const belly=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),bellyMat);
  belly.scale.set(head ? .49 : .43,.16,head ? .72 : .62);belly.position.set(0,-.29,.02);g.add(belly);
@@ -351,10 +359,32 @@ function updateWorld(state){
   if(mine.alive)updateFollowCamera(mine);
  }
  const aliveIds=new Set();
- for(const s of state.snakes||[]){aliveIds.add(s.id);let group=meshes.get(s.id);if(!group){group=new THREE.Group();meshes.set(s.id,group);scene.add(group)}
-  while(group.children.length<s.body.length){const m=makeSnakeSegment(s.color||"#35a853",iRadius(s.body.length,group.children.length),group.children.length===0);group.add(m)}
-  group.children.forEach((m,i)=>{const p=s.body[i];m.visible=!!p;if(p){m.position.set(p.x,.48,p.z);const before=s.body[Math.max(0,i-1)]||p,after=s.body[Math.min(s.body.length-1,i+1)]||p;const dx=before.x-after.x,dz=before.z-after.z;m.rotation.y=Math.atan2(dx,dz);}});
-  group.children.forEach((m,i)=>{m.scale.setScalar(i===0?1.08:Math.max(.72,1-i*.004))});
+ for(const s of state.snakes||[]){
+  aliveIds.add(s.id);
+  let group=meshes.get(s.id);
+  if(!group){
+   group=new THREE.Group();
+   const bodyMaterial=new THREE.MeshStandardMaterial({color:s.color||"#35a853",map:getSnakeScaleTexture(),roughness:.44,metalness:.05});
+   const bodyMesh=new THREE.Mesh(new THREE.BufferGeometry(),bodyMaterial);
+   bodyMesh.castShadow=true;bodyMesh.receiveShadow=true;group.add(bodyMesh);
+   const headMesh=makeSnakeSegment(s.color||"#35a853",.62,true);
+   headMesh.position.y=.52;group.add(headMesh);
+   group.userData.bodyMesh=bodyMesh;group.userData.headMesh=headMesh;
+   meshes.set(s.id,group);scene.add(group);
+  }
+  const points=(s.body||[]).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.z));
+  if(points.length>=2){
+   const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(p.x,.43,p.z)),false,"centripetal");
+   const tubularSegments=Math.max(16,Math.min(120,points.length*3));
+   const nextGeometry=new THREE.TubeGeometry(curve,tubularSegments,.39,8,false);
+   const bodyMesh=group.userData.bodyMesh;
+   if(bodyMesh){bodyMesh.geometry.dispose();bodyMesh.geometry=nextGeometry;bodyMesh.material.color.set(s.color||"#35a853");}
+   const head=group.userData.headMesh,first=points[0],neck=points[1]||first;
+   if(head){
+    head.position.set(first.x,.52,first.z);
+    head.rotation.y=Math.atan2(first.x-neck.x,first.z-neck.z);
+   }
+  }
  }
  for(const [k,g] of meshes){if(!aliveIds.has(k)){scene.remove(g);meshes.delete(k)}}
  chestMeshes.forEach(m=>scene.remove(m));chestMeshes=[];
