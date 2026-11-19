@@ -363,7 +363,7 @@ function connect(mode="multi",duration=1200){
      else if(d.type==="chestFound"){toast(lang==="ar"?"وجدت صندوقاً! تم حفظه في مخزونك 📦":"Chest found and saved to your inventory! 📦");refreshChests();}
      else if(d.type==="chestLoginRequired")toast(lang==="ar"?"سجّل الدخول أولاً حتى يُحفظ الصندوق بعد المباراة.":"Sign in first so your chest can be saved after the match.");
      else if(d.type==="chestSaveFailed")toast(lang==="ar"?"تعذّر حفظ الصندوق الآن. حاول مجدداً.":"Could not save the chest. Please try again.");
-    else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration,d.winner||null);}
+    else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration,d.winner||null,d.resultsSaved===true);}
     else if(d.type==="full")toast(tr("arenaFull"));
    };
    ws.onclose=()=>{running=false;setJoystickActive(false);if(roundEndedByServer){$("playAgainBtn").disabled=false;refreshWallet();}refreshChests();if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=tr("disconnected")};
@@ -371,10 +371,11 @@ function connect(mode="multi",duration=1200){
   };
   openSocket();
  }
- function showResults(results,duration,winner=null){
+ function showResults(results,duration,winner=null,resultsSaved=false){
   roundEndedByServer=true;exitGameView();$("deathPanel").hidden=true;$("roundResults").hidden=false;$("playAgainBtn").disabled=true;
   $("resultsTitle").textContent=tr("results");
   $("resultsSummary").textContent=tr("roundFinished",{minutes:Math.floor(duration/60)});
+  if(!resultsSaved)$("resultsSummary").textContent+=(lang==="ar"?" ⚠️ لم تُحفظ النتائج في قاعدة البيانات؛ هذه النتائج مؤقتة.":" ⚠️ Results were not saved to the database; this result is temporary.");
   if(winner){
    $("resultsSummary").textContent+=" "+tr(winner.bot?"winnerBot":"winner",{name:winner.name});
   }
