@@ -66,6 +66,15 @@ export default {
         return json({ ok: true, player: { ...player, wallet_balance: Number(wallet?.balance || 0) } }, 200, headers);
       }
 
+      if (url.pathname === "/api/chests" && request.method === "GET") {
+        const user = await firebaseUser(request, env);
+        if (!user) return json({ ok: false, error: "auth_required" }, 401, headers);
+        const rows = await env.DB.prepare(
+          "SELECT chest_id, chest_type, found_at FROM player_chests WHERE uid = ? AND status = 'pending' ORDER BY found_at DESC LIMIT 100"
+        ).bind(user.uid).all();
+        return json({ ok: true, chests: rows.results || [] }, 200, headers);
+      }
+
       if (url.pathname === "/api/ws-ticket" && request.method === "POST") {
         const user = await firebaseUser(request, env);
         if (!user) return json({ ok: false, error: "auth_required" }, 401, headers);
@@ -159,8 +168,9 @@ export class SnakeRoomHD extends DurableObject {
     this.playerMeta = new Map();
     this.snakes = new Map();
     this.mode = "multi";
-    this.coins = [];
+    this.chests = [];
     this.shields = [];
+    this.pendingChestWrites = new Set();
     this.startedAt = Date.now();
     this.roundSeconds = 1200;
     this.mainRoundSeconds = 1200;
@@ -171,7 +181,7 @@ export class SnakeRoomHD extends DurableObject {
     this.tickNo = 0;
     this.roundId = crypto.randomUUID();
     this.lastBroadcast = 0;
-    this.spawnCoins(36);
+    this.spawnChests(12);
     this.timer = null;
     this.startTicker();
   }
@@ -242,9 +252,9 @@ export class SnakeRoomHD extends DurableObject {
     this.snakes.clear();
     this.clients.clear();
     this.playerMeta.clear();
-    this.coins = [];
+    this.chests = [];
     this.shields = [];
-    this.spawnCoins(36);
+    this.spawnChests(12);
     this.roundId = crypto.randomUUID();
     this.startedAt = Date.now();
     this.tickNo = 0;
@@ -258,7 +268,7 @@ export class SnakeRoomHD extends DurableObject {
   makeSnake(pid, name, registered, bot, skin = "mint") {
     const x = 10 + Math.random() * 80, z = 10 + Math.random() * 80;
     const palette = { mint:"#35e0a1", gold:"#f7c948", fire:"#ff623e", ice:"#49d9ff", galaxy:"#a78bfa", toxic:"#b7f34a", royal:"#f472b6", diamond:"#d7f7ff" };
-    return { id: pid, name, registered, bot, alive: true, score: 0, xp: 0,
+    return { id: pid, name, registered, bot, alive: true, score: 0, chestsFound: 0, xp: 0,
       body: [{x,z},{x:x-1,z},{x:x-2,z}], dir: {x:1,z:0}, nextDir: {x:1,z:0}, turnInput: 0,
       joystickActive: false, autoWalk: false, lastManualInputAt: 0,
       shieldUntil: 0, health: 100, pendingTurn: false,
@@ -312,16 +322,38 @@ export class SnakeRoomHD extends DurableObject {
     }
   }
 
-  spawnCoins(n) {
-    for (let i=0;i<n;i++) this.coins.push({ x: 4+Math.random()*92, z: 4+Math.random()*92, value: 1 });
+  spawnChests(n) {
+    for (let i=0;i<n;i++) {
+      const roll = Math.random();
+      const type = roll < 0.70 ? "common" : roll < 0.95 ? "rare" : "legendary";
+      this.chests.push({ id: crypto.randomUUID(), x: 4+Math.random()*92, z: 4+Math.random()*92, type });
+    }
     if (Math.random() < 0.45) this.shields.push({x: 8+Math.random()*84,z: 8+Math.random()*84});
+  }
+
+  saveFoundChest(s, chest) {
+    if (!s.registered || s.bot) return;
+    const write = this.env.DB.prepare(
+      "INSERT OR IGNORE INTO player_chests(chest_id,uid,match_id,chest_type,status,found_at) VALUES(?,?,?,?,'pending',?)"
+    ).bind(chest.id, s.id, this.roundId, chest.type, now()).run()
+      .catch(error => {
+        console.error("Failed to save found chest:", error);
+        if (!this.roundEnded && this.snakes.get(s.id) === s) {
+          this.chests.push(chest);
+          s.chestsFound = Math.max(0, s.chestsFound - 1);
+          s.score = Math.max(0, s.score - 1);
+        }
+        try { this.clients.get(s.id)?.send(JSON.stringify({type:"chestSaveFailed"})); } catch {}
+      });
+    this.pendingChestWrites.add(write);
+    write.finally(() => this.pendingChestWrites.delete(write));
   }
 
   botThink(s) {
     if (Math.random() < 0.08) {
-      const coin = this.coins.reduce((best,c) => !best || Math.hypot(c.x-s.body[0].x,c.z-s.body[0].z) < Math.hypot(best.x-s.body[0].x,best.z-s.body[0].z) ? c : best, null);
-      if (coin) {
-        const dx = coin.x-s.body[0].x, dz = coin.z-s.body[0].z;
+      const chest = this.chests.reduce((best,c) => !best || Math.hypot(c.x-s.body[0].x,c.z-s.body[0].z) < Math.hypot(best.x-s.body[0].x,best.z-s.body[0].z) ? c : best, null);
+      if (chest) {
+        const dx = chest.x-s.body[0].x, dz = chest.z-s.body[0].z;
         const choices = Math.abs(dx)>Math.abs(dz) ? [{x:Math.sign(dx)||1,z:0},{x:0,z:Math.sign(dz)||1}] : [{x:0,z:Math.sign(dz)||1},{x:Math.sign(dx)||1,z:0}];
         const d = choices[Math.floor(Math.random()*choices.length)];
         if (!(d.x === -s.dir.x && d.z === -s.dir.z)) s.nextDir = d;
@@ -352,10 +384,21 @@ export class SnakeRoomHD extends DurableObject {
       const h = s.body[0];
       const nh = {x: Math.max(0,Math.min(100,h.x+s.dir.x*0.9)), z: Math.max(0,Math.min(100,h.z+s.dir.z*0.9))};
       s.body.unshift(nh); s.body.pop();
-      const ci = this.coins.findIndex(c => Math.hypot(c.x-nh.x,c.z-nh.z)<1.8);
+      const ci = this.chests.findIndex(c => Math.hypot(c.x-nh.x,c.z-nh.z)<2.2);
       if (ci >= 0) {
-        this.coins.splice(ci,1); s.score += 1; s.body.push({...s.body[s.body.length-1]});
-        if (this.coins.length < 26) this.spawnCoins(12);
+        const chest = this.chests[ci];
+        if (!s.registered || s.bot) {
+          if (t - (s.lastChestLoginNoticeAt || 0) > 5000) {
+            s.lastChestLoginNoticeAt = t;
+            try { this.clients.get(s.id)?.send(JSON.stringify({type:"chestLoginRequired"})); } catch {}
+          }
+        } else {
+          this.chests.splice(ci,1);
+          s.chestsFound += 1;
+          s.score += 1;
+          this.saveFoundChest(s, chest);
+          try { this.clients.get(s.id)?.send(JSON.stringify({type:"chestFound",chestsFound:s.chestsFound})); } catch {}
+        }
       }
       const si = this.shields.findIndex(c => Math.hypot(c.x-nh.x,c.z-nh.z)<2);
       if (si >= 0) { this.shields.splice(si,1); s.shieldUntil = t+5000; }
@@ -430,7 +473,6 @@ export class SnakeRoomHD extends DurableObject {
     for (const pid of dead) {
       const s=this.snakes.get(pid); if (!s) continue;
       s.alive=false;
-      this.coins.push(...s.body.slice(0,Math.min(12,s.body.length)).map(p=>({x:p.x,z:p.z,value:1})));
       s.body=[];
     }
   }
@@ -445,10 +487,11 @@ export class SnakeRoomHD extends DurableObject {
     const survivor = winnerId ? this.snakes.get(winnerId) : null;
     const winner = survivor ? { id: survivor.id, name: survivor.name, bot: !!survivor.bot } : null;
     // Official round results include human players only; bots never receive ranks or rewards.
+    await Promise.allSettled([...this.pendingChestWrites]);
     const results=[...this.snakes.values()]
       .filter(s=>!s.bot)
       .sort((a,b)=>Number(b.alive)-Number(a.alive) || b.score-a.score || (b.health||0)-(a.health||0))
-      .map((s,i)=>({id:s.id,name:s.name,score:s.score,rank:i+1,registered:s.registered,bot:false}));
+      .map((s,i)=>({id:s.id,name:s.name,score:s.score,chestsFound:s.chestsFound||0,rank:i+1,registered:s.registered,bot:false}));
     const end=Date.now();
     const matchId=this.roundId;
     this.broadcast({type:"roundEnd",results,winner,roundId:this.roundId,durationSeconds:Math.floor((end-this.startedAt)/1000)});
@@ -497,7 +540,7 @@ export class SnakeRoomHD extends DurableObject {
       overtimeRemaining:this.mode === "solo" ? null : Math.max(0,this.roundSeconds-elapsed),
       elapsed, zone,
       snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,alive:s.alive,score:s.score,health:Math.max(0,Math.round(s.health ?? 100)),body:s.body,color:s.color,shield:s.shieldUntil>t})),
-      coins:this.coins,shields:this.shields };
+      chests:this.chests,shields:this.shields };
   }
   broadcast(extra=null) {
     const payload=JSON.stringify(extra || this.snapshot());
