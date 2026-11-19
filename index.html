@@ -31,16 +31,16 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
   <div class="auth"><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Password"></div>
   <div class="arena-actions"><button class="primary" id="emailLogin">دخول / إنشاء حساب</button><button id="googleLogin">Google</button><button id="logout" hidden>خروج</button></div>
   <p class="notice" id="authStatus">اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.</p>
-  <div class="row" id="walletBalanceRow" hidden style="margin-top:10px"><b id="walletLabel">🪙 رصيد الصناديق</b><strong id="walletBalance">0</strong></div>
+  <div class="row" id="walletBalanceRow" hidden style="margin-top:10px"><b id="walletLabel">🪙 رصيد البيض</b><strong id="walletBalance">0</strong></div>
   <div class="row" id="rankPointsRow" hidden style="margin-top:8px"><b id="rankPointsLabel">🏆 نقاط التصنيف</b><strong id="rankPoints">0</strong></div>
-  <div class="row" id="chestInventoryRow" hidden style="margin-top:8px"><b>📦 البيض المحفوظ</b><strong id="chestInventoryCount">0</strong></div>
+  <div class="row" id="chestInventoryRow" hidden style="margin-top:8px"><b>🥚 البيض المحفوظ</b><strong id="chestInventoryCount">0</strong></div>
   <p class="notice" id="chestAdNotice">البيض يبقى محفوظاً في مخزونك. فتحه بإعلان مكافأة سيُفعّل بعد ربط التحقق الرسمي للإعلانات.</p>
   <div class="ad-slot" id="adNotice">مساحة إعلانية غير مفعّلة — لن تظهر إعلانات أثناء اللعب.</div>
  </div>
 </section>
 
 <section class="arena-wrap card" id="arenaWrap">
- <div class="hud"><div class="hud-left"><span id="hudCoins" class="hud-coins">📦 0</span><span id="healthLabel">❤️ 100%</span><span id="zoneLabel">المنطقة الآمنة</span></div><span id="hudTimer">20:00</span><div class="hud-right"><button id="cameraBtn" type="button" aria-label="تغيير زاوية الكاميرا">📷 1/3</button><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div></div>
+ <div class="hud"><div class="hud-left"><span id="hudCoins" class="hud-coins">🥚 0</span><span id="healthLabel">❤️ 100%</span><span id="zoneLabel">المنطقة الآمنة</span></div><span id="hudTimer">20:00</span><div class="hud-right"><button id="cameraBtn" type="button" aria-label="تغيير زاوية الكاميرا">📷 1/3</button><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div></div>
  <div class="arena" id="arena"></div>
  <div class="arena-actions"><button id="shieldBtn">🛡 الدرع: اجمعه من الساحة</button><button id="autoWalkBtn" type="button" aria-pressed="false">🚶 المشي التلقائي: متوقف</button><button id="leaveBtn">الخروج من الجولة</button><button id="skinBtn">تخصيص الأفعى</button></div>
  <div id="deathPanel" class="notice" hidden style="margin-top:12px;padding:14px;border:1px solid #ff623e;border-radius:12px;background:#321b25">
@@ -83,7 +83,7 @@ const skins = [
  {id:"diamond",name:"Diamond",color:"#d7f7ff",unlock:"Achievement"}
 ];
 const text = {
- ar:{login:"دخول",headline:'ابحث عن البيض المخفي… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 20 دقيقة",solo:"تدريب فردي · بلا وقت",how:"طريقة اللعب",rules:"الاصطدام بجسم أفعى يسبب الإقصاء. اصطدام الرأسين يقصي الاثنين إلا إذا كان الدرع فعالاً.",players:"في الساحة",time:"وقت الجولة",score:"صناديق الجولة",account:"احفظ تقدمك",wallet:"🪙 رصيد الصناديق",rankPoints:"🏆 نقاط التصنيف",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
+ ar:{login:"دخول",headline:'ابحث عن البيض المخفي… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 20 دقيقة",solo:"تدريب فردي · بلا وقت",how:"طريقة اللعب",rules:"الاصطدام بجسم أفعى يسبب الإقصاء. اصطدام الرأسين يقصي الاثنين إلا إذا كان الدرع فعالاً.",players:"في الساحة",time:"وقت الجولة",score:"بيض الجولة",account:"احفظ تقدمك",wallet:"🪙 رصيد البيض",rankPoints:"🏆 نقاط التصنيف",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
  en:{login:"Login",headline:'Find hidden eggs… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 20 min",solo:"Solo practice · untimed",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head eliminates both unless a shield is active.",players:"In arena",time:"Round time",score:"Round eggs",account:"Save your progress",wallet:"🪙 Egg inventory",rankPoints:"🏆 Ranking points",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
 };
 const localePacks={
@@ -290,7 +290,7 @@ function updateWorld(state){
  $("zoneLabel").textContent=zone.phase==="practice"?(tr("zonePractice")):zone.warning?(tr("zoneWarning")):zone.phase==="final"?(tr("zoneFinal")):zone.active?(tr("zoneClosing")):(tr("zoneSafe"));
  const mine=state.snakes?.find(s=>s.id===myId);
  if(mine){
-  $("myScore").textContent=mine.chestsFound||0;$("hudCoins").textContent="📦 "+(mine.chestsFound||0);
+  $("myScore").textContent=mine.chestsFound||0;$("hudCoins").textContent="🥚 "+(mine.chestsFound||0);
   const healthLabel=$("healthLabel");if(healthLabel)healthLabel.textContent="❤️ "+Math.max(0,Math.min(100,Math.round(mine.health??100)))+"%";
   $("statusPill").textContent=mine.alive?(tr("inArena")):(tr("eliminated"));
   if(wasAlive===true&&!mine.alive){setAutoWalk(false);setJoystickActive(false);$("deathPanel").hidden=false;toast(tr("eliminated"));}
@@ -363,11 +363,11 @@ function connect(mode="multi",duration=1200){
    ws.onopen=()=>{running=true;ws.send(JSON.stringify({type:"joystick",active:false}));ws.send(JSON.stringify({type:"autoWalk",enabled:false}));$("statusPill").textContent=tr("connected");toast(tr("connected"))};
    ws.onmessage=e=>{
     let d;try{d=JSON.parse(e.data)}catch{return}
-    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent=tr("round")+" "+d.roundId.slice(0,6);const initialClock=mode==="multi"?"20:00":"∞";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="📦 0";$("zoneLabel").textContent=mode==="multi"?tr("zoneSafe"):tr("zonePractice")}
+    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent=tr("round")+" "+d.roundId.slice(0,6);const initialClock=mode==="multi"?"20:00":"∞";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🥚 0";$("zoneLabel").textContent=mode==="multi"?tr("zoneSafe"):tr("zonePractice")}
     else if(d.type==="state")updateWorld(d);
      else if(d.type==="chestFound"){toast(lang==="ar"?"وجدت بيضة! تم حفظها في مخزونك 🥚":"Egg found and saved to your inventory! 🥚");refreshChests();}
-     else if(d.type==="chestLoginRequired")toast(lang==="ar"?"سجّل الدخول أولاً حتى يُحفظ الصندوق بعد المباراة.":"Sign in first so your chest can be saved after the match.");
-     else if(d.type==="chestSaveFailed")toast(lang==="ar"?"تعذّر حفظ الصندوق الآن. حاول مجدداً.":"Could not save the chest. Please try again.");
+     else if(d.type==="chestLoginRequired")toast(lang==="ar"?"سجّل الدخول أولاً حتى يُحفظ البيضة بعد المباراة.":"Sign in first so your egg can be saved after the match.");
+     else if(d.type==="chestSaveFailed")toast(lang==="ar"?"تعذّر حفظ البيضة الآن. حاول مجدداً.":"Could not save the egg. Please try again.");
     else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration,d.winner||null,d.resultsSaved===true);}
     else if(d.type==="full")toast(tr("arenaFull"));
    };
@@ -384,7 +384,7 @@ function connect(mode="multi",duration=1200){
   if(winner){
    $("resultsSummary").textContent+=" "+tr(winner.bot?"winnerBot":"winner",{name:winner.name});
   }
-  $("resultsList").innerHTML=results.map(r=>`<div class="row"><b>#${r.rank} ${escapeHtml(r.name)}${r.bot?" · BOT":""}</b><span>${r.chestsFound??r.score} 📦</span></div>`).join("")||`<div class="row muted">${tr("noResults")}</div>`;
+  $("resultsList").innerHTML=results.map(r=>`<div class="row"><b>#${r.rank} ${escapeHtml(r.name)}${r.bot?" · BOT":""}</b><span>${r.chestsFound??r.score} 🥚</span></div>`).join("")||`<div class="row muted">${tr("noResults")}</div>`;
   const mine=results.find(r=>r.id===myId);
   $("statusPill").textContent=mine?(tr("rank",{rank:mine.rank})):(tr("round"));
   if(mine)$("resultsSummary").textContent+=" "+tr("yourRank",{rank:mine.rank,score:mine.score});
