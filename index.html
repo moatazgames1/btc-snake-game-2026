@@ -31,6 +31,8 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
   <div class="auth"><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Password"></div>
   <div class="arena-actions"><button class="primary" id="emailLogin">دخول / إنشاء حساب</button><button id="googleLogin">Google</button><button id="logout" hidden>خروج</button></div>
   <p class="notice" id="authStatus">اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.</p>
+  <div class="row" id="walletBalanceRow" hidden style="margin-top:10px"><b id="walletLabel">🪙 رصيد الصناديق</b><strong id="walletBalance">0</strong></div>
+  <div class="row" id="rankPointsRow" hidden style="margin-top:8px"><b id="rankPointsLabel">🏆 نقاط التصنيف</b><strong id="rankPoints">0</strong></div>
   <div class="ad-slot" id="adNotice">مساحة إعلانية غير مفعّلة — لن تظهر إعلانات أثناء اللعب.</div>
  </div>
 </section>
@@ -79,8 +81,8 @@ const skins = [
  {id:"diamond",name:"Diamond",color:"#d7f7ff",unlock:"Achievement"}
 ];
 const text = {
- ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 20 دقيقة",solo:"تدريب فردي · بلا وقت",how:"طريقة اللعب",rules:"الاصطدام بجسم أفعى يسبب الإقصاء. اصطدام الرأسين يقصي الاثنين إلا إذا كان الدرع فعالاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
- en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 20 min",solo:"Solo practice · untimed",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head eliminates both unless a shield is active.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
+ ar:{login:"دخول",headline:'اجمع العملات… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 20 دقيقة",solo:"تدريب فردي · بلا وقت",how:"طريقة اللعب",rules:"الاصطدام بجسم أفعى يسبب الإقصاء. اصطدام الرأسين يقصي الاثنين إلا إذا كان الدرع فعالاً.",players:"في الساحة",time:"وقت الجولة",score:"عملات الجولة",account:"احفظ تقدمك",wallet:"🪙 رصيد الصناديق",rankPoints:"🏆 نقاط التصنيف",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
+ en:{login:"Login",headline:'Collect coins… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 20 min",solo:"Solo practice · untimed",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head eliminates both unless a shield is active.",players:"In arena",time:"Round time",score:"Round coins",account:"Save your progress",wallet:"🪙 Chest wallet",rankPoints:"🏆 Ranking points",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
 };
 const localePacks={
 fr:["Connexion","Collectez des pièces… <span>Dominez l’arène</span>","Arène de serpents 3D. Jouez comme invité ou connectez-vous pour sauvegarder votre progression.","Multijoueur · 20 min","Entraînement solo · sans limite","Comment jouer","Toucher le corps d’un serpent élimine. Un choc tête-à-tête élimine les deux, sauf bouclier actif.","Dans l’arène","Durée","Pièces du tour","Sauvegardez votre progression","Connexion / Inscription","Le jeu invité est disponible. Connectez-vous pour sauvegarder vos résultats.","Prêt à jouer","🏆 Classement mondial","🎨 Apparences","Les apparences sont cosmétiques, sans avantage.","Administration","Jouer"],
@@ -160,7 +162,7 @@ function firebaseError(error){const code=error?.code||"";const keys={"auth/inval
 for(const [code,values] of Object.entries(localePacks)){const pack={...text.en};localeKeys.forEach((key,i)=>pack[key]=values[i]);text[code]=pack;}
 function resolveLanguage(choice){if(choice&&choice!=="auto"&&text[choice])return choice;const raw=(navigator.languages&&navigator.languages[0]||navigator.language||"en").toLowerCase();const code=raw.split("-")[0];return text[code]?code:"en";}
 let lang=resolveLanguage(localStorage.getItem("btcSnakeLanguage")||"auto");
-function applyLang(){const t=text[lang]||text.en;const rtl=["ar","ur"].includes(lang);document.documentElement.lang=lang;document.documentElement.dir=rtl?"rtl":"ltr";$("languageSelect").value=localStorage.getItem("btcSnakeLanguage")||"auto";$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("soloBtn").textContent=t.solo;$("startSelectedBtn").textContent=t.start;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("accountLabel").textContent=tr("accountLabel");$("email").placeholder=tr("email");$("password").placeholder=tr("password");$("emailLogin").textContent=t.login2;$("authStatus").textContent=currentUser?("Signed in: "+(currentUser.displayName||currentUser.email)):t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin;$("adminText").textContent=tr("adminHint");$("adminBtn").textContent=tr("adminButton");$("cameraBtn").setAttribute("aria-label",tr("camera"));$("shieldBtn").textContent=tr("shield");$("leaveBtn").textContent=tr("leave");$("skinBtn").textContent=tr("customize");$("deathPanel").querySelector("strong").textContent=tr("deathTitle");$("deathPanel").querySelector("div").textContent=tr("deathDesc");$("resultsTitle").textContent=tr("results");$("playAgainBtn").textContent=tr("playAgain");$("adNotice").textContent=tr("adNotice");$("footerText").textContent=tr("footer");updateAutoWalkButton();if(lastState)updateWorld(lastState);}
+function applyLang(){const t=text[lang]||text.en;const rtl=["ar","ur"].includes(lang);document.documentElement.lang=lang;document.documentElement.dir=rtl?"rtl":"ltr";$("languageSelect").value=localStorage.getItem("btcSnakeLanguage")||"auto";$("loginTop").textContent=t.login;$("headline").innerHTML=t.headline;$("subhead").textContent=t.sub;$("playBtn").textContent=t.play;$("soloBtn").textContent=t.solo;$("startSelectedBtn").textContent=t.start;$("howBtn").textContent=t.how;$("rules").textContent=t.rules;$("playersLabel").textContent=t.players;$("timeLabel").textContent=t.time;$("scoreLabel").textContent=t.score;$("accountTitle").textContent=t.account;$("walletLabel").textContent=t.wallet;$("rankPointsLabel").textContent=t.rankPoints;$("accountLabel").textContent=tr("accountLabel");$("email").placeholder=tr("email");$("password").placeholder=tr("password");$("emailLogin").textContent=t.login2;$("authStatus").textContent=currentUser?("Signed in: "+(currentUser.displayName||currentUser.email)):t.auth;$("statusPill").textContent=t.ready;$("leaderTitle").textContent=t.leader;$("skinTitle").textContent=t.skins;$("skinDesc").textContent=t.skinDesc;$("adminTitle").textContent=t.admin;$("adminText").textContent=tr("adminHint");$("adminBtn").textContent=tr("adminButton");$("cameraBtn").setAttribute("aria-label",tr("camera"));$("shieldBtn").textContent=tr("shield");$("leaveBtn").textContent=tr("leave");$("skinBtn").textContent=tr("customize");$("deathPanel").querySelector("strong").textContent=tr("deathTitle");$("deathPanel").querySelector("div").textContent=tr("deathDesc");$("resultsTitle").textContent=tr("results");$("playAgainBtn").textContent=tr("playAgain");$("adNotice").textContent=tr("adNotice");$("footerText").textContent=tr("footer");updateAutoWalkButton();if(lastState)updateWorld(lastState);}
 $("languageSelect").onchange=()=>{localStorage.setItem("btcSnakeLanguage",$("languageSelect").value);lang=resolveLanguage($("languageSelect").value);applyLang();refreshLeaderboard();};applyLang();
 async function loadFirebase(){
  try{
@@ -169,12 +171,24 @@ async function loadFirebase(){
   const authMod=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js");
   const app=appMod.initializeApp(cfg.firebaseConfig);auth=authMod.getAuth(app);
   firebase={...authMod};
-  authMod.onAuthStateChanged(auth,u=>{currentUser=u;$("authStatus").textContent=u?(text[lang].login+": "+(u.displayName||u.email)):text[lang].auth;$("logout").hidden=!u;$("logout").textContent=tr("logout");refreshLeaderboard();});
+  authMod.onAuthStateChanged(auth,u=>{currentUser=u;$("authStatus").textContent=u?(text[lang].login+": "+(u.displayName||u.email)):text[lang].auth;$("logout").hidden=!u;$("logout").textContent=tr("logout");refreshLeaderboard();refreshWallet();});
  }catch(e){$("authStatus").textContent=tr("firebaseMissing")}
 }
 async function token(){return currentUser?await currentUser.getIdToken():null}
 async function api(path,method="GET",body=null){
  const t=await token();const r=await fetch(API_BASE+path,{method,headers:{"Content-Type":"application/json",...(t?{Authorization:"Bearer "+t}:{})},...(body?{body:JSON.stringify(body)}:{})});return r.json();
+}
+async function refreshWallet(){
+ const walletRow=$("walletBalanceRow"),pointsRow=$("rankPointsRow");
+ if(!currentUser){walletRow.hidden=true;pointsRow.hidden=true;return}
+ try{
+  const data=await api("/api/me");
+  if(!data.ok)throw new Error(data.error||"profile_unavailable");
+  const player=data.player||{};
+  $("walletBalance").textContent=Number(player.wallet_balance||0).toLocaleString(lang);
+  $("rankPoints").textContent=Number(player.virtual_points||0).toLocaleString(lang);
+  walletRow.hidden=false;pointsRow.hidden=false;
+ }catch{walletRow.hidden=true;pointsRow.hidden=true;}
 }
 $("emailLogin").onclick=async()=>{
  const button=$("emailLogin"),status=$("authStatus");
@@ -328,7 +342,7 @@ function connect(mode="multi",duration=1200){
     else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration,d.winner||null);}
     else if(d.type==="full")toast(tr("arenaFull"));
    };
-   ws.onclose=()=>{running=false;setJoystickActive(false);if(roundEndedByServer)$("playAgainBtn").disabled=false;if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=tr("disconnected")};
+   ws.onclose=()=>{running=false;setJoystickActive(false);if(roundEndedByServer){$("playAgainBtn").disabled=false;refreshWallet();}if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=tr("disconnected")};
    ws.onerror=()=>toast(tr("connectionError"));
   };
   openSocket();
