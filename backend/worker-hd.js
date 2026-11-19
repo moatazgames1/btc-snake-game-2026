@@ -50,7 +50,7 @@ export default {
 
       if (url.pathname === "/api/leaderboard" && request.method === "GET") {
         const rows = await env.DB.prepare(
-          "SELECT uid, display_name, best_score, total_wins, level FROM players WHERE is_banned = 0 ORDER BY best_score DESC, total_wins DESC LIMIT 50"
+          "SELECT uid, display_name, virtual_points, total_wins, total_matches, best_score, level FROM players WHERE is_banned = 0 ORDER BY virtual_points DESC, total_wins DESC, best_score DESC LIMIT 50"
         ).all();
         return json({ ok: true, leaderboard: rows.results || [] }, 200, headers);
       }
