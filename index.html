@@ -57,7 +57,7 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
 </section>
 
 <section class="grid">
- <div class="card"><h2 id="leaderTitle">🏆 الترتيب العالمي</h2><div id="leaderboard" class="list"><div class="row muted">سجّل الدخول لعرض نتائج اللاعبين.</div></div></div>
+ <div class="card"><h2 id="leaderTitle">🏆 الترتيب العالمي</h2><div id="leaderboard" class="list"><div class="row muted">سجّل الدخول لعرض نتائج اللاعبين.</div></div><h3 id="seasonTitle" style="margin-top:16px">🏅 ترتيب الموسم الحالي</h3><div id="seasonLeaderboard" class="list"><div class="row muted">لا توجد نتائج للموسم بعد.</div></div></div>
  <div class="card"><h2 id="skinTitle">🎨 متجر الأفاعي</h2><p class="notice" id="skinDesc">الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.</p><div class="skin-grid" id="skins"></div></div>
 </section>
 <section class="card" style="margin-top:18px"><h2 id="adminTitle">لوحة الإدارة</h2><p class="notice" id="adminText">تظهر الإحصاءات للمسؤول المصرّح له فقط بعد إعداد ADMIN_UIDS على الخادم.</p><button id="adminBtn">فتح ملخص الإدارة</button><pre id="adminOutput" class="notice"></pre></section>
@@ -443,7 +443,19 @@ function drawSkins(){
 }
 drawSkins();
 async function refreshLeaderboard(){
- try{const d=await api("/api/leaderboard");$("leaderboard").innerHTML=(d.leaderboard||[]).map((p,i)=>`<div class="row"><b>#${i+1} ${escapeHtml(p.display_name)} <small class="muted">Lv.${Number(p.level||1)}</small></b><span>${Number(p.virtual_points||0).toLocaleString(lang)} 🏆 <small class="muted">${Number(p.total_wins||0)} ${lang==="ar"?"فوز":"wins"}</small></span></div>`).join("")||`<div class="row muted">${tr("leaderEmpty")}</div>`}catch{$("leaderboard").innerHTML=`<div class="row muted">${tr("leaderApi")}</div>`}
+ const render=(rows,seasonMode=false)=>(rows||[]).map((p,i)=>{
+  const matches=Number(p.total_matches||0),top3=Number(seasonMode?p.top3:p.total_top3||0),rate=matches?Math.round(top3/matches*100):0;
+  return `<div class="row"><b>#${i+1} ${escapeHtml(p.display_name)} <small class="muted">Lv.${Number(p.level||1)}</small></b><span>${Number(p.virtual_points||0).toLocaleString(lang)} 🏆 <small class="muted">${Number(p.total_wins||0)} ${lang==="ar"?"فوز":"wins"} · Top 3 ${rate}%</small></span></div>`;
+ }).join("")||`<div class="row muted">${tr("leaderEmpty")}</div>`;
+ try{
+  const [all,season]=await Promise.all([api("/api/leaderboard"),api("/api/leaderboard?scope=season")]);
+  $("leaderboard").innerHTML=render(all.leaderboard||[]);
+  $("seasonLeaderboard").innerHTML=render(season.leaderboard||[],true);
+  $("seasonTitle").textContent=(lang==="ar"?"🏅 ترتيب الموسم الحالي ":"🏅 Current season ")+(season.seasonId||"");
+ }catch{
+  $("leaderboard").innerHTML=`<div class="row muted">${tr("leaderApi")}</div>`;
+  $("seasonLeaderboard").innerHTML=`<div class="row muted">${tr("leaderApi")}</div>`;
+ }
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 $("adminBtn").onclick=async()=>{try{const d=await api("/api/admin/summary");$("adminOutput").textContent=JSON.stringify(d,null,2)}catch{$("adminOutput").textContent=tr("adminUnavailable")}};
