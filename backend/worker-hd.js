@@ -340,10 +340,14 @@ export class SnakeRoomHD extends DurableObject {
       .then(() => true)
       .catch(error => {
         console.error("Failed to save found chest:", error);
-        if (!this.roundEnded && this.snakes.get(s.id) === s) {
-          this.chests.push(chest);
-          s.chestsFound = Math.max(0, s.chestsFound - 1);
-          s.score = Math.max(0, s.score - 1);
+        if (!this.roundEnded) {
+          // Return a chest to the arena even if its collector disconnected
+          // while the D1 write was pending.
+          if (!this.chests.some(c => c.id === chest.id)) this.chests.push(chest);
+          if (this.snakes.get(s.id) === s) {
+            s.chestsFound = Math.max(0, s.chestsFound - 1);
+            s.score = Math.max(0, s.score - 1);
+          }
         }
         try { this.clients.get(s.id)?.send(JSON.stringify({type:"chestSaveFailed"})); } catch {}
         return false;
