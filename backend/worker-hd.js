@@ -351,13 +351,8 @@ export class SnakeRoomHD extends DurableObject {
 
   botThink(s) {
     if (Math.random() < 0.08) {
-      const chest = this.chests.reduce((best,c) => !best || Math.hypot(c.x-s.body[0].x,c.z-s.body[0].z) < Math.hypot(best.x-s.body[0].x,best.z-s.body[0].z) ? c : best, null);
-      if (chest) {
-        const dx = chest.x-s.body[0].x, dz = chest.z-s.body[0].z;
-        const choices = Math.abs(dx)>Math.abs(dz) ? [{x:Math.sign(dx)||1,z:0},{x:0,z:Math.sign(dz)||1}] : [{x:0,z:Math.sign(dz)||1},{x:Math.sign(dx)||1,z:0}];
-        const d = choices[Math.floor(Math.random()*choices.length)];
-        if (!(d.x === -s.dir.x && d.z === -s.dir.z)) s.nextDir = d;
-      }
+      const choices = [{x:1,z:0},{x:-1,z:0},{x:0,z:1},{x:0,z:-1}].filter(d => !(d.x === -s.dir.x && d.z === -s.dir.z));
+      if (choices.length) s.nextDir = choices[Math.floor(Math.random()*choices.length)];
     }
   }
 
