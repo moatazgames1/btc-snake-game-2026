@@ -153,6 +153,8 @@ bn:["লগ আউট","বিনামূল্যে","বিরল","কি�
 const extraLabelKeys=["logout","free","rare","legendary","event","achievement","points","invalidEmail","wrongPassword","userDisabled","tooManyRequests"];
 for(const [code,values] of Object.entries(extraLabels)){values.forEach((value,index)=>extraLocale[code][extraLabelKeys[index]]=value);}
 function tr(key,vars={}){let value=(extraLocale[lang]||extraLocale.en)[key]??extraLocale.en[key]??key;return value.replace(/\{(\w+)\}/g,(_,name)=>String(vars[name]??""));}
+let toastTimer=null;
+function toast(message){const el=$("toast");if(!el)return;el.textContent=String(message||"");el.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>{el.style.display="none"},3500);}
 function firebaseError(error){const code=error?.code||"";const keys={"auth/invalid-email":"invalidEmail","auth/wrong-password":"wrongPassword","auth/invalid-credential":"wrongPassword","auth/user-disabled":"userDisabled","auth/too-many-requests":"tooManyRequests"};return keys[code]?tr(keys[code]):(error?.message||"Error");}
 
 for(const [code,values] of Object.entries(localePacks)){const pack={...text.en};localeKeys.forEach((key,i)=>pack[key]=values[i]);text[code]=pack;}
@@ -175,13 +177,26 @@ async function api(path,method="GET",body=null){
  const t=await token();const r=await fetch(API_BASE+path,{method,headers:{"Content-Type":"application/json",...(t?{Authorization:"Bearer "+t}:{})},...(body?{body:JSON.stringify(body)}:{})});return r.json();
 }
 $("emailLogin").onclick=async()=>{
- if(!firebase){toast(tr("firebaseRequired"));return}
+ const button=$("emailLogin"),status=$("authStatus");
+ if(!firebase||!auth){const message=tr("firebaseRequired");status.textContent=message;toast(message);return}
  const email=$("email").value.trim(),password=$("password").value;
- if(!email||password.length<6){toast(tr("loginInvalid"));return}
- try{await firebase.signInWithEmailAndPassword(auth,email,password).catch(async e=>{if(e.code==="auth/user-not-found"||e.code==="auth/invalid-credential")return firebase.createUserWithEmailAndPassword(auth,email,password);throw e});toast(tr("welcome"))}
- catch(e){toast(firebaseError(e))}
+ if(!email||password.length<6){const message=tr("loginInvalid");status.textContent=message;toast(message);return}
+ button.disabled=true;button.textContent=lang==="ar"?"جارٍ الدخول…":"Signing in…";
+ status.textContent=button.textContent;
+ try{
+  try{await firebase.signInWithEmailAndPassword(auth,email,password)}
+  catch(error){
+   if(error.code==="auth/user-not-found")await firebase.createUserWithEmailAndPassword(auth,email,password);
+   else throw error;
+  }
+  status.textContent=tr("welcome");toast(tr("welcome"));
+ }catch(error){
+  const message=firebaseError(error);status.textContent=message;toast(message);
+ }finally{
+  button.disabled=false;button.textContent=(text[lang]||text.en).login2;
+ }
 };
-$("googleLogin").onclick=async()=>{if(!firebase)return toast(tr("firebaseRequired"));try{await firebase.signInWithPopup(auth,new firebase.GoogleAuthProvider())}catch(e){toast(firebaseError(e))}};
+$("googleLogin").onclick=async()=>{if(!firebase||!auth){const message=tr("firebaseRequired");$("authStatus").textContent=message;toast(message);return}try{await firebase.signInWithPopup(auth,new firebase.GoogleAuthProvider());toast(tr("welcome"))}catch(e){const message=firebaseError(e);$("authStatus").textContent=message;toast(message)}};
 $("logout").onclick=()=>firebase?.signOut(auth);
 $("loginTop").onclick=()=>$("email").focus();
 
