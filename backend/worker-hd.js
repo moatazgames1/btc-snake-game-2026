@@ -17,6 +17,14 @@ const cors = (origin, env) => {
 const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", ...headers } });
 const now = () => Math.floor(Date.now() / 1000);
+function getSeasonWindow(timestampMs = Date.now()) {
+  const date = new Date(timestampMs), day = (date.getUTCDay() + 6) % 7;
+  const monday = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() - day);
+  const thursday = new Date(monday + 3 * 86400000), isoYear = thursday.getUTCFullYear();
+  const jan4 = Date.UTC(isoYear, 0, 4), jan4Day = (new Date(jan4).getUTCDay() + 6) % 7;
+  const week = Math.floor((monday - (jan4 - jan4Day * 86400000)) / (7 * 86400000)) + 1;
+  return { id: `${isoYear}-W${String(week).padStart(2, "0")}`, startAt: Math.floor(monday / 1000), endAt: Math.floor((monday + 7 * 86400000) / 1000) };
+}
 const id = () => crypto.randomUUID();
 
 async function firebaseUser(request, env) {
@@ -49,10 +57,21 @@ export default {
       if (url.pathname === "/api/health") return json({ ok: true, service: "btc-snake-hd-api", time: now() }, 200, headers);
 
       if (url.pathname === "/api/leaderboard" && request.method === "GET") {
+        const season = getSeasonWindow();
+        if (url.searchParams.get("scope") === "season") {
+          const rows = await env.DB.prepare(`
+            SELECT p.uid,p.display_name,p.level,s.points AS virtual_points,s.wins AS total_wins,
+              s.total_matches,s.top3,s.xp
+            FROM player_season_stats s JOIN players p ON p.uid=s.uid
+            WHERE s.season_id=? AND p.is_banned=0
+            ORDER BY s.points DESC,s.wins DESC,s.top3 DESC,s.total_matches DESC LIMIT 50
+          `).bind(season.id).all();
+          return json({ ok: true, seasonId: season.id, leaderboard: rows.results || [] }, 200, headers);
+        }
         const rows = await env.DB.prepare(
-          "SELECT uid, display_name, virtual_points, total_wins, total_matches, best_score, level FROM players WHERE is_banned = 0 ORDER BY virtual_points DESC, total_wins DESC, best_score DESC LIMIT 50"
+          "SELECT uid, display_name, virtual_points, total_wins, total_matches, total_top3, best_score, level FROM players WHERE is_banned = 0 ORDER BY virtual_points DESC, total_wins DESC, total_top3 DESC, best_score DESC LIMIT 50"
         ).all();
-        return json({ ok: true, leaderboard: rows.results || [] }, 200, headers);
+        return json({ ok: true, seasonId: season.id, leaderboard: rows.results || [] }, 200, headers);
       }
 
       if (url.pathname === "/api/me" && request.method === "GET") {
@@ -509,17 +528,12 @@ export class SnakeRoomHD extends DurableObject {
     try {
       if (this.mode !== "solo") {
         // Persist the match, human results, and player aggregates atomically.
+        const season = getSeasonWindow(end);
         const statements = [
           this.env.DB.prepare(
             "INSERT INTO matches(id,started_at,ended_at,duration_seconds,winner_uid,created_at) VALUES(?,?,?,?,?,?)"
-          ).bind(
-            matchId,
-            Math.floor(this.startedAt/1000),
-            Math.floor(end/1000),
-            Math.floor((end-this.startedAt)/1000),
-            (winner && !winner.bot && survivor.registered) ? winner.id : null,
-            Math.floor(end/1000)
-          )
+          ).bind(matchId,Math.floor(this.startedAt/1000),Math.floor(end/1000),Math.floor((end-this.startedAt)/1000),(winner && !winner.bot && survivor.registered) ? winner.id : null,Math.floor(end/1000)),
+          this.env.DB.prepare("INSERT OR IGNORE INTO seasons(season_id,start_at,end_at,status) VALUES(?,?,?,'active')").bind(season.id,season.startAt,season.endAt)
         ];
         for (const r of results.filter(x=>x.registered&&!x.bot)) {
           statements.push(
@@ -528,23 +542,32 @@ export class SnakeRoomHD extends DurableObject {
             ).bind(matchId,r.id,r.name,r.score,r.rank,0,Math.floor(end/1000))
           );
           statements.push(this.env.DB.prepare(`
-            INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,virtual_points,xp,level)
-            VALUES(?,?,?,?,?,?,?,?,?,(CAST(? AS INTEGER)/100)+1)
+            INSERT INTO players(uid,display_name,created_at,last_seen_at,best_score,total_matches,total_wins,total_top3,virtual_points,xp,level)
+            VALUES(?,?,?,?,?,?,?,?,?,?,(CAST(? AS INTEGER)/100)+1)
             ON CONFLICT(uid) DO UPDATE SET
-              display_name=excluded.display_name,
-              last_seen_at=excluded.last_seen_at,
+              display_name=excluded.display_name,last_seen_at=excluded.last_seen_at,
               best_score=MAX(players.best_score,excluded.best_score),
               total_matches=players.total_matches+1,
               total_wins=players.total_wins+CASE WHEN excluded.total_wins>0 THEN 1 ELSE 0 END,
+              total_top3=players.total_top3+excluded.total_top3,
               virtual_points=players.virtual_points+excluded.virtual_points,
               xp=players.xp+excluded.xp,
               level=CAST((players.xp+excluded.xp)/100 AS INTEGER)+1
           `).bind(
-            r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),
-            r.score,1,r.rank===1?1:0,
+            r.id,r.name,Math.floor(end/1000),Math.floor(end/1000),r.score,1,r.rank===1?1:0,r.rank<=3?1:0,
             r.rank===1?25:r.rank===2?12:r.rank===3?6:2,
-            r.score,r.score
+            10+r.score*5+(r.rank===1?50:r.rank<=3?25:0),10+r.score*5+(r.rank===1?50:r.rank<=3?25:0)
           ));
+          statements.push(this.env.DB.prepare(`
+            INSERT INTO player_season_stats(season_id,uid,points,wins,top3,total_matches,xp,updated_at)
+            VALUES(?,?,?,?,?,?,?,?)
+            ON CONFLICT(season_id,uid) DO UPDATE SET
+              points=player_season_stats.points+excluded.points,
+              wins=player_season_stats.wins+excluded.wins,
+              top3=player_season_stats.top3+excluded.top3,
+              total_matches=player_season_stats.total_matches+1,
+              xp=player_season_stats.xp+excluded.xp,updated_at=excluded.updated_at
+          `).bind(season.id,r.id,r.rank===1?25:r.rank===2?12:r.rank===3?6:2,r.rank===1?1:0,r.rank<=3?1:0,1,10+r.score*5+(r.rank===1?50:r.rank<=3?25:0),Math.floor(end/1000)));
         }
         await this.env.DB.batch(statements);
       }
