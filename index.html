@@ -258,9 +258,31 @@ function init3D(){
  zoneMesh=new THREE.Mesh(new THREE.TorusGeometry(1,.16,8,128),new THREE.MeshStandardMaterial({color:"#35c9ff",emissive:"#0876a5",emissiveIntensity:.65,roughness:.25,transparent:true,opacity:.95}));
  zoneMesh.rotation.x=Math.PI/2;zoneMesh.position.y=.16;zoneMesh.visible=false;scene.add(zoneMesh);
  const resize=()=>resizeGameRenderer();new ResizeObserver(resize).observe(host);window.addEventListener("resize",resizeGameRenderer);document.addEventListener("fullscreenchange",()=>requestAnimationFrame(resizeGameRenderer));requestAnimationFrame(resizeGameRenderer);
+ let lastSnakeSmoothAt=0;
  function animate(){
  requestAnimationFrame(animate);
- const t=performance.now()*.001;
+ const now=performance.now(),t=now*.001;
+ // Smooth the complete body path and head direction between server snapshots.
+ if(now-lastSnakeSmoothAt>=40){
+  lastSnakeSmoothAt=now;
+  for(const group of meshes.values()){
+   const display=group.userData.displayPoints,target=group.userData.targetPoints;
+   if(display&&target&&display.length>=2&&target.length===display.length){
+    for(let i=0;i<display.length;i++)display[i].lerp(target[i],.42);
+    const curve=new THREE.CatmullRomCurve3(display,false,"centripetal");
+    const tube=new THREE.TubeGeometry(curve,Math.max(32,Math.min(96,display.length*2)),.39,8,false);
+    const bodyMesh=group.userData.bodyMesh;
+    if(bodyMesh){bodyMesh.geometry.dispose();bodyMesh.geometry=tube;}
+    const head=group.userData.headMesh,first=display[0],neck=display[1];
+    if(head){
+     head.position.set(first.x,.52,first.z);
+     const yaw=Math.atan2(first.x-neck.x,first.z-neck.z);
+     const desired=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),yaw);
+     head.quaternion.slerp(desired,.42);
+    }
+   }
+  }
+ }
  for(const group of meshes.values()){
   const tongue=group.userData.headMesh?.getObjectByName("snakeTongue");
   if(tongue){tongue.visible=Math.sin(t*3.2+group.position.x*.1)>.15;tongue.scale.z=.85+.15*Math.sin(t*5);}
@@ -412,16 +434,12 @@ function updateWorld(state){
   }
   const points=(s.body||[]).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.z));
   if(points.length>=2){
-   const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(p.x,.43,p.z)),false,"centripetal");
-   const tubularSegments=Math.max(16,Math.min(120,points.length*3));
-   const nextGeometry=new THREE.TubeGeometry(curve,tubularSegments,.39,8,false);
-   const bodyMesh=group.userData.bodyMesh;
-   if(bodyMesh){bodyMesh.geometry.dispose();bodyMesh.geometry=nextGeometry;bodyMesh.material.color.set(s.color||"#35a853");}
-   const head=group.userData.headMesh,first=points[0],neck=points[1]||first;
-   if(head){
-    head.position.set(first.x,.52,first.z);
-    head.rotation.y=Math.atan2(first.x-neck.x,first.z-neck.z);
+   const targetPoints=points.map(p=>new THREE.Vector3(p.x,.43,p.z));
+   if(!group.userData.displayPoints||group.userData.displayPoints.length!==targetPoints.length){
+    group.userData.displayPoints=targetPoints.map(p=>p.clone());
    }
+   group.userData.targetPoints=targetPoints;
+   group.userData.bodyMesh.material.color.set(s.color||"#35a853");
   }
  }
  for(const [k,g] of meshes){if(!aliveIds.has(k)){scene.remove(g);meshes.delete(k)}}
