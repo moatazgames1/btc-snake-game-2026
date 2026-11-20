@@ -350,6 +350,9 @@ export class SnakeRoomHD extends DurableObject {
   spawnBoss() {
     if (this.bossSpawned) return;
     this.bossSpawned = true;
+    const replaceBot=[...this.snakes.values()].find(s=>s.bot&&!s.boss);
+    if(replaceBot)this.snakes.delete(replaceBot.id);
+    else if(this.snakes.size>=20){this.bossSpawned=false;return;}
     const boss = this.makeSnake("boss-"+crypto.randomUUID(),"👑 BOSS",false,true);
     boss.boss = true;
     boss.score = 150;
@@ -405,7 +408,7 @@ export class SnakeRoomHD extends DurableObject {
       s.body.unshift(nh);
       const desiredLength=Math.min(72,18+Math.floor(Math.max(0,s.score-10)/3));
       while(s.body.length>desiredLength)s.body.pop();
-      const fi=this.food.findIndex(f=>Math.hypot(f.x-nh.x,f.z-nh.z)<1.25);
+      const fi=s.boss?-1:this.food.findIndex(f=>Math.hypot(f.x-nh.x,f.z-nh.z)<1.25);
       if(fi>=0){this.food.splice(fi,1);s.score+=1;s.coins+=1;if(this.food.length<100)this.spawnFood(1);}
     }
     this.resolveCollisions(t);
@@ -484,7 +487,7 @@ export class SnakeRoomHD extends DurableObject {
     await Promise.allSettled([...this.pendingChestWrites]);
     const results=[...this.snakes.values()]
       .filter(s=>!s.bot)
-      .sort((a,b)=>Number(b.alive)-Number(a.alive) || b.score-a.score || (b.health||0)-(a.health||0))
+      .sort((a,b)=>Number(b.id===winnerId)-Number(a.id===winnerId) || Number(b.alive)-Number(a.alive) || b.score-a.score)
       .map((s,i)=>({id:s.id,name:s.name,score:Math.floor(s.score),coins:s.coins||0,bossKills:s.bossKills||0,rank:i+1,registered:s.registered,bot:false}));
     const end=Date.now();
     const matchId=this.roundId;
