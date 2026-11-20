@@ -304,6 +304,25 @@ function cycleCameraView(){
 }
 $("cameraBtn").onclick=cycleCameraView;
 function makeSphere(color,r=.65){return new THREE.Mesh(new THREE.SphereGeometry(r,24,18),new THREE.MeshStandardMaterial({color,roughness:.38,metalness:.04}))}
+function updateSnakeLabel(group,s){
+ if(!group.userData.scoreSprite){
+  const canvas=document.createElement("canvas");canvas.width=256;canvas.height=96;
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+  const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:true});
+  const sprite=new THREE.Sprite(material);sprite.scale.set(2.7,1,1);group.add(sprite);
+  group.userData.scoreCanvas=canvas;group.userData.scoreContext=canvas.getContext("2d");group.userData.scoreTexture=texture;group.userData.scoreSprite=sprite;
+ }
+ const label=s.boss?"BOSS "+Math.floor(s.score):String(Math.floor(s.score));
+ if(group.userData.scoreLabel===label)return;
+ const ctx=group.userData.scoreContext,canvas=group.userData.scoreCanvas;
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ ctx.fillStyle=s.boss?"rgba(105,65,0,.92)":"rgba(7,12,24,.84)";
+ ctx.beginPath();ctx.roundRect(8,8,240,80,22);ctx.fill();
+ ctx.strokeStyle=s.boss?"#ffe17a":"#ffffff88";ctx.lineWidth=5;ctx.stroke();
+ ctx.fillStyle=s.boss?"#fff1a8":"#ffffff";ctx.font="bold 48px system-ui,Arial";ctx.textAlign="center";ctx.textBaseline="middle";
+ ctx.fillText(label,128,49);
+ group.userData.scoreTexture.needsUpdate=true;group.userData.scoreLabel=label;
+}
 let snakeScaleTexture=null;
 function getSnakeScaleTexture(){
  if(snakeScaleTexture)return snakeScaleTexture;
@@ -403,7 +422,7 @@ function iRadius(total,index){return Math.max(.36,.59-index*.008)}
 function updateWorld(state){
  lastState=state;
  const clock=String(Math.floor((state.remaining??300)/60)).padStart(2,"0")+":"+String((state.remaining??300)%60).padStart(2,"0");
- $("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent=clock;$("hudTimer").textContent=clock;
+ $("playersCount").textContent=state.snakes?.filter(s=>s.alive).length||0;$("timeCount").textContent=clock;$("hudTimer").textContent=clock;
  const mine=state.snakes?.find(s=>s.id===myId);
  if(mine){
   $("myScore").textContent=mine.score||10;$("hudCoins").textContent="🐍 "+(mine.score||10)+" · 🪙 "+(mine.coins||0);
