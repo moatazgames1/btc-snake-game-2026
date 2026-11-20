@@ -149,8 +149,8 @@ export default {
           user = { uid: row.uid, name: row.display_name };
         }
         const mode = url.searchParams.get("mode") === "solo" ? "solo" : "multi";
-        // Competitive matches are fixed at 20 minutes.
-        const duration = mode === "solo" ? 0 : 1200;
+        // Snake BTC classic rounds last five minutes.
+        const duration = 300;
         if (origin && !isAllowedOrigin(origin, env)) return json({ ok: false, error: "origin_not_allowed" }, 403, headers);
         if (user) {
           const account = await env.DB.prepare("SELECT is_banned FROM players WHERE uid = ?").bind(user.uid).first();
@@ -187,12 +187,12 @@ export class SnakeRoomHD extends DurableObject {
     this.playerMeta = new Map();
     this.snakes = new Map();
     this.mode = "multi";
-    this.chests = [];
-    this.shields = [];
+    this.food = [];
+    this.bossSpawned = false;
     this.pendingChestWrites = new Set();
     this.startedAt = Date.now();
-    this.roundSeconds = 1200;
-    this.mainRoundSeconds = 1200;
+    this.roundSeconds = 300;
+    this.mainRoundSeconds = 300;
     this.roundEnded = false;
     this.endRoundInProgress = false;
     this.botFillDone = false;
@@ -200,7 +200,7 @@ export class SnakeRoomHD extends DurableObject {
     this.tickNo = 0;
     this.roundId = crypto.randomUUID();
     this.lastBroadcast = 0;
-    this.spawnChests(12);
+    this.spawnFood(120);
     this.timer = null;
     this.startTicker();
   }
@@ -216,11 +216,9 @@ export class SnakeRoomHD extends DurableObject {
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     server.accept();
-    this.mode = request.headers.get("X-Game-Mode") === "solo" ? "solo" : "multi";
-    if (this.mode === "solo") this.chests = [];
-    // Battle Royale has a hard 20-minute limit. Solo practice has no timer.
-    this.roundSeconds = this.mode === "solo" ? 0 : 1200;
-    this.mainRoundSeconds = this.mode === "solo" ? 0 : 1200;
+    this.mode = "multi";
+    this.roundSeconds = 300;
+    this.mainRoundSeconds = 300;
     if (this.roundEnded && this.clients.size === 0) this.resetRound();
     const pid = request.headers.get("X-Player-Id") || `guest-${crypto.randomUUID()}`;
     const previousSocket = this.clients.get(pid);
@@ -234,7 +232,7 @@ export class SnakeRoomHD extends DurableObject {
     const registered = request.headers.get("X-Player-Registered") === "1";
     const oldBot = [...this.snakes.values()].find(s => s.bot);
     if (oldBot) this.snakes.delete(oldBot.id);
-    if (this.snakes.size >= 50) {
+    if (this.snakes.size >= 20) {
       server.send(JSON.stringify({ type: "full", message: "Arena full. Please retry." }));
       server.close(1013, "Arena full");
       return new Response(null, { status: 101, webSocket: client });
@@ -244,8 +242,7 @@ export class SnakeRoomHD extends DurableObject {
     this.snakes.set(pid, snake);
     this.clients.set(pid, server);
     this.playerMeta.set(pid, { name, registered, skin });
-    // If the arena was already filled with bots, replace the bot removed for this
-    // incoming player so the room returns to its 50-snake target.
+    // Replace one waiting bot with each arriving real player.
     if (this.mode === "multi" && this.botFillDone) this.fillBots();
     server.send(JSON.stringify({ type: "welcome", playerId: pid, roundId: this.roundId, roundSeconds: this.roundSeconds }));
     this.broadcast();
@@ -272,9 +269,9 @@ export class SnakeRoomHD extends DurableObject {
     this.snakes.clear();
     this.clients.clear();
     this.playerMeta.clear();
-    this.chests = [];
-    this.shields = [];
-    if (this.mode === "multi") this.spawnChests(12);
+    this.food = [];
+    this.bossSpawned = false;
+    this.spawnFood(120);
     this.roundId = crypto.randomUUID();
     this.startedAt = Date.now();
     this.tickNo = 0;
@@ -289,11 +286,9 @@ export class SnakeRoomHD extends DurableObject {
     // Keep the full fixed-length body inside the arena at spawn.
     const x = 13 + Math.random() * 74, z = 8 + Math.random() * 84;
     const palette = { mint:"#35e0a1", gold:"#f7c948", fire:"#ff623e", ice:"#49d9ff", galaxy:"#a78bfa", toxic:"#b7f34a", royal:"#f472b6", diamond:"#d7f7ff" };
-    return { id: pid, name, registered, bot, alive: true, score: 0, chestsFound: 0, xp: 0,
-      // Fixed 24-point body; each point is 0.45 world units behind the previous one.
-      body: Array.from({length:24},(_,i)=>({x:x-i*0.45,z})), dir: {x:1,z:0}, nextDir: {x:1,z:0}, turnInput: 0,
-      joystickActive: false, autoWalk: false, lastManualInputAt: 0,
-      shieldUntil: 0, health: 100, pendingTurn: false,
+    return { id: pid, name, registered, bot, boss: false, alive: true, score: 10, coins: 0, bossKills: 0,
+      body: Array.from({length:18},(_,i)=>({x:x-i*0.45,z})), dir: {x:1,z:0}, nextDir: {x:1,z:0}, turnInput: 0,
+      joystickActive: false, autoWalk: false, lastManualInputAt: 0, boost: false, pendingTurn: false,
       color: bot ? ["#a78bfa","#22d3ee","#f59e0b","#34d399","#fb7185"][Math.floor(Math.random()*5)] : (palette[skin] || palette.mint), skin };
   }
 
@@ -301,8 +296,8 @@ export class SnakeRoomHD extends DurableObject {
     if (this.mode !== "multi") return;
     const bots = [...this.snakes.values()].filter(s => s.bot).length;
     const real = [...this.snakes.values()].filter(s => !s.bot).length;
-    const targetBots = 50;
-    const desired = Math.min(50 - real - bots, Math.max(0, targetBots - bots));
+    const targetBots = Math.max(0, 20 - real);
+    const desired = Math.min(20 - real - bots, Math.max(0, targetBots - bots));
     for (let i = 0; i < desired; i++) {
       const bid = `bot-${crypto.randomUUID()}`;
       this.snakes.set(bid, this.makeSnake(bid, `BOT-${i+1}`, false, true));
@@ -334,6 +329,10 @@ export class SnakeRoomHD extends DurableObject {
       s.autoWalk = data.enabled;
       return;
     }
+    if (data.type === "boost" && typeof data.enabled === "boolean") {
+      s.boost = data.enabled;
+      return;
+    }
     if (data.type === "steer" && Number.isFinite(data.value)) {
       s.turnInput = Math.max(-1, Math.min(1, data.value));
       return;
@@ -344,13 +343,21 @@ export class SnakeRoomHD extends DurableObject {
     }
   }
 
-  spawnChests(n) {
-    for (let i=0;i<n;i++) {
-      const roll = Math.random();
-      const type = roll < 0.70 ? "common" : roll < 0.95 ? "rare" : "legendary";
-      this.chests.push({ id: crypto.randomUUID(), x: 4+Math.random()*92, z: 4+Math.random()*92, type });
-    }
-    if (Math.random() < 0.45) this.shields.push({x: 8+Math.random()*84,z: 8+Math.random()*84});
+  spawnFood(n = 1) {
+    for (let i=0;i<n;i++) this.food.push({id:crypto.randomUUID(),x:3+Math.random()*94,z:3+Math.random()*94});
+  }
+
+  spawnBoss() {
+    if (this.bossSpawned) return;
+    this.bossSpawned = true;
+    const boss = this.makeSnake("boss-"+crypto.randomUUID(),"👑 BOSS",false,true);
+    boss.boss = true;
+    boss.score = 150;
+    boss.color = "#f7c948";
+    boss.body = Array.from({length:42},(_,i)=>({x:50-i*0.45,z:50}));
+    boss.dir = {x:0,z:1};
+    boss.nextDir = {x:0,z:1};
+    this.snakes.set(boss.id,boss);
   }
 
   saveFoundChest(s, chest) {
@@ -384,128 +391,113 @@ export class SnakeRoomHD extends DurableObject {
   }
 
   botThink(s) {
-    if (Math.random() < 0.08) {
-      const choices = [{x:1,z:0},{x:-1,z:0},{x:0,z:1},{x:0,z:-1}].filter(d => !(d.x === -s.dir.x && d.z === -s.dir.z));
-      if (choices.length) s.nextDir = choices[Math.floor(Math.random()*choices.length)];
+    if (Math.random() < 0.12) {
+      const target = this.food.reduce((best,f)=> {
+        const d=Math.hypot(f.x-s.body[0].x,f.z-s.body[0].z);
+        return !best || d<best.d ? {f,d} : best;
+      },null);
+      if (target && target.d < 18) {
+        const dx=target.f.x-s.body[0].x,dz=target.f.z-s.body[0].z;
+        if (Math.abs(dx)>Math.abs(dz)) s.nextDir={x:Math.sign(dx)||s.dir.x,z:0};
+        else s.nextDir={x:0,z:Math.sign(dz)||s.dir.z};
+      } else {
+        const choices=[{x:1,z:0},{x:-1,z:0},{x:0,z:1},{x:0,z:-1}].filter(d=>!(d.x===-s.dir.x&&d.z===-s.dir.z));
+        if(choices.length)s.nextDir=choices[Math.floor(Math.random()*choices.length)];
+      }
     }
   }
 
   tick() {
     if (this.roundEnded || this.endRoundInProgress) return;
     this.tickNo++;
-    const t = Date.now();
-    for (const s of this.snakes.values()) {
-      if (!s.alive) continue;
-      if (s.bot) {
+    const t=Date.now();
+    const elapsed=(t-this.startedAt)/1000;
+    if(!this.bossSpawned && elapsed>=270) this.spawnBoss();
+    for(const s of this.snakes.values()){
+      if(!s.alive)continue;
+      if(s.bot){
         this.botThink(s);
-        if (s.nextDir) s.dir = { x: s.nextDir.x, z: s.nextDir.z };
-      } else if (s.pendingTurn) {
-        s.dir = { x: s.nextDir.x, z: s.nextDir.z };
-        s.pendingTurn = false;
+        if(s.nextDir)s.dir={x:s.nextDir.x,z:s.nextDir.z};
+      }else if(s.pendingTurn){
+        s.dir={x:s.nextDir.x,z:s.nextDir.z};
+        s.pendingTurn=false;
       }
-      const manualMove = s.joystickActive && (t - (s.lastManualInputAt || 0) < 650);
-      if (!s.bot && manualMove && s.turnInput) {
-        const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.05;
-        s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
+      const manualMove=s.joystickActive&&(t-(s.lastManualInputAt||0)<650);
+      if(!s.bot&&manualMove&&s.turnInput){
+        const angle=Math.atan2(s.dir.z,s.dir.x)+s.turnInput*.05;
+        s.dir={x:Math.cos(angle),z:Math.sin(angle)};
       }
-      if (!s.bot && !s.autoWalk && !manualMove) continue;
-      const h = s.body[0];
-      const nh = {x: Math.max(0,Math.min(100,h.x+s.dir.x*0.45)), z: Math.max(0,Math.min(100,h.z+s.dir.z*0.45))};
-      s.body.unshift(nh); s.body.pop();
-      const ci = this.chests.findIndex(c => Math.hypot(c.x-nh.x,c.z-nh.z)<2.2);
-      if (ci >= 0) {
-        const chest = this.chests[ci];
-        if (!s.registered || s.bot) {
-          if (t - (s.lastChestLoginNoticeAt || 0) > 5000) {
-            s.lastChestLoginNoticeAt = t;
-            try { this.clients.get(s.id)?.send(JSON.stringify({type:"chestLoginRequired"})); } catch {}
-          }
-        } else {
-          this.chests.splice(ci,1);
-          s.chestsFound += 1;
-          s.score += 1;
-          this.saveFoundChest(s, chest).then(saved => {
-            if (saved) {
-              try { this.clients.get(s.id)?.send(JSON.stringify({type:"chestFound",chestsFound:s.chestsFound})); } catch {}
-            }
-          });
-        }
-      }
-      const si = this.shields.findIndex(c => Math.hypot(c.x-nh.x,c.z-nh.z)<2);
-      if (si >= 0) { this.shields.splice(si,1); s.shieldUntil = t+5000; }
+      if(!s.bot&&!s.autoWalk&&!manualMove)continue;
+      const speed=s.boost&&!s.bot?.68:.45;
+      if(s.boost&&!s.bot)s.score=Math.max(1,s.score-.003);
+      const h=s.body[0];
+      const nh={x:Math.max(0,Math.min(100,h.x+s.dir.x*speed)),z:Math.max(0,Math.min(100,h.z+s.dir.z*speed))};
+      s.body.unshift(nh);
+      const desiredLength=Math.min(72,18+Math.floor(Math.max(0,s.score-10)/3));
+      while(s.body.length>desiredLength)s.body.pop();
+      const fi=this.food.findIndex(f=>Math.hypot(f.x-nh.x,f.z-nh.z)<1.25);
+      if(fi>=0){this.food.splice(fi,1);s.score+=1;s.coins+=1;if(this.food.length<100)this.spawnFood(1);}
     }
     this.resolveCollisions(t);
-
-    if (this.mode === "multi" && this.botFillDone) {
-      const alive = [...this.snakes.values()].filter(s => s.alive);
-      if (alive.length <= 1) {
-        this.endRound(alive[0]?.id || null);
-        return;
-      }
-      // At exactly 20 minutes the match ends. If the zone has not left one
-      // survivor, the best surviving snake by score (then health) wins.
-      if ((t-this.startedAt)/1000 >= this.mainRoundSeconds) {
-        alive.sort((a,b) => b.score-a.score || (b.health||0)-(a.health||0));
-        this.endRound(alive[0]?.id || null);
-        return;
-      }
+    const alive=[...this.snakes.values()].filter(s=>s.alive);
+    const realAlive=alive.filter(s=>!s.bot);
+    const bossWinner=realAlive.find(s=>s.bossKills>0);
+    if(bossWinner){this.endRound(bossWinner.id);return;}
+    if(alive.length<=1){this.endRound(alive[0]?.id||null);return;}
+    if(elapsed>=this.mainRoundSeconds){
+      alive.sort((a,b)=>b.score-a.score||Number(b.alive)-Number(a.alive));
+      this.endRound(alive[0]?.id||null);return;
     }
-    if (t-this.lastBroadcast > 50) { this.lastBroadcast=t; this.broadcast(); }
-  }
-
-  zoneState(t = Date.now()) {
-    const elapsed = Math.max(0, (t - this.startedAt) / 1000);
-    if (this.mode === "solo") return { active: false, warning: false, x: 50, z: 50, radius: 72, phase: "practice" };
-    const warning = elapsed >= 150 && elapsed < 180;
-    const active = elapsed >= 180;
-    const progress = Math.min(1, Math.max(0, (elapsed - 180) / 1020));
-    const radius = 72 - (71 * progress);
-    const phase = elapsed >= 1140 ? "final" : active ? "closing" : "warning";
-    return { active, warning, x: 50, z: 50, radius: Math.max(1, radius), phase };
+    if(t-this.lastBroadcast>50){this.lastBroadcast=t;this.broadcast();}
   }
 
   resolveCollisions(t) {
-    const all = [...this.snakes.values()].filter(s=>s.alive);
-    const dead = new Set();
-    const collision = new Set();
-    const zone = this.zoneState(t);
-    for (let i=0;i<all.length;i++) {
-      const a=all[i], ah=a.body[0];
-      if (ah.x<=0.5||ah.x>=99.5||ah.z<=0.5||ah.z>=99.5) collision.add(a.id);
-      // Ignore the two nearest samples; they are part of the normal neck curve.
-      for (let k=3;k<a.body.length;k++) {
-        const seg=a.body[k];
-        if (Math.hypot(ah.x-seg.x,ah.z-seg.z)<0.85) { collision.add(a.id); break; }
+    const all=[...this.snakes.values()].filter(s=>s.alive);
+    const dead=new Set(), eatenBy=new Map();
+    for(const a of all){
+      if(!a.body.length)continue;
+      const h=a.body[0];
+      if(h.x<=.5||h.x>=99.5||h.z<=.5||h.z>=99.5)dead.add(a.id);
+      for(let k=3;k<a.body.length;k++){
+        const p=a.body[k];
+        if(Math.hypot(h.x-p.x,h.z-p.z)<.72){dead.add(a.id);break;}
       }
-      for (let j=0;j<all.length;j++) {
-        if (i===j) continue;
-        const b=all[j], bh=b.body[0];
-        if (Math.hypot(ah.x-bh.x,ah.z-bh.z)<1.1) collision.add(a.id);
-        for (let k=1;k<b.body.length;k++) {
-          const seg=b.body[k];
-          if (Math.hypot(ah.x-seg.x,ah.z-seg.z)<0.85) { collision.add(a.id); break; }
+    }
+    for(let i=0;i<all.length;i++){
+      const a=all[i];if(!a.alive||!a.body.length)continue;
+      for(let j=i+1;j<all.length;j++){
+        const b=all[j];if(!b.alive||!b.body.length)continue;
+        const ah=a.body[0],bh=b.body[0];
+        const headTouch=Math.hypot(ah.x-bh.x,ah.z-bh.z)<1.0;
+        const aHitsB=a.body.length&&b.body.slice(1).some(p=>Math.hypot(ah.x-p.x,ah.z-p.z)<.82);
+        const bHitsA=a.body.slice(1).some(p=>Math.hypot(bh.x-p.x,bh.z-p.z)<.82);
+        if(headTouch){
+          if(a.score>b.score){dead.add(b.id);eatenBy.set(a.id,(eatenBy.get(a.id)||0)+Math.floor(b.score/2));}
+          else if(b.score>a.score){dead.add(a.id);eatenBy.set(b.id,(eatenBy.get(b.id)||0)+Math.floor(a.score/2));}
+          else {dead.add(a.id);dead.add(b.id);}
+        }else{
+          if(aHitsB){
+            if(a.score>b.score){dead.add(b.id);eatenBy.set(a.id,(eatenBy.get(a.id)||0)+Math.floor(b.score/2));}
+            else dead.add(a.id);
+          }
+          if(bHitsA){
+            if(b.score>a.score){dead.add(a.id);eatenBy.set(b.id,(eatenBy.get(b.id)||0)+Math.floor(a.score/2));}
+            else dead.add(b.id);
+          }
         }
       }
-      if (zone.active) {
-        const outside = Math.hypot(ah.x-zone.x, ah.z-zone.z) > zone.radius;
-        const progress = Math.min(1, Math.max(0, ((t-this.startedAt)/1000 - 180) / 1020));
-        // Damage rises as the safe zone gets smaller: about 1.2 to 12 health/sec.
-        if (outside) a.health = Math.max(0, (a.health ?? 100) - (0.12 + 1.08*progress));
-        else a.health = Math.min(100, (a.health ?? 100) + 0.2);
-        if (a.health <= 0) dead.add(a.id);
-      } else a.health = 100;
     }
-    // Resolve collision protection only after every snake has been checked, so order cannot decide who survives.
-    for (const pid of collision) {
-      const s = this.snakes.get(pid);
-      if (!s || dead.has(pid)) continue;
-      if (s.shieldUntil >= t) s.shieldUntil = 0;
-      else dead.add(pid);
+    for(const [id,gain] of eatenBy){
+      const eater=this.snakes.get(id);
+      if(eater&&!dead.has(id)){
+        eater.score+=gain;
+        const victim=[...all].find(s=>dead.has(s.id)&&s.boss&&s.score>0);
+        if(victim&&eater.score>victim.score){eater.bossKills=(eater.bossKills||0)+1;eater.coins+=100;}
+      }
     }
-    for (const pid of dead) {
-      const s=this.snakes.get(pid); if (!s) continue;
-      s.alive=false;
-      s.body=[];
+    for(const id of dead){
+      const s=this.snakes.get(id);if(!s)continue;
+      s.alive=false;s.body=[];
     }
   }
 
@@ -523,7 +515,7 @@ export class SnakeRoomHD extends DurableObject {
     const results=[...this.snakes.values()]
       .filter(s=>!s.bot)
       .sort((a,b)=>Number(b.alive)-Number(a.alive) || b.score-a.score || (b.health||0)-(a.health||0))
-      .map((s,i)=>({id:s.id,name:s.name,score:s.score,chestsFound:s.chestsFound||0,rank:i+1,registered:s.registered,bot:false}));
+      .map((s,i)=>({id:s.id,name:s.name,score:Math.floor(s.score),coins:s.coins||0,bossKills:s.bossKills||0,rank:i+1,registered:s.registered,bot:false}));
     const end=Date.now();
     const matchId=this.roundId;
     let resultsSaved = this.mode === "solo";
@@ -599,11 +591,10 @@ export class SnakeRoomHD extends DurableObject {
     const elapsed = Math.floor((t - this.startedAt) / 1000);
     const zone = this.zoneState(t);
     return { type:"state", roundId:this.roundId,
-      remaining:this.mode === "solo" ? null : Math.max(0,this.mainRoundSeconds-elapsed),
-      overtimeRemaining:this.mode === "solo" ? null : Math.max(0,this.roundSeconds-elapsed),
-      elapsed, zone,
-      snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,alive:s.alive,score:s.score,chestsFound:s.chestsFound||0,health:Math.max(0,Math.round(s.health ?? 100)),body:s.body,color:s.color,shield:s.shieldUntil>t})),
-      chests:this.chests.map(c=>({id:c.id,x:c.x,z:c.z})),shields:this.shields };
+      remaining:Math.max(0,this.mainRoundSeconds-elapsed),
+      elapsed, bossSpawned:this.bossSpawned,
+      snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,boss:!!s.boss,alive:s.alive,score:Math.floor(s.score),coins:s.coins||0,body:s.body,color:s.color,boost:!!s.boost})),
+      food:this.food };
   }
   broadcast(extra=null) {
     const payload=JSON.stringify(extra || this.snapshot());
