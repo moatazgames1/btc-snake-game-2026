@@ -445,12 +445,12 @@ export class SnakeRoomHD extends DurableObject {
         const aHitsB=a.body.length&&b.body.slice(1).some(p=>Math.hypot(ah.x-p.x,ah.z-p.z)<.82);
         const bHitsA=a.body.slice(1).some(p=>Math.hypot(bh.x-p.x,bh.z-p.z)<.82);
         if(headTouch){
-          if(a.score>b.score){dead.add(b.id);eatenBy.set(a.id,(eatenBy.get(a.id)||0)+Math.floor(b.score/2));}
+          if(a.score>b.score){dead.add(b.id);eatenBy.set(a.id,(eatenBy.get(a.id)||0)+Math.floor(b.score/2));if(b.boss)bossEaters.add(a.id);}
           else if(b.score>a.score){dead.add(a.id);eatenBy.set(b.id,(eatenBy.get(b.id)||0)+Math.floor(a.score/2));if(a.boss)bossEaters.add(b.id);}
           else {dead.add(a.id);dead.add(b.id);}
         }else{
           if(aHitsB){
-            if(a.score>b.score){dead.add(b.id);eatenBy.set(a.id,(eatenBy.get(a.id)||0)+Math.floor(b.score/2));}
+            if(a.score>b.score){dead.add(b.id);eatenBy.set(a.id,(eatenBy.get(a.id)||0)+Math.floor(b.score/2));if(b.boss)bossEaters.add(a.id);}
             else dead.add(a.id);
           }
           if(bHitsA){
