@@ -18,16 +18,16 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
 </style>
 </head>
 <body>
-<header><div class="brand">🐍 <b>BTC</b> SNAKE · BATTLE ROYALE</div><div style="display:flex;gap:8px;align-items:center"><select id="languageSelect" aria-label="Choose language" style="max-width:145px;background:#1a1b32;color:white;border:1px solid var(--line);padding:9px;border-radius:12px"><option value="auto">🌐 Auto</option><option value="ar">العربية</option><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="ru">Русский</option><option value="tr">Türkçe</option><option value="zh">简体中文</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="hi">हिन्दी</option><option value="id">Bahasa Indonesia</option><option value="ur">اردو</option><option value="it">Italiano</option><option value="nl">Nederlands</option><option value="pl">Polski</option><option value="uk">Українська</option><option value="vi">Tiếng Việt</option><option value="th">ไทย</option><option value="bn">বাংলা</option></select><button id="loginTop">Login</button></div></header>
+<header><div class="brand">🐍 <b>BTC</b> SNAKE · CLASSIC SNAKE</div><div style="display:flex;gap:8px;align-items:center"><select id="languageSelect" aria-label="Choose language" style="max-width:145px;background:#1a1b32;color:white;border:1px solid var(--line);padding:9px;border-radius:12px"><option value="auto">🌐 Auto</option><option value="ar">العربية</option><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="ru">Русский</option><option value="tr">Türkçe</option><option value="zh">简体中文</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="hi">हिन्दी</option><option value="id">Bahasa Indonesia</option><option value="ur">اردو</option><option value="it">Italiano</option><option value="nl">Nederlands</option><option value="pl">Polski</option><option value="uk">Українська</option><option value="vi">Tiếng Việt</option><option value="th">ไทย</option><option value="bn">বাংলা</option></select><button id="loginTop">Login</button></div></header>
 <main>
 <section class="hero">
  <div class="card">
   <div class="eyebrow">GROW • SURVIVE • DOMINATE</div>
   <h1 id="headline">اجمع العملات… <span>وكن ملك الساحة</span></h1>
   <p class="muted" id="subhead">لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.</p>
-  <div class="stats"><div class="stat"><strong id="playersCount">—</strong><small class="muted" id="playersLabel">في الساحة</small></div><div class="stat"><strong id="timeCount">20:00</strong><small class="muted" id="timeLabel">وقت الجولة</small></div><div class="stat"><strong id="myScore">0</strong><small class="muted" id="scoreLabel">عملات الجولة</small></div></div>
-  <div class="arena-actions"><button class="mode-option selected" id="playBtn" type="button" aria-pressed="true">منافسة جماعية · 20 دقيقة</button><button class="mode-option" id="soloBtn" type="button" aria-pressed="false">تدريب فردي · بلا وقت</button><button class="primary" id="startSelectedBtn" type="button">بدء اللعب</button><button id="howBtn">طريقة اللعب</button></div>
-  <div class="notice" id="rules">الاصطدام برأس أفعى في جسم أخرى يسبب الموت. اصطدام الرأسين يقصي الاثنين. الدرع يحمي مؤقتاً.</div>
+  <div class="stats"><div class="stat"><strong id="playersCount">—</strong><small class="muted" id="playersLabel">أفاعٍ في الساحة</small></div><div class="stat"><strong id="timeCount">05:00</strong><small class="muted" id="timeLabel">مدة الجولة</small></div><div class="stat"><strong id="myScore">10</strong><small class="muted" id="scoreLabel">رقم أفعاك</small></div></div>
+  <div class="arena-actions"><button class="mode-option selected" id="playBtn" type="button" aria-pressed="true">لعب جماعي · 5 دقائق</button><button id="soloBtn" hidden type="button">Solo</button><button class="primary" id="startSelectedBtn" type="button">ابدأ اللعب</button><button id="howBtn">طريقة اللعب</button></div>
+  <div class="notice" id="rules">اجمع الطعام لتكبر. الأفعى ذات الرقم الأكبر تلتهم الأصغر، ويمكنك مطاردتها أو محاصرتها. يظهر الزعيم في آخر 30 ثانية.</div>
  </div>
  <div class="card">
   <div class="eyebrow" id="accountLabel">PLAYER ACCOUNT</div><h2 id="accountTitle">احفظ تقدمك</h2>
@@ -43,9 +43,9 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
 </section>
 
 <section class="arena-wrap card" id="arenaWrap">
- <div class="hud"><div class="hud-left"><span id="hudCoins" class="hud-coins">🥚 0</span><span id="healthLabel">❤️ 100%</span><span id="zoneLabel">المنطقة الآمنة</span></div><span id="hudTimer">20:00</span><div class="hud-right"><button id="cameraBtn" type="button" aria-label="تغيير زاوية الكاميرا">📷 1/3</button><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div></div>
+ <div class="hud"><div class="hud-left"><span id="hudCoins" class="hud-coins">🐍 10 · 🪙 0</span></div><span id="hudTimer">05:00</span><div class="hud-right"><button id="cameraBtn" type="button" aria-label="تغيير زاوية الكاميرا">📷 1/3</button><span id="statusPill">جاهز للعب</span><span id="roundPill">ROUND 01</span></div></div>
  <div class="arena" id="arena"></div>
- <div class="arena-actions"><button id="shieldBtn">🛡 الدرع: اجمعه من الساحة</button><button id="autoWalkBtn" type="button" aria-pressed="false">🚶 المشي التلقائي: متوقف</button><button id="leaveBtn">الخروج من الجولة</button><button id="skinBtn">تخصيص الأفعى</button></div>
+ <div class="arena-actions"><button id="boostBtn" type="button">⚡ Boost</button><button id="autoWalkBtn" type="button" aria-pressed="false" hidden>🚶 المشي التلقائي: متوقف</button><button id="leaveBtn">الخروج من الجولة</button><button id="skinBtn">تخصيص الأفعى</button></div>
  <div id="deathPanel" class="notice" hidden style="margin-top:12px;padding:14px;border:1px solid #ff623e;border-radius:12px;background:#321b25">
   <strong>تم إقصاؤك من الجولة 🐍</strong>
   <div>لن تعود الأفعى للحياة. يمكنك مشاهدة بقية المنافسة أو الخروج من الجولة.</div>
@@ -71,9 +71,9 @@ body.game-fullscreen{overflow:hidden}body.game-fullscreen header,body.game-fulls
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
 const API_BASE = "https://btc-snake-hd-api.motazfaysel5.workers.dev";
 const FB_CONFIG_URL = "./firebase-config.js";
-let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), chestMeshes = [], shieldMeshes = [], selectedSkin = "mint", lastState = null;
-let lastMode = "multi", lastDuration = 1200, roundEndedByServer = false, manualLeave = false, wasAlive = null, cameraViewMode = 0, selectedMode = "multi", selectedDuration = 1200, zoneMesh = null;
-let autoWalkEnabled = false, joystickActive = false, controlHeartbeat = null;
+let firebase = null, auth = null, currentUser = null, ws = null, running = false, myId = null, scene, camera, renderer, meshes = new Map(), foodMeshes = new Map(), selectedSkin = "mint", lastState = null;
+let lastMode = "multi", lastDuration = 300, roundEndedByServer = false, manualLeave = false, wasAlive = null, cameraViewMode = 0, selectedMode = "multi", selectedDuration = 300;
+let autoWalkEnabled = false, joystickActive = false, controlHeartbeat = null, boostActive = false;
 const $ = id => document.getElementById(id);
 const skins = [
  {id:"mint",name:"Mint",color:"#35e0a1",unlock:"Free"},
@@ -86,25 +86,25 @@ const skins = [
  {id:"diamond",name:"Diamond",color:"#d7f7ff",unlock:"Achievement"}
 ];
 const text = {
- ar:{login:"دخول",headline:'ابحث عن البيض المخفي… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 20 دقيقة",solo:"تدريب فردي · بلا وقت",how:"طريقة اللعب",rules:"الاصطدام بجسم أفعى يسبب الإقصاء. اصطدام الرأسين يقصي الاثنين إلا إذا كان الدرع فعالاً.",players:"في الساحة",time:"وقت الجولة",score:"بيض الجولة",account:"احفظ تقدمك",wallet:"🪙 رصيد البيض",rankPoints:"🏆 نقاط التصنيف",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
- en:{login:"Login",headline:'Find hidden eggs… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 20 min",solo:"Solo practice · untimed",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head eliminates both unless a shield is active.",players:"In arena",time:"Round time",score:"Round eggs",account:"Save your progress",wallet:"🪙 Egg inventory",rankPoints:"🏆 Ranking points",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
+ ar:{login:"دخول",headline:'ابحث عن البيض المخفي… <span>وكن ملك الساحة</span>',sub:"لعبة أفعى ثلاثية الأبعاد بمنافسة مباشرة. العب كضيف أو سجّل لحفظ تقدمك.",play:"منافسة جماعية · 5 دقائق",solo:"تدريب فردي · بلا وقت",how:"طريقة اللعب",rules:"الاصطدام بجسم أفعى يسبب الإقصاء. اصطدام الرأسين يقصي الاثنين إلا إذا كان الدرع فعالاً.",players:"في الساحة",time:"وقت الجولة",score:"بيض الجولة",account:"احفظ تقدمك",wallet:"🪙 رصيد البيض",rankPoints:"🏆 نقاط التصنيف",login2:"دخول / إنشاء حساب",auth:"اللعب كضيف متاح. الحساب مطلوب لحفظ النتائج والترتيب العالمي.",ready:"جاهز للعب",leader:"🏆 الترتيب العالمي",skins:"🎨 متجر الأفاعي",skinDesc:"الأشكال تجميلية فقط ولا تمنح سرعة أو قوة إضافية.",admin:"لوحة الإدارة",language:"EN",start:"بدء اللعب"},
+ en:{login:"Login",headline:'Find hidden eggs… <span>Rule the arena</span>',sub:"A top-down 3D snake arena with live competition. Play as a guest or sign in to save progress.",play:"Live multiplayer · 5 min",solo:"Solo practice · untimed",how:"How to play",rules:"Head into another snake's body = elimination. Head-to-head eliminates both unless a shield is active.",players:"In arena",time:"Round time",score:"Round eggs",account:"Save your progress",wallet:"🪙 Egg inventory",rankPoints:"🏆 Ranking points",login2:"Login / Sign up",auth:"Guest play is available. Sign in to save results and join the global leaderboard.",ready:"Ready to play",leader:"🏆 Global leaderboard",skins:"🎨 Snake skins",skinDesc:"Skins are cosmetic only; no speed or power advantage.",admin:"Admin panel",language:"عربي",start:"Start Game"}
 };
 const localePacks={
-fr:["Connexion","Collectez des pièces… <span>Dominez l’arène</span>","Arène de serpents 3D. Jouez comme invité ou connectez-vous pour sauvegarder votre progression.","Multijoueur · 20 min","Entraînement solo · sans limite","Comment jouer","Toucher le corps d’un serpent élimine. Un choc tête-à-tête élimine les deux, sauf bouclier actif.","Dans l’arène","Durée","Pièces du tour","Sauvegardez votre progression","Connexion / Inscription","Le jeu invité est disponible. Connectez-vous pour sauvegarder vos résultats.","Prêt à jouer","🏆 Classement mondial","🎨 Apparences","Les apparences sont cosmétiques, sans avantage.","Administration","Jouer"],
-es:["Entrar","Consigue monedas… <span>Domina la arena</span>","Arena 3D de serpientes. Juega como invitado o inicia sesión para guardar tu progreso.","Multijugador · 20 min","Práctica individual · sin límite","Cómo jugar","Chocar con el cuerpo de otra serpiente elimina. Un choque de cabezas elimina a ambas salvo escudo activo.","En la arena","Duración","Monedas de ronda","Guarda tu progreso","Entrar / Registrarse","Puedes jugar como invitado. Inicia sesión para guardar resultados.","Listo para jugar","🏆 Clasificación mundial","🎨 Aspectos","Los aspectos son cosméticos y no dan ventajas.","Administración","Jugar"],
-de:["Anmelden","Sammle Münzen… <span>Beherrsche die Arena</span>","3D-Schlangen-Arena. Spiele als Gast oder melde dich an, um deinen Fortschritt zu speichern.","Mehrspieler · 20 Min.","Einzeltraining · ohne Zeitlimit","Spielanleitung","Berührt dein Kopf den Körper einer Schlange, scheidest du aus. Kopf-an-Kopf eliminiert beide, außer ein Schild ist aktiv.","In der Arena","Rundenzeit","Rundenmünzen","Fortschritt speichern","Anmelden / Registrieren","Gastspiel ist möglich. Melde dich an, um Ergebnisse zu speichern.","Bereit","🏆 Weltrangliste","🎨 Schlangen-Skins","Skins sind rein kosmetisch und bieten keine Vorteile.","Verwaltung","Spiel starten"],
-pt:["Entrar","Colete moedas… <span>Domine a arena</span>","Arena 3D de cobras. Jogue como convidado ou entre para salvar seu progresso.","Multijogador · 20 min","Treino solo · sem limite","Como jogar","Colidir com o corpo de outra cobra elimina. Colisão entre cabeças elimina ambas, exceto com escudo.","Na arena","Duração","Moedas da rodada","Salve seu progresso","Entrar / Criar conta","É possível jogar como convidado. Entre para salvar resultados.","Pronto para jogar","🏆 Classificação mundial","🎨 Visuais","Os visuais são cosméticos e não dão vantagens.","Administração","Jogar"],
-ru:["Войти","Собирай монеты… <span>Стань хозяином арены</span>","3D-арена змей. Играйте гостем или войдите, чтобы сохранить прогресс.","Сетевая игра · 20 мин","Одиночная тренировка · без таймера","Как играть","Столкновение с телом змеи приводит к выбыванию. Столкновение головами выводит обеих, если нет щита.","На арене","Время раунда","Монеты раунда","Сохранить прогресс","Войти / Регистрация","Можно играть гостем. Войдите, чтобы сохранять результаты.","Готово к игре","🏆 Мировой рейтинг","🎨 Облики змей","Облики только косметические и не дают преимуществ.","Администрирование","Начать игру"],
-tr:["Giriş","Coin topla… <span>Arenaya hükmet</span>","3D yılan arenası. Misafir olarak oyna veya ilerlemeni kaydetmek için giriş yap.","Çok oyunculu · 20 dk","Tek kişilik antrenman · süresiz","Nasıl oynanır","Başka bir yılanın gövdesine çarpmak elenmeye neden olur. Kalkan yoksa kafa kafaya çarpışmada ikisi de elenir.","Arenada","Tur süresi","Tur coinleri","İlerlemeni kaydet","Giriş / Kayıt","Misafir olarak oynayabilirsin. Sonuçları kaydetmek için giriş yap.","Oynamaya hazır","🏆 Dünya sıralaması","🎨 Yılan görünümleri","Görünümler kozmetiktir, avantaj sağlamaz.","Yönetim paneli","Oyunu başlat"],
+fr:["Connexion","Collectez des pièces… <span>Dominez l’arène</span>","Arène de serpents 3D. Jouez comme invité ou connectez-vous pour sauvegarder votre progression.","Multijoueur · 5 min","Entraînement solo · sans limite","Comment jouer","Toucher le corps d’un serpent élimine. Un choc tête-à-tête élimine les deux, sauf bouclier actif.","Dans l’arène","Durée","Pièces du tour","Sauvegardez votre progression","Connexion / Inscription","Le jeu invité est disponible. Connectez-vous pour sauvegarder vos résultats.","Prêt à jouer","🏆 Classement mondial","🎨 Apparences","Les apparences sont cosmétiques, sans avantage.","Administration","Jouer"],
+es:["Entrar","Consigue monedas… <span>Domina la arena</span>","Arena 3D de serpientes. Juega como invitado o inicia sesión para guardar tu progreso.","Multijugador · 5 min","Práctica individual · sin límite","Cómo jugar","Chocar con el cuerpo de otra serpiente elimina. Un choque de cabezas elimina a ambas salvo escudo activo.","En la arena","Duración","Monedas de ronda","Guarda tu progreso","Entrar / Registrarse","Puedes jugar como invitado. Inicia sesión para guardar resultados.","Listo para jugar","🏆 Clasificación mundial","🎨 Aspectos","Los aspectos son cosméticos y no dan ventajas.","Administración","Jugar"],
+de:["Anmelden","Sammle Münzen… <span>Beherrsche die Arena</span>","3D-Schlangen-Arena. Spiele als Gast oder melde dich an, um deinen Fortschritt zu speichern.","Mehrspieler · 5 Min.","Einzeltraining · ohne Zeitlimit","Spielanleitung","Berührt dein Kopf den Körper einer Schlange, scheidest du aus. Kopf-an-Kopf eliminiert beide, außer ein Schild ist aktiv.","In der Arena","Rundenzeit","Rundenmünzen","Fortschritt speichern","Anmelden / Registrieren","Gastspiel ist möglich. Melde dich an, um Ergebnisse zu speichern.","Bereit","🏆 Weltrangliste","🎨 Schlangen-Skins","Skins sind rein kosmetisch und bieten keine Vorteile.","Verwaltung","Spiel starten"],
+pt:["Entrar","Colete moedas… <span>Domine a arena</span>","Arena 3D de cobras. Jogue como convidado ou entre para salvar seu progresso.","Multijogador · 5 min","Treino solo · sem limite","Como jogar","Colidir com o corpo de outra cobra elimina. Colisão entre cabeças elimina ambas, exceto com escudo.","Na arena","Duração","Moedas da rodada","Salve seu progresso","Entrar / Criar conta","É possível jogar como convidado. Entre para salvar resultados.","Pronto para jogar","🏆 Classificação mundial","🎨 Visuais","Os visuais são cosméticos e não dão vantagens.","Administração","Jogar"],
+ru:["Войти","Собирай монеты… <span>Стань хозяином арены</span>","3D-арена змей. Играйте гостем или войдите, чтобы сохранить прогресс.","Сетевая игра · 5 мин","Одиночная тренировка · без таймера","Как играть","Столкновение с телом змеи приводит к выбыванию. Столкновение головами выводит обеих, если нет щита.","На арене","Время раунда","Монеты раунда","Сохранить прогресс","Войти / Регистрация","Можно играть гостем. Войдите, чтобы сохранять результаты.","Готово к игре","🏆 Мировой рейтинг","🎨 Облики змей","Облики только косметические и не дают преимуществ.","Администрирование","Начать игру"],
+tr:["Giriş","Coin topla… <span>Arenaya hükmet</span>","3D yılan arenası. Misafir olarak oyna veya ilerlemeni kaydetmek için giriş yap.","Çok oyunculu · 5 dk","Tek kişilik antrenman · süresiz","Nasıl oynanır","Başka bir yılanın gövdesine çarpmak elenmeye neden olur. Kalkan yoksa kafa kafaya çarpışmada ikisi de elenir.","Arenada","Tur süresi","Tur coinleri","İlerlemeni kaydet","Giriş / Kayıt","Misafir olarak oynayabilirsin. Sonuçları kaydetmek için giriş yap.","Oynamaya hazır","🏆 Dünya sıralaması","🎨 Yılan görünümleri","Görünümler kozmetiktir, avantaj sağlamaz.","Yönetim paneli","Oyunu başlat"],
 zh:["登录","收集金币… <span>称霸竞技场</span>","3D 贪吃蛇竞技场。可游客游玩或登录保存进度。","多人竞技 · 20 分钟","单人练习 · 不限时","玩法说明","蛇头撞到其他蛇身会被淘汰。头部相撞时双方淘汰，除非护盾生效。","竞技场人数","回合时间","本回合金币","保存游戏进度","登录 / 注册","可游客游玩。登录后可保存成绩。","准备就绪","🏆 全球排行榜","🎨 蛇皮肤","皮肤仅改变外观，不提供优势。","管理面板","开始游戏"],
 ja:["ログイン","コインを集めて… <span>アリーナを制覇</span>","3Dスネークアリーナ。ゲストで遊ぶか、ログインして進行状況を保存できます。","オンライン対戦 · 20分","ソロ練習 · 時間制限なし","遊び方","他のヘビの体に頭が当たると脱落。シールドがなければ頭同士の衝突で両方脱落します。","アリーナ内","ラウンド時間","ラウンドコイン","進行状況を保存","ログイン / 登録","ゲストプレイ可能。ログインすると結果を保存できます。","プレイ準備完了","🏆 世界ランキング","🎨 スキン","スキンは見た目のみで能力差はありません。","管理パネル","ゲーム開始"],
-ko:["로그인","코인을 모으고… <span>아레나를 지배하세요</span>","실시간 경쟁이 가능한 3D 뱀 아레나입니다. 게스트로 플레이하거나 로그인해 진행 상황을 저장하세요.","멀티플레이 · 20분","솔로 연습 · 시간 제한 없음","게임 방법","다른 뱀의 몸에 머리가 부딪히면 탈락합니다. 보호막이 없으면 머리끼리 충돌한 두 뱀 모두 탈락합니다.","아레나 인원","라운드 시간","라운드 코인","진행 상황 저장","로그인 / 가입","게스트 플레이 가능. 결과를 저장하려면 로그인하세요.","플레이 준비 완료","🏆 글로벌 순위","🎨 뱀 스킨","스킨은 외형만 바꾸며 능력치 이점이 없습니다.","관리자 패널","게임 시작"],
+ko:["로그인","코인을 모으고… <span>아레나를 지배하세요</span>","실시간 경쟁이 가능한 3D 뱀 아레나입니다. 게스트로 플레이하거나 로그인해 진행 상황을 저장하세요.","멀티플레이 · 5분","솔로 연습 · 시간 제한 없음","게임 방법","다른 뱀의 몸에 머리가 부딪히면 탈락합니다. 보호막이 없으면 머리끼리 충돌한 두 뱀 모두 탈락합니다.","아레나 인원","라운드 시간","라운드 코인","진행 상황 저장","로그인 / 가입","게스트 플레이 가능. 결과를 저장하려면 로그인하세요.","플레이 준비 완료","🏆 글로벌 순위","🎨 뱀 스킨","스킨은 외형만 바꾸며 능력치 이점이 없습니다.","관리자 패널","게임 시작"],
 hi:["लॉग इन","सिक्के जमा करें… <span>एरीना पर राज करें</span>","लाइव मुकाबले वाला 3D साँप एरीना। अतिथि के रूप में खेलें या प्रगति सहेजने के लिए लॉग इन करें।","मल्टीप्लेयर · 20 मिनट","एकल अभ्यास · समय सीमा नहीं","कैसे खेलें","दूसरे साँप के शरीर से टकराने पर आप बाहर हो जाते हैं। ढाल न हो तो सिरों की टक्कर में दोनों बाहर हो जाते हैं।","एरीना में","राउंड समय","राउंड सिक्के","प्रगति सहेजें","लॉग इन / साइन अप","अतिथि खेल उपलब्ध है। परिणाम सहेजने के लिए लॉग इन करें।","खेलने के लिए तैयार","🏆 वैश्विक रैंकिंग","🎨 साँप की स्किन","स्किन केवल दिखावट बदलती हैं, अतिरिक्त लाभ नहीं देतीं।","व्यवस्थापक पैनल","खेल शुरू करें"],
 id:["Masuk","Kumpulkan koin… <span>Kuasai arena</span>","Arena ular 3D. Bermain sebagai tamu atau masuk untuk menyimpan progres.","Multipemain · 20 menit","Latihan solo · tanpa batas waktu","Cara bermain","Menabrak tubuh ular lain menyebabkan eliminasi. Tabrakan kepala mengeliminasi keduanya kecuali perisai aktif.","Di arena","Durasi ronde","Koin ronde","Simpan progres","Masuk / Daftar","Mode tamu tersedia. Masuk untuk menyimpan hasil.","Siap bermain","🏆 Peringkat global","🎨 Skin ular","Skin hanya kosmetik dan tidak memberi keunggulan.","Panel admin","Mulai bermain"],
 ur:["لاگ اِن","سکے جمع کریں… <span>میدان کے بادشاہ بنیں</span>","لائیو مقابلے کے ساتھ 3D سانپ کا میدان۔ مہمان کے طور پر کھیلیں یا پیش رفت محفوظ کرنے کے لیے لاگ اِن کریں۔","ملٹی پلیئر · 20 منٹ","اکیلے مشق · وقت کی حد نہیں","کھیلنے کا طریقہ","دوسرے سانپ کے جسم سے ٹکرانے پر آپ باہر ہو جاتے ہیں۔ ڈھال نہ ہو تو سر کی ٹکر میں دونوں باہر ہو جاتے ہیں۔","میدان میں","راؤنڈ کا وقت","راؤنڈ کے سکے","پیش رفت محفوظ کریں","لاگ اِن / اکاؤنٹ بنائیں","مہمان کے طور پر کھیل سکتے ہیں۔ نتائج محفوظ کرنے کے لیے لاگ اِن کریں۔","کھیلنے کے لیے تیار","🏆 عالمی درجہ بندی","🎨 سانپ کے انداز","یہ صرف ظاہری تبدیلیاں ہیں، کوئی اضافی طاقت نہیں دیتیں۔","انتظامی پینل","کھیل شروع کریں"],
-it:["Accedi","Raccogli monete… <span>Domina l’arena</span>","Arena 3D di serpenti. Gioca come ospite o accedi per salvare i progressi.","Multigiocatore · 20 min","Allenamento singolo · senza limite","Come si gioca","Colpire il corpo di un altro serpente comporta l’eliminazione. Lo scontro tra teste elimina entrambi, salvo scudo attivo.","Nell’arena","Durata round","Monete round","Salva i progressi","Accedi / Registrati","Puoi giocare come ospite. Accedi per salvare i risultati.","Pronto a giocare","🏆 Classifica mondiale","🎨 Aspetti","Gli aspetti sono solo estetici e non danno vantaggi.","Pannello admin","Inizia"],
-nl:["Inloggen","Verzamel munten… <span>Heers over de arena</span>","3D-slangenarena. Speel als gast of log in om je voortgang op te slaan.","Multiplayer · 20 min","Solo oefenen · zonder tijdslimiet","Speluitleg","Tegen het lichaam van een andere slang botsen betekent uitschakeling. Een kopbotsing schakelt beide uit, tenzij een schild actief is.","In de arena","Rondetijd","Rondemunten","Voortgang opslaan","Inloggen / Registreren","Gastspel is beschikbaar. Log in om resultaten op te slaan.","Klaar om te spelen","🏆 Wereldranglijst","🎨 Slangen skins","Skins zijn alleen cosmetisch en geven geen voordeel.","Beheerpaneel","Start spel"],
-pl:["Zaloguj","Zbieraj monety… <span>Opanuj arenę</span>","Arena węży 3D z rywalizacją na żywo. Graj jako gość lub zaloguj się, aby zapisać postępy.","Wieloosobowa · 20 min","Trening solo · bez limitu czasu","Jak grać","Uderzenie w ciało innego węża oznacza eliminację. Zderzenie głowami eliminuje oba węże, chyba że działa tarcza.","Na arenie","Czas rundy","Monety rundy","Zapisz postępy","Logowanie / Rejestracja","Możesz grać jako gość. Zaloguj się, aby zapisywać wyniki.","Gotowy do gry","🏆 Ranking światowy","🎨 Wygląd węża","Wygląd jest kosmetyczny i nie daje przewagi.","Panel administratora","Rozpocznij grę"],
+it:["Accedi","Raccogli monete… <span>Domina l’arena</span>","Arena 3D di serpenti. Gioca come ospite o accedi per salvare i progressi.","Multigiocatore · 5 min","Allenamento singolo · senza limite","Come si gioca","Colpire il corpo di un altro serpente comporta l’eliminazione. Lo scontro tra teste elimina entrambi, salvo scudo attivo.","Nell’arena","Durata round","Monete round","Salva i progressi","Accedi / Registrati","Puoi giocare come ospite. Accedi per salvare i risultati.","Pronto a giocare","🏆 Classifica mondiale","🎨 Aspetti","Gli aspetti sono solo estetici e non danno vantaggi.","Pannello admin","Inizia"],
+nl:["Inloggen","Verzamel munten… <span>Heers over de arena</span>","3D-slangenarena. Speel als gast of log in om je voortgang op te slaan.","Multiplayer · 5 min","Solo oefenen · zonder tijdslimiet","Speluitleg","Tegen het lichaam van een andere slang botsen betekent uitschakeling. Een kopbotsing schakelt beide uit, tenzij een schild actief is.","In de arena","Rondetijd","Rondemunten","Voortgang opslaan","Inloggen / Registreren","Gastspel is beschikbaar. Log in om resultaten op te slaan.","Klaar om te spelen","🏆 Wereldranglijst","🎨 Slangen skins","Skins zijn alleen cosmetisch en geven geen voordeel.","Beheerpaneel","Start spel"],
+pl:["Zaloguj","Zbieraj monety… <span>Opanuj arenę</span>","Arena węży 3D z rywalizacją na żywo. Graj jako gość lub zaloguj się, aby zapisać postępy.","Wieloosobowa · 5 min","Trening solo · bez limitu czasu","Jak grać","Uderzenie w ciało innego węża oznacza eliminację. Zderzenie głowami eliminuje oba węże, chyba że działa tarcza.","Na arenie","Czas rundy","Monety rundy","Zapisz postępy","Logowanie / Rejestracja","Możesz grać jako gość. Zaloguj się, aby zapisywać wyniki.","Gotowy do gry","🏆 Ranking światowy","🎨 Wygląd węża","Wygląd jest kosmetyczny i nie daje przewagi.","Panel administratora","Rozpocznij grę"],
 uk:["Увійти","Збирай монети… <span>Підкорюй арену</span>","3D-арена змій із змаганнями наживо. Грай як гість або увійди, щоб зберегти прогрес.","Мультиплеєр · 20 хв","Одиночне тренування · без часу","Як грати","Зіткнення з тілом іншої змії призводить до вибування. Зіткнення голів вибувають обидві, якщо щит не активний.","На арені","Час раунду","Монети раунду","Зберегти прогрес","Увійти / Реєстрація","Можна грати гостем. Увійдіть, щоб зберігати результати.","Готовий до гри","🏆 Світовий рейтинг","🎨 Скіни змій","Скіни лише косметичні й не дають переваг.","Панель адміністратора","Почати гру"],
 vi:["Đăng nhập","Thu thập xu… <span>Làm chủ đấu trường</span>","Đấu trường rắn 3D với cạnh tranh trực tiếp. Chơi với tư cách khách hoặc đăng nhập để lưu tiến trình.","Nhiều người chơi · 20 phút","Luyện tập đơn · không giới hạn","Cách chơi","Đầu rắn chạm thân rắn khác sẽ bị loại. Va chạm đầu với đầu loại cả hai trừ khi có khiên.","Trong đấu trường","Thời gian vòng","Xu vòng chơi","Lưu tiến trình","Đăng nhập / Đăng ký","Có thể chơi với tư cách khách. Đăng nhập để lưu kết quả.","Sẵn sàng chơi","🏆 Bảng xếp hạng toàn cầu","🎨 Giao diện rắn","Giao diện chỉ mang tính thẩm mỹ, không tăng sức mạnh.","Bảng quản trị","Bắt đầu"],
 th:["เข้าสู่ระบบ","เก็บเหรียญ… <span>ครองสนามประลอง</span>","สนามงู 3 มิติพร้อมการแข่งขันสด เล่นแบบผู้เยี่ยมชมหรือเข้าสู่ระบบเพื่อบันทึกความคืบหน้า","หลายผู้เล่น · 20 นาที","ฝึกคนเดียว · ไม่จำกัดเวลา","วิธีเล่น","หัวชนลำตัวงูตัวอื่นจะถูกคัดออก การชนหัวกันจะคัดออกทั้งคู่ เว้นแต่มีโล่ทำงานอยู่","ในสนาม","เวลารอบ","เหรียญในรอบ","บันทึกความคืบหน้า","เข้าสู่ระบบ / สมัคร","เล่นแบบผู้เยี่ยมชมได้ เข้าสู่ระบบเพื่อบันทึกผล","พร้อมเล่น","🏆 ตารางคะแนนโลก","🎨 สกินงู","สกินเปลี่ยนรูปลักษณ์เท่านั้น ไม่มีข้อได้เปรียบ","แผงผู้ดูแล","เริ่มเกม"],
@@ -255,8 +255,6 @@ function init3D(){
  const stoneMat=new THREE.MeshStandardMaterial({color:"#77796c",roughness:1});
  for(let i=0;i<34;i++){const a=Math.random()*Math.PI*2,r=34+Math.random()*18,stone=new THREE.Mesh(new THREE.DodecahedronGeometry(.35+Math.random()*.7,1),stoneMat);stone.position.set(50+Math.cos(a)*r,.05,50+Math.sin(a)*r);stone.scale.y=.55;stone.rotation.set(Math.random()*.4,Math.random()*Math.PI,Math.random()*.35);stone.castShadow=true;stone.receiveShadow=true;scene.add(stone)}
  const edge=new THREE.Mesh(new THREE.TorusGeometry(50,.35,5,96),new THREE.MeshStandardMaterial({color:"#7c8c68",roughness:1}));edge.rotation.x=Math.PI/2;edge.position.set(50,-.15,50);scene.add(edge);
- zoneMesh=new THREE.Mesh(new THREE.TorusGeometry(1,.16,8,128),new THREE.MeshStandardMaterial({color:"#35c9ff",emissive:"#0876a5",emissiveIntensity:.65,roughness:.25,transparent:true,opacity:.95}));
- zoneMesh.rotation.x=Math.PI/2;zoneMesh.position.y=.16;zoneMesh.visible=false;scene.add(zoneMesh);
  const resize=()=>resizeGameRenderer();new ResizeObserver(resize).observe(host);window.addEventListener("resize",resizeGameRenderer);document.addEventListener("fullscreenchange",()=>requestAnimationFrame(resizeGameRenderer));requestAnimationFrame(resizeGameRenderer);
  let lastSnakeSmoothAt=0;
  function animate(){
@@ -404,15 +402,11 @@ function makePrototypeHead(color="#d84d73"){
 function iRadius(total,index){return Math.max(.36,.59-index*.008)}
 function updateWorld(state){
  lastState=state;
- const clock=state.remaining==null?"∞":String(Math.floor(state.remaining/60)).padStart(2,"0")+":"+String(state.remaining%60).padStart(2,"0");
+ const clock=String(Math.floor((state.remaining??300)/60)).padStart(2,"0")+":"+String((state.remaining??300)%60).padStart(2,"0");
  $("playersCount").textContent=state.snakes?.length||0;$("timeCount").textContent=clock;$("hudTimer").textContent=clock;
- const zone=state.zone||{};
- if(zoneMesh){zoneMesh.visible=!!zone.active;zoneMesh.position.set(zone.x??50,.16,zone.z??50);zoneMesh.scale.set(zone.radius||1,zone.radius||1,1);zoneMesh.material.color.set(zone.phase==="final"?"#ff684f":zone.warning?"#ffd166":"#35c9ff");}
- $("zoneLabel").textContent=zone.phase==="practice"?(tr("zonePractice")):zone.warning?(tr("zoneWarning")):zone.phase==="final"?(tr("zoneFinal")):zone.active?(tr("zoneClosing")):(tr("zoneSafe"));
  const mine=state.snakes?.find(s=>s.id===myId);
  if(mine){
-  $("myScore").textContent=mine.chestsFound||0;$("hudCoins").textContent="🥚 "+(mine.chestsFound||0);
-  const healthLabel=$("healthLabel");if(healthLabel)healthLabel.textContent="❤️ "+Math.max(0,Math.min(100,Math.round(mine.health??100)))+"%";
+  $("myScore").textContent=mine.score||10;$("hudCoins").textContent="🐍 "+(mine.score||10)+" · 🪙 "+(mine.coins||0);
   $("statusPill").textContent=mine.alive?(tr("inArena")):(tr("eliminated"));
   if(wasAlive===true&&!mine.alive){setAutoWalk(false);setJoystickActive(false);$("deathPanel").hidden=false;toast(tr("eliminated"));}
   wasAlive=mine.alive;
@@ -443,24 +437,12 @@ function updateWorld(state){
   }
  }
  for(const [k,g] of meshes){if(!aliveIds.has(k)){scene.remove(g);meshes.delete(k)}}
- chestMeshes.forEach(m=>scene.remove(m));chestMeshes=[];
- for(const c of state.chests||[]){
-  const g=new THREE.Group();
-  const shellColor=c.type==="legendary"?"#f7c948":c.type==="rare"?"#83d8ff":"#f1e6c8";
-  const shell=new THREE.Mesh(new THREE.LatheGeometry([
-   new THREE.Vector2(0,-.68),new THREE.Vector2(.22,-.65),new THREE.Vector2(.43,-.48),
-   new THREE.Vector2(.55,-.15),new THREE.Vector2(.54,.2),new THREE.Vector2(.4,.48),
-   new THREE.Vector2(.2,.67),new THREE.Vector2(0,.72)
-  ],28),new THREE.MeshStandardMaterial({color:shellColor,roughness:.3,metalness:.04}));
-  shell.position.y=.82;shell.castShadow=true;g.add(shell);
-  const band=new THREE.Mesh(new THREE.TorusGeometry(.49,.035,8,32),new THREE.MeshStandardMaterial({color:c.type==="legendary"?"#fff0a8":"#a7a18d",roughness:.35}));
-  band.rotation.x=Math.PI/2;band.position.y=.82;g.add(band);
-  const glow=new THREE.PointLight(c.type==="legendary"?0xffd45a:c.type==="rare"?0x70cfff:0xfff1cf,.45,3);
-  glow.position.y=1.15;g.add(glow);
-  g.position.set(c.x,0,c.z);scene.add(g);chestMeshes.push(g);
+ const foodIds=new Set((state.food||[]).map(f=>f.id));
+ for(const [id,m] of foodMeshes){if(!foodIds.has(id)){scene.remove(m);foodMeshes.delete(id);}}
+ for(const f of state.food||[]){
+  if(foodMeshes.has(f.id))continue;
+  const m=makeSphere("#f7c948",.24);m.position.set(f.x,.28,f.z);scene.add(m);foodMeshes.set(f.id,m);
  }
- shieldMeshes.forEach(m=>scene.remove(m));shieldMeshes=[];
- for(const c of state.shields||[]){const m=makeSphere("#54e7ff",.7);m.position.set(c.x,.7,c.z);scene.add(m);shieldMeshes.push(m)}
 }
 function enterGameView(){
  document.body.classList.add("game-fullscreen");
@@ -484,8 +466,8 @@ function startGame(mode,duration){
   if(!running)connect(mode,duration);
  })));
 }
-function connect(mode="multi",duration=1200){
-  duration=mode==="solo"?0:1200;
+function connect(mode="multi",duration=300){
+  mode="multi";duration=300;
   if(ws)ws.close();
   autoWalkEnabled=false;joystickActive=false;updateAutoWalkButton();
   if(controlHeartbeat){clearInterval(controlHeartbeat);controlHeartbeat=null;}
@@ -502,15 +484,12 @@ function connect(mode="multi",duration=1200){
    ws.onopen=()=>{running=true;ws.send(JSON.stringify({type:"joystick",active:false}));ws.send(JSON.stringify({type:"autoWalk",enabled:false}));$("statusPill").textContent=tr("connected");toast(tr("connected"))};
    ws.onmessage=e=>{
     let d;try{d=JSON.parse(e.data)}catch{return}
-    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent=tr("round")+" "+d.roundId.slice(0,6);const initialClock=mode==="multi"?"20:00":"∞";$("timeCount").textContent=initialClock;$("hudTimer").textContent=initialClock;$("hudCoins").textContent="🥚 0";$("zoneLabel").textContent=mode==="multi"?tr("zoneSafe"):tr("zonePractice")}
+    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent=tr("round")+" "+d.roundId.slice(0,6);$("timeCount").textContent="05:00";$("hudTimer").textContent="05:00";$("hudCoins").textContent="🐍 10 · 🪙 0"}
     else if(d.type==="state")updateWorld(d);
-     else if(d.type==="chestFound"){toast(lang==="ar"?"وجدت بيضة! تم حفظها في مخزونك 🥚":"Egg found and saved to your inventory! 🥚");refreshChests();}
-     else if(d.type==="chestLoginRequired")toast(lang==="ar"?"سجّل الدخول أولاً حتى يُحفظ البيضة بعد المباراة.":"Sign in first so your egg can be saved after the match.");
-     else if(d.type==="chestSaveFailed")toast(lang==="ar"?"تعذّر حفظ البيضة الآن. حاول مجدداً.":"Could not save the egg. Please try again.");
     else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration,d.winner||null,d.resultsSaved===true);}
     else if(d.type==="full")toast(tr("arenaFull"));
    };
-   ws.onclose=()=>{running=false;setJoystickActive(false);if(roundEndedByServer){$("playAgainBtn").disabled=false;refreshWallet();}refreshChests();if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=tr("disconnected")};
+   ws.onclose=()=>{running=false;setJoystickActive(false);sendBoost(false);if(roundEndedByServer){$("playAgainBtn").disabled=false;refreshWallet();}if(!roundEndedByServer&&!manualLeave)$("statusPill").textContent=tr("disconnected")};
    ws.onerror=()=>toast(tr("connectionError"));
   };
   openSocket();
@@ -529,16 +508,14 @@ function connect(mode="multi",duration=1200){
   if(mine)$("resultsSummary").textContent+=" "+tr("yourRank",{rank:mine.rank,score:mine.score});
   $("playAgainBtn").textContent=tr("playAgain");
  }
- function chooseMode(mode,duration){
-  selectedMode=mode;selectedDuration=mode==="solo"?0:1200;
-  for(const id of ["playBtn","soloBtn"]){const b=$(id);const active=(id==="playBtn"&&mode==="multi")||(id==="soloBtn"&&mode==="solo");b.classList.toggle("selected",active);b.setAttribute("aria-pressed",String(active));}
- }
- $("playBtn").onclick=()=>chooseMode("multi",1200);
- $("soloBtn").onclick=()=>chooseMode("solo",300);
+ function chooseMode(){selectedMode="multi";selectedDuration=300;$("playBtn").classList.add("selected");$("playBtn").setAttribute("aria-pressed","true");}
+ $("playBtn").onclick=chooseMode;
  $("startSelectedBtn").onclick=()=>startGame(selectedMode,selectedDuration);
  $("playAgainBtn").onclick=()=>startGame(lastMode,lastDuration);
  $("leaveBtn").onclick=()=>{manualLeave=true;setAutoWalk(false);setJoystickActive(false);ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=tr("left");exitGameView()};
- $("shieldBtn").onclick=()=>toast(tr("shieldHint"));
+ const boostBtn=$("boostBtn");
+ const sendBoost=enabled=>{boostActive=!!enabled;if(ws?.readyState===1)ws.send(JSON.stringify({type:"boost",enabled:boostActive}));if(boostBtn)boostBtn.classList.toggle("active",boostActive);};
+ if(boostBtn){boostBtn.addEventListener("pointerdown",e=>{e.preventDefault();boostBtn.setPointerCapture(e.pointerId);sendBoost(true);});boostBtn.addEventListener("pointerup",()=>sendBoost(false));boostBtn.addEventListener("pointercancel",()=>sendBoost(false));boostBtn.addEventListener("lostpointercapture",()=>sendBoost(false));}
  $("skinBtn").onclick=()=>{exitGameView();requestAnimationFrame(()=>$("skins").scrollIntoView({behavior:"smooth",block:"center"}));};
 $("howBtn").onclick=()=>toast(tr("howHint"));
 function steerTurn(value){
