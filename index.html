@@ -274,6 +274,7 @@ function init3D(){
     const head=group.userData.headMesh,first=display[0],neck=display[1];
     if(head){
      head.position.set(first.x,.52,first.z);
+     const scoreSprite=group.userData.scoreSprite;if(scoreSprite)scoreSprite.position.set(first.x,1.85,first.z);
      const yaw=Math.atan2(first.x-neck.x,first.z-neck.z);
      const desired=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),yaw);
      head.quaternion.slerp(desired,.42);
@@ -461,6 +462,7 @@ function updateWorld(state){
    }
    group.userData.targetPoints=targetPoints;
    group.userData.bodyMesh.material.color.set(s.color||"#35a853");
+   updateSnakeLabel(group,s);
   }
  }
  for(const [k,g] of meshes){if(!aliveIds.has(k)){scene.remove(g);meshes.delete(k)}}
