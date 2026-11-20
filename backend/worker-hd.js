@@ -384,7 +384,7 @@ export class SnakeRoomHD extends DurableObject {
   }
 
   botThink(s) {
-    if (Math.random() < 0.04) {
+    if (Math.random() < 0.08) {
       const choices = [{x:1,z:0},{x:-1,z:0},{x:0,z:1},{x:0,z:-1}].filter(d => !(d.x === -s.dir.x && d.z === -s.dir.z));
       if (choices.length) s.nextDir = choices[Math.floor(Math.random()*choices.length)];
     }
