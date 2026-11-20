@@ -156,9 +156,10 @@ export default {
           const account = await env.DB.prepare("SELECT is_banned FROM players WHERE uid = ?").bind(user.uid).first();
           if (account?.is_banned) return json({ ok: false, error: "account_banned" }, 403, headers);
         }
+        // v2 creates clean five-minute rooms, avoiding stale room state from older deployments.
         const roomId = mode === "solo"
-          ? `solo-${user?.uid || crypto.randomUUID()}-300`
-          : "public-300";
+          ? `solo-${user?.uid || crypto.randomUUID()}-300-v2`
+          : "public-300-v2";
         const stub = env.ROOMS.get(env.ROOMS.idFromName(roomId));
         const guest = !user;
         const headersForRoom = new Headers(request.headers);
@@ -219,7 +220,8 @@ export class SnakeRoomHD extends DurableObject {
     this.mode = "multi";
     this.roundSeconds = 300;
     this.mainRoundSeconds = 300;
-    if (this.roundEnded && this.clients.size === 0) this.resetRound();
+    // A new match starts whenever the arena has no connected human players.
+    if (this.clients.size === 0) this.resetRound();
     const pid = request.headers.get("X-Player-Id") || `guest-${crypto.randomUUID()}`;
     const previousSocket = this.clients.get(pid);
     if (previousSocket) {
