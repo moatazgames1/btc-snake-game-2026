@@ -286,10 +286,12 @@ export class SnakeRoomHD extends DurableObject {
   }
 
   makeSnake(pid, name, registered, bot, skin = "mint") {
-    const x = 10 + Math.random() * 80, z = 10 + Math.random() * 80;
+    // Keep the full fixed-length body inside the arena at spawn.
+    const x = 13 + Math.random() * 74, z = 8 + Math.random() * 84;
     const palette = { mint:"#35e0a1", gold:"#f7c948", fire:"#ff623e", ice:"#49d9ff", galaxy:"#a78bfa", toxic:"#b7f34a", royal:"#f472b6", diamond:"#d7f7ff" };
     return { id: pid, name, registered, bot, alive: true, score: 0, chestsFound: 0, xp: 0,
-      body: [{x,z},{x:x-1,z},{x:x-2,z}], dir: {x:1,z:0}, nextDir: {x:1,z:0}, turnInput: 0,
+      // Fixed 24-point body; each point is 0.45 world units behind the previous one.
+      body: Array.from({length:24},(_,i)=>({x:x-i*0.45,z})), dir: {x:1,z:0}, nextDir: {x:1,z:0}, turnInput: 0,
       joystickActive: false, autoWalk: false, lastManualInputAt: 0,
       shieldUntil: 0, health: 100, pendingTurn: false,
       color: bot ? ["#a78bfa","#22d3ee","#f59e0b","#34d399","#fb7185"][Math.floor(Math.random()*5)] : (palette[skin] || palette.mint), skin };
@@ -382,7 +384,7 @@ export class SnakeRoomHD extends DurableObject {
   }
 
   botThink(s) {
-    if (Math.random() < 0.08) {
+    if (Math.random() < 0.04) {
       const choices = [{x:1,z:0},{x:-1,z:0},{x:0,z:1},{x:0,z:-1}].filter(d => !(d.x === -s.dir.x && d.z === -s.dir.z));
       if (choices.length) s.nextDir = choices[Math.floor(Math.random()*choices.length)];
     }
@@ -403,13 +405,12 @@ export class SnakeRoomHD extends DurableObject {
       }
       const manualMove = s.joystickActive && (t - (s.lastManualInputAt || 0) < 650);
       if (!s.bot && manualMove && s.turnInput) {
-        const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.10;
+        const angle = Math.atan2(s.dir.z,s.dir.x) + s.turnInput * 0.05;
         s.dir = {x:Math.cos(angle),z:Math.sin(angle)};
       }
       if (!s.bot && !s.autoWalk && !manualMove) continue;
-      if (this.tickNo % 2) continue;
       const h = s.body[0];
-      const nh = {x: Math.max(0,Math.min(100,h.x+s.dir.x*0.9)), z: Math.max(0,Math.min(100,h.z+s.dir.z*0.9))};
+      const nh = {x: Math.max(0,Math.min(100,h.x+s.dir.x*0.45)), z: Math.max(0,Math.min(100,h.z+s.dir.z*0.45))};
       s.body.unshift(nh); s.body.pop();
       const ci = this.chests.findIndex(c => Math.hypot(c.x-nh.x,c.z-nh.z)<2.2);
       if (ci >= 0) {
@@ -449,7 +450,7 @@ export class SnakeRoomHD extends DurableObject {
         return;
       }
     }
-    if (t-this.lastBroadcast > 100) { this.lastBroadcast=t; this.broadcast(); }
+    if (t-this.lastBroadcast > 50) { this.lastBroadcast=t; this.broadcast(); }
   }
 
   zoneState(t = Date.now()) {
@@ -471,7 +472,8 @@ export class SnakeRoomHD extends DurableObject {
     for (let i=0;i<all.length;i++) {
       const a=all[i], ah=a.body[0];
       if (ah.x<=0.5||ah.x>=99.5||ah.z<=0.5||ah.z>=99.5) collision.add(a.id);
-      for (let k=1;k<a.body.length;k++) {
+      // Ignore the two nearest samples; they are part of the normal neck curve.
+      for (let k=3;k<a.body.length;k++) {
         const seg=a.body[k];
         if (Math.hypot(ah.x-seg.x,ah.z-seg.z)<0.85) { collision.add(a.id); break; }
       }
