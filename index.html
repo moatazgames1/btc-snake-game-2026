@@ -513,7 +513,7 @@ function connect(mode="multi",duration=300){
    ws.onopen=()=>{running=true;ws.send(JSON.stringify({type:"joystick",active:false}));ws.send(JSON.stringify({type:"autoWalk",enabled:false}));$("statusPill").textContent=tr("connected");toast(tr("connected"))};
    ws.onmessage=e=>{
     let d;try{d=JSON.parse(e.data)}catch{return}
-    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent=tr("round")+" "+d.roundId.slice(0,6);$("timeCount").textContent="05:00";$("hudTimer").textContent="05:00";$("hudCoins").textContent="🐍 10 · 🪙 0"}
+    if(d.type==="welcome"){myId=d.playerId;$("roundPill").textContent=tr("round")+" "+d.roundId.slice(0,6);const welcomeSeconds=Math.max(0,Math.floor(Number(d.roundSeconds)||300));const welcomeClock=String(Math.floor(welcomeSeconds/60)).padStart(2,"0")+":"+String(welcomeSeconds%60).padStart(2,"0");$("timeCount").textContent=welcomeClock;$("hudTimer").textContent=welcomeClock;$("hudCoins").textContent="🐍 10 · 🪙 0"}
     else if(d.type==="state")updateWorld(d);
     else if(d.type==="roundEnd"){roundEndedByServer=true;showResults(d.results||[],d.durationSeconds||duration,d.winner||null,d.resultsSaved===true);}
     else if(d.type==="full")toast(tr("arenaFull"));
@@ -541,7 +541,7 @@ function connect(mode="multi",duration=300){
  $("playBtn").onclick=chooseMode;
  $("startSelectedBtn").onclick=()=>startGame(selectedMode,selectedDuration);
  $("playAgainBtn").onclick=()=>startGame(lastMode,lastDuration);
- $("leaveBtn").onclick=()=>{manualLeave=true;setAutoWalk(false);setJoystickActive(false);ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=tr("left");exitGameView()};
+ $("leaveBtn").onclick=()=>{manualLeave=true;setAutoWalk(false);setJoystickActive(false);ws?.close();running=false;$("deathPanel").hidden=true;$("statusPill").textContent=tr("left");$("timeCount").textContent="05:00";$("hudTimer").textContent="05:00";$("playersCount").textContent="0";exitGameView()};
  const boostBtn=$("boostBtn");
  const sendBoost=enabled=>{boostActive=!!enabled;if(ws?.readyState===1)ws.send(JSON.stringify({type:"boost",enabled:boostActive}));if(boostBtn)boostBtn.classList.toggle("active",boostActive);};
  if(boostBtn){boostBtn.addEventListener("pointerdown",e=>{e.preventDefault();boostBtn.setPointerCapture(e.pointerId);sendBoost(true);});boostBtn.addEventListener("pointerup",()=>sendBoost(false));boostBtn.addEventListener("pointercancel",()=>sendBoost(false));boostBtn.addEventListener("lostpointercapture",()=>sendBoost(false));}
