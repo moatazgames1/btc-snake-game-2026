@@ -535,6 +535,15 @@ export class SnakeRoomHD extends DurableObject {
               total_matches=player_season_stats.total_matches+1,
               xp=player_season_stats.xp+excluded.xp,updated_at=excluded.updated_at
           `).bind(season.id,r.id,r.rank===1?25:r.rank===2?12:r.rank===3?6:2,r.rank===1?1:0,r.rank<=3?1:0,1,10+r.score*5+(r.rank===1?50:r.rank<=3?25:0),Math.floor(end/1000)));
+          if (r.coins > 0) {
+            statements.push(this.env.DB.prepare(`
+              INSERT OR IGNORE INTO wallet_ledger(id,uid,entry_type,amount,balance_after,reference_id,note,created_at)
+              VALUES(?,?,'match_reward',?,COALESCE((SELECT SUM(amount) FROM wallet_ledger WHERE uid=?),0)+?,?,?,?)
+            `).bind(
+              `${matchId}-${r.id}`,r.id,r.coins,r.id,r.coins,matchId,
+              r.bossKills ? "Food and boss victory coins" : "Food collected in match",Math.floor(end/1000)
+            ));
+          }
         }
         await this.env.DB.batch(statements);
       }
