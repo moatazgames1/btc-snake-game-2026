@@ -352,7 +352,7 @@ export class SnakeRoomHD extends DurableObject {
     this.bossSpawned = true;
     const replaceBot=[...this.snakes.values()].find(s=>s.bot&&!s.boss);
     if(replaceBot)this.snakes.delete(replaceBot.id);
-    else if(this.snakes.size>=20){this.bossSpawned=false;return;}
+    else if(this.snakes.size>=20){return;}
     const boss = this.makeSnake("boss-"+crypto.randomUUID(),"👑 BOSS",false,true);
     boss.boss = true;
     boss.score = 150;
@@ -426,7 +426,7 @@ export class SnakeRoomHD extends DurableObject {
 
   resolveCollisions(t) {
     const all=[...this.snakes.values()].filter(s=>s.alive);
-    const dead=new Set(), eatenBy=new Map();
+    const dead=new Set(), eatenBy=new Map(), bossEaters=new Set();
     for(const a of all){
       if(!a.body.length)continue;
       const h=a.body[0];
@@ -446,7 +446,7 @@ export class SnakeRoomHD extends DurableObject {
         const bHitsA=a.body.slice(1).some(p=>Math.hypot(bh.x-p.x,bh.z-p.z)<.82);
         if(headTouch){
           if(a.score>b.score){dead.add(b.id);eatenBy.set(a.id,(eatenBy.get(a.id)||0)+Math.floor(b.score/2));}
-          else if(b.score>a.score){dead.add(a.id);eatenBy.set(b.id,(eatenBy.get(b.id)||0)+Math.floor(a.score/2));}
+          else if(b.score>a.score){dead.add(a.id);eatenBy.set(b.id,(eatenBy.get(b.id)||0)+Math.floor(a.score/2));if(a.boss)bossEaters.add(b.id);}
           else {dead.add(a.id);dead.add(b.id);}
         }else{
           if(aHitsB){
@@ -454,7 +454,7 @@ export class SnakeRoomHD extends DurableObject {
             else dead.add(a.id);
           }
           if(bHitsA){
-            if(b.score>a.score){dead.add(a.id);eatenBy.set(b.id,(eatenBy.get(b.id)||0)+Math.floor(a.score/2));}
+            if(b.score>a.score){dead.add(a.id);eatenBy.set(b.id,(eatenBy.get(b.id)||0)+Math.floor(a.score/2));if(a.boss)bossEaters.add(b.id);}
             else dead.add(b.id);
           }
         }
@@ -464,8 +464,7 @@ export class SnakeRoomHD extends DurableObject {
       const eater=this.snakes.get(id);
       if(eater&&!dead.has(id)){
         eater.score+=gain;
-        const victim=[...all].find(s=>dead.has(s.id)&&s.boss&&s.score>0);
-        if(victim&&eater.score>victim.score){eater.bossKills=(eater.bossKills||0)+1;eater.coins+=100;}
+        if(bossEaters.has(id)){eater.bossKills=(eater.bossKills||0)+1;eater.coins+=100;}
       }
     }
     for(const id of dead){
