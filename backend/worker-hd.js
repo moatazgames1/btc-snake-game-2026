@@ -158,7 +158,7 @@ export default {
         }
         const roomId = mode === "solo"
           ? `solo-${user?.uid || crypto.randomUUID()}-300`
-          : "public-1200";
+          : "public-300";
         const stub = env.ROOMS.get(env.ROOMS.idFromName(roomId));
         const guest = !user;
         const headersForRoom = new Headers(request.headers);
@@ -360,36 +360,6 @@ export class SnakeRoomHD extends DurableObject {
     this.snakes.set(boss.id,boss);
   }
 
-  saveFoundChest(s, chest) {
-    if (!s.registered || s.bot) return;
-    const write = this.env.DB.prepare(
-      "INSERT OR IGNORE INTO player_chests(chest_id,uid,match_id,chest_type,status,found_at) VALUES(?,?,?,?,'pending',?)"
-    ).bind(chest.id, s.id, this.roundId, chest.type, now()).run()
-      .then(() => true)
-      .catch(error => {
-        console.error("Failed to save found chest:", error);
-        if (!this.roundEnded) {
-          // Return a chest to the arena even if its collector disconnected
-          // while the D1 write was pending.
-          if (!this.chests.some(c => c.id === chest.id)) this.chests.push(chest);
-          if (this.snakes.get(s.id) === s) {
-            s.chestsFound = Math.max(0, s.chestsFound - 1);
-            s.score = Math.max(0, s.score - 1);
-          }
-        }
-        try { this.clients.get(s.id)?.send(JSON.stringify({type:"chestSaveFailed"})); } catch {}
-        return false;
-      });
-    this.pendingChestWrites.add(write);
-    // Cleanup is attached as a two-branch handler so it cannot create an
-    // unobserved rejected promise as finally() would.
-    write.then(
-      () => this.pendingChestWrites.delete(write),
-      () => this.pendingChestWrites.delete(write)
-    );
-    return write;
-  }
-
   botThink(s) {
     if (Math.random() < 0.12) {
       const target = this.food.reduce((best,f)=> {
@@ -428,7 +398,7 @@ export class SnakeRoomHD extends DurableObject {
         s.dir={x:Math.cos(angle),z:Math.sin(angle)};
       }
       if(!s.bot&&!s.autoWalk&&!manualMove)continue;
-      const speed=s.boost&&!s.bot?.68:.45;
+      const speed = (s.boost && !s.bot) ? 0.68 : 0.45;
       if(s.boost&&!s.bot)s.score=Math.max(1,s.score-.003);
       const h=s.body[0];
       const nh={x:Math.max(0,Math.min(100,h.x+s.dir.x*speed)),z:Math.max(0,Math.min(100,h.z+s.dir.z*speed))};
@@ -589,7 +559,6 @@ export class SnakeRoomHD extends DurableObject {
   snapshot() {
     const t = Date.now();
     const elapsed = Math.floor((t - this.startedAt) / 1000);
-    const zone = this.zoneState(t);
     return { type:"state", roundId:this.roundId,
       remaining:Math.max(0,this.mainRoundSeconds-elapsed),
       elapsed, bossSpawned:this.bossSpawned,
