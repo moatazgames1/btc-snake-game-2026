@@ -149,8 +149,8 @@ export default {
           user = { uid: row.uid, name: row.display_name };
         }
         const mode = url.searchParams.get("mode") === "solo" ? "solo" : "multi";
-        // Snake BTC classic rounds last five minutes.
-        const duration = 300;
+        // Snake BTC HD test rounds last ten minutes.
+        const duration = 600;
         if (origin && !isAllowedOrigin(origin, env)) return json({ ok: false, error: "origin_not_allowed" }, 403, headers);
         if (user) {
           const account = await env.DB.prepare("SELECT is_banned FROM players WHERE uid = ?").bind(user.uid).first();
@@ -158,8 +158,8 @@ export default {
         }
         // v2 creates clean five-minute rooms, avoiding stale room state from older deployments.
         const roomId = mode === "solo"
-          ? `solo-${user?.uid || crypto.randomUUID()}-300-v2`
-          : "public-300-v2";
+          ? `solo-${user?.uid || crypto.randomUUID()}-600-zone-v1`
+          : "public-600-zone-v1";
         const stub = env.ROOMS.get(env.ROOMS.idFromName(roomId));
         const guest = !user;
         const headersForRoom = new Headers(request.headers);
@@ -192,8 +192,8 @@ export class SnakeRoomHD extends DurableObject {
     this.bossSpawned = false;
     this.pendingChestWrites = new Set();
     this.startedAt = Date.now();
-    this.roundSeconds = 300;
-    this.mainRoundSeconds = 300;
+    this.roundSeconds = 600;
+    this.mainRoundSeconds = 600;
     this.roundEnded = false;
     this.endRoundInProgress = false;
     this.botFillDone = false;
@@ -218,8 +218,8 @@ export class SnakeRoomHD extends DurableObject {
     const [client, server] = Object.values(pair);
     server.accept();
     this.mode = "multi";
-    this.roundSeconds = 300;
-    this.mainRoundSeconds = 300;
+    this.roundSeconds = 600;
+    this.mainRoundSeconds = 600;
     // A new match starts whenever the arena has no connected human players.
     if (this.clients.size === 0) this.resetRound();
     const pid = request.headers.get("X-Player-Id") || `guest-${crypto.randomUUID()}`;
@@ -387,9 +387,16 @@ export class SnakeRoomHD extends DurableObject {
     this.tickNo++;
     const t=Date.now();
     const elapsed=(t-this.startedAt)/1000;
-    if(!this.bossSpawned && elapsed>=270) this.spawnBoss();
+    const zoneRadius = elapsed < 120 ? 71 : elapsed < 240 ? 71-(elapsed-120)*(18/120) : elapsed < 360 ? 53-(elapsed-240)*(18/120) : elapsed < 480 ? 35-(elapsed-360)*(17/120) : elapsed < 540 ? 18-(elapsed-480)*(10/60) : elapsed < 600 ? 8-(elapsed-540)*(6/60) : Math.max(.2,2-(elapsed-600)*.25);
+    if(!this.bossSpawned && elapsed>=570) this.spawnBoss();
     for(const s of this.snakes.values()){
       if(!s.alive)continue;
+      const headForZone=s.body[0];
+      if(elapsed>=120 && Math.hypot(headForZone.x-50,headForZone.z-50)>zoneRadius){
+        s.zoneExposure=(s.zoneExposure||0)+.1;
+        const limit=elapsed>=600?1:elapsed>=540?2.5:elapsed>=480?4:7;
+        if(s.zoneExposure>=limit){s.alive=false;s.body=[];continue;}
+      }else{s.zoneExposure=0;}
       if(s.bot){
         this.botThink(s);
         if(s.nextDir)s.dir={x:s.nextDir.x,z:s.nextDir.z};
@@ -419,8 +426,7 @@ export class SnakeRoomHD extends DurableObject {
     const bossWinner=realAlive.find(s=>s.bossKills>0);
     if(bossWinner){this.endRound(bossWinner.id);return;}
     if(alive.length<=1){this.endRound(alive[0]?.id||null);return;}
-    if(elapsed>=this.mainRoundSeconds){
-      alive.sort((a,b)=>b.score-a.score||Number(b.alive)-Number(a.alive));
+    if(elapsed>=this.mainRoundSeconds && alive.length<=1){
       this.endRound(alive[0]?.id||null);return;
     }
     if(t-this.lastBroadcast>50){this.lastBroadcast=t;this.broadcast();}
@@ -572,6 +578,7 @@ export class SnakeRoomHD extends DurableObject {
   snapshot() {
     const t = Date.now();
     const elapsed = Math.floor((t - this.startedAt) / 1000);
+    const zoneRadius = elapsed < 120 ? 71 : elapsed < 240 ? 71-(elapsed-120)*(18/120) : elapsed < 360 ? 53-(elapsed-240)*(18/120) : elapsed < 480 ? 35-(elapsed-360)*(17/120) : elapsed < 540 ? 18-(elapsed-480)*(10/60) : elapsed < 600 ? 8-(elapsed-540)*(6/60) : Math.max(.2,2-(elapsed-600)*.25);
     return { type:"state", roundId:this.roundId,
       remaining:Math.max(0,this.mainRoundSeconds-elapsed),
       elapsed, bossSpawned:this.bossSpawned,
