@@ -539,7 +539,7 @@ function connect(mode="multi",duration=300){
   if(mine)$("resultsSummary").textContent+=" "+tr("yourRank",{rank:mine.rank,score:mine.score});
   $("playAgainBtn").textContent=tr("playAgain");
  }
- function chooseMode(){selectedMode="multi";selectedDuration=300;$("playBtn").classList.add("selected");$("playBtn").setAttribute("aria-pressed","true");}
+ function chooseMode(){selectedMode="multi";selectedDuration=600;$("playBtn").classList.add("selected");$("playBtn").setAttribute("aria-pressed","true");}
  $("playBtn").onclick=chooseMode;
  $("startSelectedBtn").onclick=()=>startGame(selectedMode,selectedDuration);
  $("playAgainBtn").onclick=()=>startGame(lastMode,lastDuration);
