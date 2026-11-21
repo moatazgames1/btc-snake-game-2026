@@ -69,3 +69,4 @@ After setting `ADMIN_UIDS`, a Firebase user whose UID is listed can open:
 `https://moatazgames1.github.io/btc-snake/?admin=1`
 
 The initial admin summary is intentionally limited to safe operational counts. Do not expose payout or private user data in public endpoints.
+Test Cloudflare HD build
