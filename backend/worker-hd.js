@@ -581,7 +581,7 @@ export class SnakeRoomHD extends DurableObject {
     const zoneRadius = elapsed < 120 ? 71 : elapsed < 240 ? 71-(elapsed-120)*(18/120) : elapsed < 360 ? 53-(elapsed-240)*(18/120) : elapsed < 480 ? 35-(elapsed-360)*(17/120) : elapsed < 540 ? 18-(elapsed-480)*(10/60) : elapsed < 600 ? 8-(elapsed-540)*(6/60) : Math.max(.2,2-(elapsed-600)*.25);
     return { type:"state", roundId:this.roundId,
       remaining:Math.max(0,this.mainRoundSeconds-elapsed),
-      elapsed, bossSpawned:this.bossSpawned,
+      elapsed, zoneRadius, bossSpawned:this.bossSpawned,
       snakes:[...this.snakes.values()].map(s=>({id:s.id,name:s.name,bot:s.bot,boss:!!s.boss,alive:s.alive,score:Math.floor(s.score),coins:s.coins||0,body:s.body,color:s.color,boost:!!s.boost})),
       food:this.food };
   }
